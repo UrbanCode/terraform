@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://www.urbancode.com/schema/cs/project-dependencies/1.0"
+ name="#AHP_PROJECT_NAME#" workflow="Build [master]">
+  <dependencies conflictStrategy="FAIL">
+    <!-- Dependencies Here -->
+    <!-- Example Anthill Project Dependency
+    <dependency>
+      <ah-project name="Anthill Project" workflow="build workflow [trunk]"/>
+      <criteria status="success"/>
+      <delivery artifact-set="Library">
+        <directory>lib</directory>
+      </delivery>
+    </dependency>
+    -->
+    <!-- Example Codestation Project Dependency
+    <dependency>
+      <cs-project name="Codestation Project"/>
+      <criteria stamp="1.*" />
+      <delivery artifact-set="Library">
+        <directory>lib</directory>
+      </delivery>
+    </dependency>
+    -->
+  </dependencies>
+</project>

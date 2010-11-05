@@ -1,0 +1,290 @@
+<project name="#AHP_PROJECT_NAME#" default="dist" xmlns:codestation="antlib:com.urbancode.codestation2.client">
+
+    <defaultexcludes add="**/.ahs.dig" />
+    <defaultexcludes add="**/.ahs.manifest" />
+    <defaultexcludes add="**/*.bom" />
+
+    <property environment="env"/>
+
+    <!-- ==================================================================
+         Environmental detection
+         ================================================================== -->
+    <condition property="git" value="git.cmd">
+        <os family="windows" />
+    </condition>
+    <condition property="git" value="git">
+        <not>
+            <os family="windows" />
+        </not>
+    </condition>
+
+    <!-- ==================================================================
+         Project configuration 
+         ================================================================== -->
+    <property name="project" value="${ant.project.name}"/>
+    <property name="build.life.id" value="${env.AH_BUILD_LIFE_ID}"/>
+
+    <property name="ahp.branch.name" value="master"/>
+    <property name="ahp.project.name" value="${project}"/>
+    <property name="ahp.workflow.name" value="build workflow [${ahp.branch.name}]"/>
+
+    <!-- ==================================================================
+         Locations of project elements
+         ================================================================== -->
+    <property name="build.dir" location="build" />
+    <property name="build.main.dir" location="${build.dir}/main" />
+    <property name="build.main.classes.dir" location="${build.main.dir}/classes" />
+    <property name="build.main.api.dir" location="${build.main.dir}/api"/>
+    
+    <property name="build.tests.dir" location="${build.dir}/tests" />
+    <property name="build.tests.data.dir" location="${build.tests.dir}/data" />
+    <property name="build.tests.classes.dir" location="${build.tests.dir}/classes" />
+
+    <property name="src.dir" location="source" />
+    <property name="src.main.java.dir" location="${src.dir}/main/java" />
+    <property name="src.tests.java.dir" location="${src.dir}/tests/java" />
+
+    <property name="lib.dir" location="lib" />
+    <property name="lib.tests.dir" location="lib/test" />
+
+    <!-- ==================================================================
+         Locations of build artifacts
+         ================================================================== -->
+    <property name="dist.dir" location="dist" />
+    <property name="dist.tests.dir" location="${dist.dir}/tests" />
+
+    <!-- ==================================================================
+         Compilation Properties
+         ================================================================== -->
+    <property name="debug" value="true" />
+    <property name="deprecation" value="false" />
+    <property name="optimize" value="false" />
+    <property name="source" value="1.5" />
+    <property name="target" value="1.5" />
+
+    <!-- ==================================================================
+         Task defaults
+         ================================================================== -->
+    <presetdef name="exec">
+      <exec failifexecutionfails="true"
+            failonerror="true"
+            logError="true"/>
+    </presetdef>
+
+    <presetdef name="javac">
+        <javac
+            debug="${debug}"
+            deprecation="${deprecation}"
+            optimize="${optimize}"
+            source="${source}"
+            target="${target}"
+            failonerror="true"
+
+            includeantruntime="false"
+            memoryinitialsize="256m"
+            memorymaximumsize="512m"/>
+    </presetdef>
+    
+    <!-- ==================================================================
+         PATHS
+         ================================================================== -->
+    <path id="classpath.main">
+        <fileset dir="${lib.dir}">
+            <include name="*.jar" />
+        </fileset>
+    </path>
+
+    <path id="classpath.tests">
+        <fileset dir="${lib.tests.dir}">
+            <include name="*.jar" />
+        </fileset>
+        <path refid="classpath.main" />
+        <pathelement location="${build.main.classes.dir}" />
+        <pathelement location="${build.tests.classes.dir}" />
+    </path>
+
+    <!-- ===================================================================
+         Standard targets
+         =================================================================== -->
+    <target name="compile" depends="compile-main, compile-tests"/>
+    <target name="jar" depends="jar-main, jar-tests"/>
+    <target name="dist" depends="dist-main, dist-tests"/>
+    <target name="javadoc" depends="javadoc-main" />
+
+    <!-- ==================================================================
+         ARTIFACT HANDLING
+         ================================================================== -->
+    <target name="resolve" unless="resolve.no" 
+            description="Resolve all dependencies">
+            <mkdir dir="${lib.dir}"/>
+            <mkdir dir="${lib.tests.dir}"/>
+        <codestation:resolve
+            server="anthill3.urbancode.com"
+            buildLife="${build.life.id}"
+            xmlFile="dependencies.xml" />
+    </target>
+
+    <target name="publish" depends="dist" unless="publish.no"
+            description="Publish artifacts to local codestation repository">
+        <codestation:publish
+            project="${ahp.project.name}"
+            workflow="${ahp.workflow.name}"
+            publishall="true"/>
+    </target>
+
+    <!-- ==================================================================
+         COMPILE
+         ================================================================== -->
+    <target name="compile-main">
+        <mkdir dir="${build.main.classes.dir}" />
+
+        <javac srcdir="${src.main.java.dir}"
+               destdir="${build.main.classes.dir}">
+            <classpath refid="classpath.main" />
+        </javac>
+    </target>
+
+    <target name="compile-tests" depends="compile-main">
+        <mkdir dir="${build.tests.classes.dir}" />
+
+        <javac srcdir="${src.tests.java.dir}"
+               destdir="${build.tests.classes.dir}">
+            <classpath refid="classpath.tests" />
+        </javac>
+    </target>
+
+    <!-- ==================================================================
+         JAR
+         ================================================================== -->
+    <target name="jar-main" depends="compile-main, set-version-property">
+        <mkdir dir="${dist.dir}" />
+
+        <jar destfile="${dist.dir}/${project}.jar">
+            <manifest>
+                <attribute name="Implementation-Vendor" value="Urbancode"/>
+                <attribute name="Implementation-Title" value="${project}"/>
+                <attribute name="Implementation-Version" value="${version}"/>
+            </manifest>
+          
+            <fileset dir="${build.main.classes.dir}"/>
+            <fileset dir="${src.main.java.dir}" excludes="**/*.java"/>
+        </jar>
+    </target>
+
+    <target name="jar-tests" depends="compile-tests">
+        <mkdir dir="${dist.tests.dir}" />
+
+        <jar jarfile="${dist.tests.dir}/${project}-tests.jar">
+            <fileset dir="${build.tests.classes.dir}"/>
+            <fileset dir="${src.tests.java.dir}" excludes="**/*.java"/>
+        </jar>
+    </target>
+
+    <!-- ==================================================================
+         JAVADOC
+         ================================================================== -->
+    <target name="javadoc-main"
+            description="Generate javadocs">
+        <mkdir dir="${build.main.api.dir}"/>
+        <mkdir dir="${dist.dir}" />
+
+        <javadoc
+            packagenames="*"
+            sourcepath="${src.main.java.dir}"
+            classpathref="classpath.main"
+            destdir="${build.main.api.dir}"
+            author="false"
+            version="false"
+            use="true">
+            <link href="http://javadocs.urbancode.com/java/1.5.0/api/"/>
+        </javadoc>
+
+        <zip
+            destfile="${dist.dir}/${project}-api.zip"
+            basedir="${build.main.api.dir}"
+            includes="**"/>
+    </target>
+
+    <!-- ==================================================================
+         DIST
+         ================================================================== -->
+    <target name="dist-main" depends="jar-main"/>
+    <target name="dist-tests" depends="jar-tests"/>
+
+    <!-- ==================================================================
+         TEST
+         ================================================================== -->
+    <target name="run-tests" depends="compile-tests" unless="tests.no">
+        <mkdir dir="${build.tests.data.dir}" />
+        <mkdir dir="${dist.tests.dir}" />
+
+        <junit printsummary="on" haltonfailure="false" fork="yes" showoutput="false">
+            <classpath refid="classpath.tests" />
+            <formatter type="brief" usefile="false" />
+            <formatter type="xml" />
+            <batchtest todir="${build.tests.data.dir}">
+                <fileset dir="${build.tests.classes.dir}">
+                    <include name="**/*Test*" />
+                </fileset>
+            </batchtest>
+        </junit>
+
+        <junitreport todir="${dist.tests.dir}">
+            <fileset dir="${build.tests.data.dir}">
+                <include name="TEST-*.xml" />
+            </fileset>
+            <report format="frames" todir="${dist.tests.dir}" />
+        </junitreport>
+    </target>
+
+    <target name="run-single-test" depends="jar-tests" unless="tests.no">
+        <mkdir dir="${reports.junit.data.dir}"/>
+        <mkdir dir="${reports.junit.html.dir}"/>
+
+        <junit 
+            printsummary="withOutAndErr"
+            haltonfailure="false"
+            fork="yes"
+            dir="test-data"
+            showoutput="yes"
+            failureproperty="tests.failed">
+            <classpath refid="tests.classpath"/>
+            <formatter type="brief" usefile="false"/>
+            <formatter type="xml"/>
+            <batchtest todir="${reports.junit.data.dir}">
+                <fileset dir="${build.tests.classes.dir}">
+                    <include name="com/urbancode/**/${run.test}.class"/>
+                </fileset>
+            </batchtest>
+        </junit>
+    </target>
+
+    <!-- ==================================================================
+         OTHER
+         ================================================================== -->
+    <target name="clean">
+        <delete dir="${dist.dir}" />
+        <delete dir="${build.dir}" />
+    </target>
+
+    <target name="clean-all" depends="clean">
+        <delete dir="${lib.dir}" />
+    </target>
+
+    <target name="set-version-property" unless="version">
+        <exec executable="${git}" outputproperty="scm.branch">
+          <arg value="symbolic-ref"/>
+          <arg value="HEAD"/>
+        </exec>
+        
+        <exec executable="${git}" outputproperty="scm.short.revision">
+            <arg value="rev-parse"/>
+            <arg value="--verify"/>
+            <arg value="--short"/>
+            <arg value="HEAD"/>
+        </exec>
+
+        <property name="version" value="${ahp.branch.name}_dev_${scm.branch}_${scm.short.revision}" />
+    </target>
+</project>
+
