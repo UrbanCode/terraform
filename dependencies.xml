@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://www.urbancode.com/schema/cs/project-dependencies/1.0"
- name="#AHP_PROJECT_NAME#" workflow="Build [master]">
+ name="#AHP_PROJECT_NAME#" workflow="build workflow [master]">
   <dependencies conflictStrategy="FAIL">
     <!-- Dependencies Here -->
     <!-- Example Anthill Project Dependency
     <dependency>
-      <ah-project name="Anthill Project" workflow="build workflow [trunk]"/>
+      <ah-project name="Anthill Project" workflow="build workflow [master]"/>
       <criteria status="success"/>
       <delivery artifact-set="Library">
         <directory>lib</directory>

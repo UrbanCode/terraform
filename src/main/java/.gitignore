@@ -1,0 +1,15 @@
+# ignore all dotfiles by except git specific ones
+.*
+!.gitignore
+!.git*
+
+# ignore all temporary files and ahp specific files
+*.bak
+*.bom
+*.swp
+*~
+
+# ignore compilation related directories in the root of the project
+/build
+/dist
+/lib
