@@ -36,22 +36,22 @@
     <property name="build.main.classes.dir" location="${build.main.dir}/classes" />
     <property name="build.main.api.dir" location="${build.main.dir}/api"/>
     
-    <property name="build.tests.dir" location="${build.dir}/tests" />
-    <property name="build.tests.data.dir" location="${build.tests.dir}/data" />
-    <property name="build.tests.classes.dir" location="${build.tests.dir}/classes" />
+    <property name="build.test.dir" location="${build.dir}/test" />
+    <property name="build.test.data.dir" location="${build.test.dir}/data" />
+    <property name="build.test.classes.dir" location="${build.test.dir}/classes" />
 
-    <property name="src.dir" location="source" />
+    <property name="src.dir" location="src" />
     <property name="src.main.java.dir" location="${src.dir}/main/java" />
-    <property name="src.tests.java.dir" location="${src.dir}/tests/java" />
+    <property name="src.test.java.dir" location="${src.dir}/test/java" />
 
     <property name="lib.dir" location="lib" />
-    <property name="lib.tests.dir" location="lib/test" />
+    <property name="lib.test.dir" location="lib/test" />
 
     <!-- ==================================================================
          Locations of build artifacts
          ================================================================== -->
     <property name="dist.dir" location="dist" />
-    <property name="dist.tests.dir" location="${dist.dir}/tests" />
+    <property name="dist.test.dir" location="${dist.dir}/test" />
 
     <!-- ==================================================================
          Compilation Properties
@@ -94,13 +94,13 @@
         </fileset>
     </path>
 
-    <path id="classpath.tests">
-        <fileset dir="${lib.tests.dir}">
+    <path id="classpath.test">
+        <fileset dir="${lib.test.dir}">
             <include name="*.jar" />
         </fileset>
         <path refid="classpath.main" />
         <pathelement location="${build.main.classes.dir}" />
-        <pathelement location="${build.tests.classes.dir}" />
+        <pathelement location="${build.test.classes.dir}" />
     </path>
 
     <!-- ===================================================================
@@ -117,7 +117,7 @@
     <target name="resolve" unless="resolve.no" 
             description="Resolve all dependencies">
             <mkdir dir="${lib.dir}"/>
-            <mkdir dir="${lib.tests.dir}"/>
+            <mkdir dir="${lib.test.dir}"/>
         <codestation:resolve
             server="anthill3.urbancode.com"
             buildLife="${build.life.id}"
@@ -145,11 +145,11 @@
     </target>
 
     <target name="compile-tests" depends="compile-main">
-        <mkdir dir="${build.tests.classes.dir}" />
+        <mkdir dir="${build.test.classes.dir}" />
 
-        <javac srcdir="${src.tests.java.dir}"
-               destdir="${build.tests.classes.dir}">
-            <classpath refid="classpath.tests" />
+        <javac srcdir="${src.test.java.dir}"
+               destdir="${build.test.classes.dir}">
+            <classpath refid="classpath.test" />
         </javac>
     </target>
 
@@ -172,11 +172,11 @@
     </target>
 
     <target name="jar-tests" depends="compile-tests">
-        <mkdir dir="${dist.tests.dir}" />
+        <mkdir dir="${dist.test.dir}" />
 
-        <jar jarfile="${dist.tests.dir}/${project}-tests.jar">
-            <fileset dir="${build.tests.classes.dir}"/>
-            <fileset dir="${src.tests.java.dir}" excludes="**/*.java"/>
+        <jar jarfile="${dist.test.dir}/${project}-tests.jar">
+            <fileset dir="${build.test.classes.dir}"/>
+            <fileset dir="${src.test.java.dir}" excludes="**/*.java"/>
         </jar>
     </target>
 
@@ -215,25 +215,25 @@
          TEST
          ================================================================== -->
     <target name="run-tests" depends="compile-tests" unless="tests.no">
-        <mkdir dir="${build.tests.data.dir}" />
-        <mkdir dir="${dist.tests.dir}" />
+        <mkdir dir="${build.test.data.dir}" />
+        <mkdir dir="${dist.test.dir}" />
 
         <junit printsummary="on" haltonfailure="false" fork="yes" showoutput="false">
-            <classpath refid="classpath.tests" />
+            <classpath refid="classpath.test" />
             <formatter type="brief" usefile="false" />
             <formatter type="xml" />
-            <batchtest todir="${build.tests.data.dir}">
-                <fileset dir="${build.tests.classes.dir}">
+            <batchtest todir="${build.test.data.dir}">
+                <fileset dir="${build.test.classes.dir}">
                     <include name="**/*Test*" />
                 </fileset>
             </batchtest>
         </junit>
 
-        <junitreport todir="${dist.tests.dir}">
-            <fileset dir="${build.tests.data.dir}">
+        <junitreport todir="${dist.test.dir}">
+            <fileset dir="${build.test.data.dir}">
                 <include name="TEST-*.xml" />
             </fileset>
-            <report format="frames" todir="${dist.tests.dir}" />
+            <report format="frames" todir="${dist.test.dir}" />
         </junitreport>
     </target>
 
@@ -248,11 +248,11 @@
             dir="test-data"
             showoutput="yes"
             failureproperty="tests.failed">
-            <classpath refid="tests.classpath"/>
+            <classpath refid="classpath.test"/>
             <formatter type="brief" usefile="false"/>
             <formatter type="xml"/>
             <batchtest todir="${reports.junit.data.dir}">
-                <fileset dir="${build.tests.classes.dir}">
+                <fileset dir="${build.test.classes.dir}">
                     <include name="com/urbancode/**/${run.test}.class"/>
                 </fileset>
             </batchtest>
