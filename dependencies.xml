@@ -21,5 +21,16 @@
       </delivery>
     </dependency>
     -->
+
+    <!-- MAIN -->
+
+    <!-- TEST -->
+    <dependency>
+      <cs-project name="JUnit"/>
+      <criteria status="success"/>
+      <delivery artifact-set="Default">
+        <directory>lib/test</directory>
+      </delivery>
+    </dependency>
   </dependencies>
 </project>

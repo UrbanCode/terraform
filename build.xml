@@ -7,7 +7,7 @@
     <property environment="env"/>
 
     <!-- ==================================================================
-         Environmental detection
+         ENVIRONMENTAL DETECTION
          ================================================================== -->
     <condition property="git" value="git.cmd">
         <os family="windows" />
@@ -19,7 +19,7 @@
     </condition>
 
     <!-- ==================================================================
-         Project configuration 
+         PROJECT CONFIGURATION 
          ================================================================== -->
     <property name="project" value="${ant.project.name}"/>
     <property name="build.life.id" value="${env.AH_BUILD_LIFE_ID}"/>
@@ -29,7 +29,7 @@
     <property name="ahp.workflow.name" value="build workflow [${ahp.branch.name}]"/>
 
     <!-- ==================================================================
-         Locations of project elements
+         LOCATIONS OF PROJECT ELEMENTS
          ================================================================== -->
     <property name="build.dir" location="build" />
     <property name="build.main.dir" location="${build.dir}/main" />
@@ -48,13 +48,13 @@
     <property name="lib.test.dir" location="lib/test" />
 
     <!-- ==================================================================
-         Locations of build artifacts
+         LOCATIONS OF BUILD ARTIFACTS
          ================================================================== -->
     <property name="dist.dir" location="dist" />
     <property name="dist.test.dir" location="${dist.dir}/test" />
 
     <!-- ==================================================================
-         Compilation Properties
+         COMPILATION PROPERTIES
          ================================================================== -->
     <property name="debug" value="true" />
     <property name="deprecation" value="false" />
@@ -63,7 +63,7 @@
     <property name="target" value="1.5" />
 
     <!-- ==================================================================
-         Task defaults
+         TASK DEFAULTS
          ================================================================== -->
     <presetdef name="exec">
       <exec failifexecutionfails="true"
@@ -104,11 +104,11 @@
     </path>
 
     <!-- ===================================================================
-         Standard targets
+         STANDARD TARGETS
          =================================================================== -->
     <target name="compile" depends="compile-main, compile-tests"/>
-    <target name="jar" depends="jar-main, jar-tests"/>
-    <target name="dist" depends="dist-main, dist-tests"/>
+    <target name="jar" depends="jar-main"/>
+    <target name="dist" depends="dist-main"/>
     <target name="javadoc" depends="javadoc-main" />
 
     <!-- ==================================================================
@@ -171,15 +171,6 @@
         </jar>
     </target>
 
-    <target name="jar-tests" depends="compile-tests">
-        <mkdir dir="${dist.test.dir}" />
-
-        <jar jarfile="${dist.test.dir}/${project}-tests.jar">
-            <fileset dir="${build.test.classes.dir}"/>
-            <fileset dir="${src.test.java.dir}" excludes="**/*.java"/>
-        </jar>
-    </target>
-
     <!-- ==================================================================
          JAVADOC
          ================================================================== -->
@@ -209,7 +200,6 @@
          DIST
          ================================================================== -->
     <target name="dist-main" depends="jar-main"/>
-    <target name="dist-tests" depends="jar-tests"/>
 
     <!-- ==================================================================
          TEST
@@ -237,7 +227,7 @@
         </junitreport>
     </target>
 
-    <target name="run-single-test" depends="jar-tests" unless="tests.no">
+    <target name="run-single-test" depends="compile-tests" unless="tests.no">
         <mkdir dir="${reports.junit.data.dir}"/>
         <mkdir dir="${reports.junit.html.dir}"/>
 
