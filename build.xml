@@ -262,19 +262,12 @@
     </target>
 
     <target name="set-version-property" unless="version">
-        <exec executable="${git}" outputproperty="scm.branch">
-          <arg value="symbolic-ref"/>
-          <arg value="HEAD"/>
-        </exec>
-        
-        <exec executable="${git}" outputproperty="scm.short.revision">
+        <exec executable="${git}" outputproperty="version">
             <arg value="rev-parse"/>
             <arg value="--verify"/>
-            <arg value="--short"/>
+            <arg value="--short=12"/>
             <arg value="HEAD"/>
         </exec>
-
-        <property name="version" value="${ahp.branch.name}_dev_${scm.branch}_${scm.short.revision}" />
     </target>
 </project>
 
