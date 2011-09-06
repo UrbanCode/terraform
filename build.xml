@@ -3,6 +3,8 @@
     <defaultexcludes add="**/.ahs.dig" />
     <defaultexcludes add="**/.ahs.manifest" />
     <defaultexcludes add="**/*.bom" />
+    <defaultexcludes add="**/.git*" />
+    <defaultexcludes add="**/.mailmap" />
 
     <property environment="env"/>
 
