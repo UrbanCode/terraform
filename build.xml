@@ -37,6 +37,8 @@
     <property name="build.main.dir" location="${build.dir}/main" />
     <property name="build.main.classes.dir" location="${build.main.dir}/classes" />
     <property name="build.main.api.dir" location="${build.main.dir}/api"/>
+
+    <property name="build.instrumented.classes.dir" location="${build.main.dir}/instrumented" />
     
     <property name="build.test.dir" location="${build.dir}/test" />
     <property name="build.test.data.dir" location="${build.test.dir}/data" />
@@ -54,6 +56,7 @@
          ================================================================== -->
     <property name="dist.dir" location="dist" />
     <property name="dist.test.dir" location="${dist.dir}/test" />
+    <property name="dist.cobertura.dir" location="${dist.dir}/cobertura" />
 
     <!-- ==================================================================
          COMPILATION PROPERTIES
@@ -101,6 +104,7 @@
             <include name="*.jar" />
         </fileset>
         <path refid="classpath.main" />
+        <pathelement location="${build.instrumented.classes.dir}" />
         <pathelement location="${build.main.classes.dir}" />
         <pathelement location="${build.test.classes.dir}" />
     </path>
@@ -206,17 +210,18 @@
     <!-- ==================================================================
          TEST
          ================================================================== -->
-    <target name="run-tests" depends="compile-tests" unless="tests.no">
+    <target name="run-tests" depends="compile-tests, cobertura-instrument" unless="tests.no">
         <mkdir dir="${build.test.data.dir}" />
         <mkdir dir="${dist.test.dir}" />
 
         <junit printsummary="on" haltonfailure="false" fork="yes" showoutput="false">
+            <sysproperty key="net.sourceforge.cobertura.datafile" file="${build.dir}/.cobertura.ser" />
             <classpath refid="classpath.test" />
             <formatter type="brief" usefile="false" />
             <formatter type="xml" />
             <batchtest todir="${build.test.data.dir}">
                 <fileset dir="${build.test.classes.dir}">
-                    <include name="**/*Test*" />
+                    <include name="**/*Test.class" />
                 </fileset>
             </batchtest>
         </junit>
@@ -236,9 +241,9 @@
         <junit 
             printsummary="withOutAndErr"
             haltonfailure="false"
-            fork="yes"
+            fork="true"
             dir="test-data"
-            showoutput="yes"
+            showoutput="true"
             failureproperty="tests.failed">
             <classpath refid="classpath.test"/>
             <formatter type="brief" usefile="false"/>
@@ -249,6 +254,43 @@
                 </fileset>
             </batchtest>
         </junit>
+    </target>
+
+    <target name="cobertura-init-tasks">
+        <taskdef classpathref="classpath.test" resource="tasks.properties"/>
+    </target>
+    
+    <target name="cobertura-instrument" depends="jar, cobertura-init-tasks" if="use.cobertura">
+        <delete file="${build.dir}/.cobertura.ser"/>
+        <delete dir="${build.instrumented.classes.dir}"/>
+        <mkdir dir="${build.instrumented.classes.dir}"/>
+
+        <cobertura-instrument todir="${build.instrumented.classes.dir}" datafile="${build.dir}/.cobertura.ser">
+            <includeClasses regex=".*"/>
+            <fileset dir="${build.main.classes.dir}">
+                <include name="**/*.class" />
+                <exclude name="**/*Test.class" />
+            </fileset>
+        </cobertura-instrument>
+    </target>
+
+    <target name="cobertura-report-prepare-directory">
+        <delete dir="${dist.cobertura.dir}"/>
+        <mkdir dir="${dist.cobertura.dir}"/>
+    </target>
+
+    <target name="cobertura-reports" depends="cobertura-report-html, cobertura-report-xml"/>
+
+    <target name="cobertura-report-html" depends="cobertura-report-prepare-directory, cobertura-init-tasks">
+        <cobertura-report format="html" destdir="${dist.cobertura.dir}" datafile="${build.dir}/.cobertura.ser">
+            <fileset dir="${src.main.java.dir}" includes="**/*.java"/>
+        </cobertura-report>
+    </target>
+
+    <target name="cobertura-report-xml" depends="cobertura-report-prepare-directory, cobertura-init-tasks">
+        <cobertura-report format="xml" destdir="${dist.cobertura.dir}" datafile="${build.dir}/.cobertura.ser">
+            <fileset dir="${src.main.java.dir}" includes="**/*.java"/>
+        </cobertura-report>
     </target>
 
     <!-- ==================================================================

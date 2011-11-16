@@ -26,9 +26,30 @@
 
     <!-- TEST -->
     <dependency>
+      <cs-project name="Apache-log4j"/>
+      <criteria stamp="1.2.*" />
+      <delivery artifact-set="Default">
+        <directory>lib/test</directory>
+      </delivery>
+    </dependency>
+    <dependency>
+      <cs-project name="Cobertura"/>
+      <criteria status="success"/>
+      <delivery artifact-set="Default">
+        <directory>lib/test</directory>
+      </delivery>
+    </dependency>
+    <dependency>
       <cs-project name="JUnit"/>
       <criteria status="success"/>
       <delivery artifact-set="Default">
+        <directory>lib/test</directory>
+      </delivery>
+    </dependency>
+    <dependency>
+      <cs-project name="Mockito"/>
+      <criteria stamp="1.8.*"/>
+      <delivery artifact-set="Library">
         <directory>lib/test</directory>
       </delivery>
     </dependency>
