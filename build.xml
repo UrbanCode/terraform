@@ -214,7 +214,7 @@
         <mkdir dir="${build.test.data.dir}" />
         <mkdir dir="${dist.test.dir}" />
 
-        <junit printsummary="on" haltonfailure="false" fork="yes" showoutput="false">
+        <junit printsummary="on" haltonfailure="false" fork="yes" showoutput="false" failureproperty="junit.failed">
             <sysproperty key="net.sourceforge.cobertura.datafile" file="${build.dir}/.cobertura.ser" />
             <classpath refid="classpath.test" />
             <formatter type="brief" usefile="false" />
@@ -232,6 +232,8 @@
             </fileset>
             <report format="frames" todir="${dist.test.dir}" />
         </junitreport>
+        
+        <fail if="junit.failed"/>
     </target>
 
     <target name="run-single-test" depends="compile-tests" unless="tests.no">
@@ -240,7 +242,7 @@
 
         <junit 
             printsummary="withOutAndErr"
-            haltonfailure="false"
+            haltonfailure="true"
             fork="true"
             dir="test-data"
             showoutput="true"
