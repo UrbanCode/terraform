@@ -114,7 +114,7 @@
          =================================================================== -->
     <target name="compile" depends="compile-main, compile-tests"/>
     <target name="jar" depends="jar-main"/>
-    <target name="dist" depends="dist-main"/>
+    <target name="dist" depends="dist-main, run-tests"/>
     <target name="javadoc" depends="javadoc-main" />
 
     <!-- ==================================================================
