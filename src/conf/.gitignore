@@ -9,7 +9,13 @@
 *.swp
 *~
 
-# ignore compilation related directories in the root of the project
-/build
-/dist
-/lib
+#ignore dynamic configuration files
+dhcpd.conf
+interfaces
+iptables.conf
+isc-dhcp-server
+
+# ignore log and orig files
+*.log
+*.out
+*.orig

@@ -1,0 +1,10 @@
+context=com.urbancode.uprovision.tasks.vmware.ContextVmware
+environment=com.urbancode.uprovision.tasks.vmware.EnvironmentTaskVmware
+network=com.urbancode.uprovision.tasks.vmware.NetworkTask
+clone=com.urbancode.uprovision.tasks.vmware.CloneTask
+network-ref=com.urbancode.uprovision.tasks.vmware.NetworkRefTask
+security-group=com.urbancode.uprovision.tasks.vmware.SecurityGroupTask
+security-group-ref=com.urbancode.uprovision.tasks.vmware.SecurityGroupRefTask
+port-range=com.urbancode.uprovision.tasks.vmware.PortRangeTask
+post-create-task=com.urbancode.uprovision.tasks.vmware.RouterConfigPostCreateTask
+event-listener=com.urbancode.uprovision.tasks.vmware.events.CloneVmCreatedEventListener
