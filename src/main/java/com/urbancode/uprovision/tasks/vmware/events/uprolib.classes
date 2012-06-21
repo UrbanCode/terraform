@@ -1,1 +1,0 @@
-event-listener=com.urbancode.uprovision.tasks.vmware.events.CloneVmCreatedEventListener
