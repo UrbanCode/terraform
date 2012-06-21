@@ -1,4 +1,4 @@
-<project name="#AHP_PROJECT_NAME#" default="dist" xmlns:codestation="antlib:com.urbancode.codestation2.client">
+<project name="terraform" default="dist" xmlns:codestation="antlib:com.urbancode.codestation2.client">
 
     <defaultexcludes add="**/.ahs.dig" />
     <defaultexcludes add="**/.ahs.manifest" />

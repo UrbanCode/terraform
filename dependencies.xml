@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://www.urbancode.com/schema/cs/project-dependencies/1.0"
- name="#AHP_PROJECT_NAME#" workflow="build workflow [master]">
+ name="terraform" workflow="build workflow [master]">
   <dependencies conflictStrategy="FAIL">
     <!-- Dependencies Here -->
     <!-- Example Anthill Project Dependency
