@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- This document models a "virtual private cloud" model generic across providers -->
+<root>
+    <context>
+        <vmware-properties>
+        <service-instance url="http://vcenter.urbancode.com/sdk" user="api-test" password="api-test123"/>
+        <dest-folder name="uc-vmw-test-1" parent="/Urbancode/kas-test"/>
+        <host name="/Urbancode/vm-dev1.urbancode.com"/>
+        <datastore name="/Urbancode/vm-dev1-2"/>
+    </vmware-properties>
+    </context>
+    
+    <properties>
+        <host-network name="host" addr="10.15.0.0" mask="255.255.0.0" gateway="10.15.1.1">
+            <ip-pool first-ip="10.15.50.1" last-ip="10.15.50.32"/>
+        </host-network>
+    </properties>
+    
+    <private-cloud name="" target-folder="/Urbancode/kas-test">
+        <subnet name="dmz" cidr="10.15.0.0/24"/>
+        
+        <firewall name="fw-rules-1">
+            <rule id="100" source="0.0.0.0/0" protocol="tcp" port="80" allow="true"/>
+            <rule id="110" source="10.15.0.0/24" protocol="tcp" port="22" allow="true"/>
+        </firewall>
+        
+        <!-- reference only names of instances -->
+        <instance-list>
+            <instance name="inst1" subnet-ref="dmz" image-path="/Urbancode/cloud/linux-ud-agent" nat-ip="true"/>
+            <instance name="inst2" subnet-ref="dmz" image-path="/Urbancode/cloud/linux-ud-agent" nat-ip="true" />
+        </instance-list>
+        
+    </private-cloud>
+    
+    <!-- 
+    <dhcp-config default-lease="600"
+             max-lease="7200"
+             subnet="192.168.0.0"
+             mask="255.255.255.0"
+             router=""
+             dns-ip="192.0.2.1"/>
+             
+    <nat-rules>
+        <rule id="200" ip-from="10.15.0.0/24" port-from="80" ip-to="192.168.0.0/24" port-to="80"/>
+        <rule id="210" ip-from="10.15.0.0/24" port-from="22" ip-to="192.168.0.0/24" port-to="22"/>
+        <rule id="220" ip-from="10.15.0.0/24" port-from="3306" ip-to="192.168.0.0/24" port-to="3306"/>
+    </nat-rules>
+     -->
+</root>

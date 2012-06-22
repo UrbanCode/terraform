@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<context
+xmlns="com.urbancode.uprovision.tasks.vmware"
+xmlns:udeploy="com.urbancode.uprovision.tasks.vmware.udeploy">
+    <environment 
+    name="uc-vmw-test-1" 
+    folder-name="uc-vmw-test-1">
+        
+        <network network-name="my-net-web" port-count="32"/>
+        <security-group name="default-group">
+            <port-range first-port="22" last-port="80"/>
+            <port-range first-port="3306" last-port="3306"/>
+            <port-range first-port="8080" last-port="9090"/>
+        </security-group>
+    
+        <clone instance-name="router-1"
+                  order="1"
+                  image-path="/Urbancode/cloud/router-dev-snapshot"
+                  snapshot-name="initial-snapshot">
+            <network-ref network-name="my-net-web" nic-index="1"/>
+            <post-create-task/>
+            <event-listener/>
+        </clone>
+                  
+        <clone instance-name="instance-1"
+                  order="2"
+                  image-path="/Urbancode/cloud/linux-ud-agent-snapshot"
+                  snapshot-name="initial-snapshot"
+                  assign-host-ip="true"
+                  server-count="1">
+            <security-group-ref name="default-group"/>
+            <network-ref network-name="my-net-web" nic-index="0"/>
+            <udeploy:post-create-task/>
+        </clone>
+        
+    </environment>
+</context>
