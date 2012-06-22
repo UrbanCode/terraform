@@ -57,7 +57,7 @@ public class Main {
                 log.fatal(msg);
                 throw new Exception(msg);
             }
-            
+
             inputXmlFile = createFile(args[1]);
             creds = createFile(args[2]);
 
@@ -77,11 +77,11 @@ public class Main {
         Main myMain = new Main(doCreate, inputXmlFile, creds, unparsedArgs);
         myMain.execute();
     }
-    
-    static private File createFile(String filePath) 
+
+    static private File createFile(String filePath)
     throws Exception {
         File result = null;
-        
+
         if (!"".equals(filePath)) {
         result = new File(filePath);
             if (result.exists()) {
@@ -109,7 +109,7 @@ public class Main {
                 throw new Exception(msg);
             }
         }
-        
+
         return result;
     }
 
@@ -147,10 +147,10 @@ public class Main {
     throws Exception {
         // parse xml and set context
         Context context = parseContext(inputXmlFile);
-        
+
         Credentials credentials = CredentialsFactory.getInstance().restoreFromFile(credsFile);
         context.setCredentials(credentials);
-        
+
         log.debug("Create = " + isCreate);
         if (isCreate) {
             log.debug("Calling create() on context");
@@ -159,40 +159,40 @@ public class Main {
             // create new file if creating a new environment
             outputXmlFile = new File("env-" + context.getEnvironment().getName() + "-" +
                                  UUID.randomUUID().toString().substring(0,4) + ".xml");
+            writeEnvToXml(outputXmlFile, context);
         }
         else {
             log.debug("Calling destroy() on context");
             context.destroy();
-            // update the input file if destroying
-            outputXmlFile = inputXmlFile;
+            inputXmlFile.delete();
         }
-        
-        writeEnvToXml(outputXmlFile, context);
+
+
     }
-    
+
     //----------------------------------------------------------------------------------------------
     private PropertyResolver createResolver() {
         return new PropertyResolver(props);
     }
-    
+
     //----------------------------------------------------------------------------------------------
-    private Context parseContext(File xmlFileToRead) 
+    private Context parseContext(File xmlFileToRead)
     throws ParserConfigurationException, XmlParsingException, SAXException, IOException {
         Context result = null;
-        
+
         DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
         dbFactory.setNamespaceAware(true);
         DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
         Document doc = dBuilder.parse(xmlFileToRead);
         Element rootElement = doc.getDocumentElement();
         rootElement.normalize();
- 
+
         XmlModelParser parser = new XmlModelParser();
         result = parser.parse(rootElement);
         if (result != null) {
             result.setResolver(createResolver());
         }
-        
+
         return result;
     }
 
@@ -212,7 +212,7 @@ public class Main {
         }
         return result;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public void writeEnvToXml(File file, Context context)
     throws Exception {
@@ -223,7 +223,7 @@ public class Main {
         write.makeXml(context, doc, null);
         write.writeDocToFile(file, doc);
     }
-    
+
     //----------------------------------------------------------------------------------------------
     private void startCredsParser() {
         CredentialsParserRegistry.getInstance().register(CredentialsAWS.class.getName(), CredentialsParserAWS.class);
