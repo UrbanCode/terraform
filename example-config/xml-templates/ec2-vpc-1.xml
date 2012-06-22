@@ -1,0 +1,61 @@
+<context xmlns="org.urbancode.terraform.tasks.aws" >
+  <environment name="durr" >
+    <vpc id="" cidr="192.168.1.0/16">
+        <subnet id="" name="OurSubnet" zone="us-east-1d" cidr="192.168.2.0/24" />
+        <subnet id="" name="OurSubnet2" zone="us-east-1d" cidr="192.168.3.0/24" />
+        <inet-gwy name="myGateway" id="" />
+        <route-table id="" assoc-id="" subnet-name="OurSubnet" default="true">
+                <!-- <route id="" target-name="myGateway" dest="0.0.0.0/0" route-table-id="" /> -->
+        </route-table>
+        <route-table id="" assoc-id="" subnet-name="OurSubnet2" default="false">
+                <!-- <route id="" target-name="myGateway" dest="0.0.0.0/0" route-table-id="" /> -->
+        </route-table>
+        <vpc-security-group id="" name="SecGroupTest" description="This is a test group">
+            <rule source="0.0.0.0/0" protocol="tcp" start-port="1" end-port="65535" inbound="true" />
+            <rule source="0.0.0.0/0" protocol="tcp" start-port="7918" end-port="7918" inbound="true" />
+            <rule source="0.0.0.0/0" protocol="tcp" start-port="22" end-port="22" inbound="true" />
+        </vpc-security-group>
+        <vpc-security-group id="" name="lbTest2" description="This is a lb test group"/>
+        <vpc-security-group id="" name="lbTest1" description="This is a lb test group"/>
+    </vpc>
+    
+    <instance name="derp" id="" ami-id="ami-707ca619" subnet-name="OurSubnet" count="1"
+            subnet-id="" elastic-ip="true" elastic-ip-alloc-id="" elastic-ip-address=""
+            private-key-ref="nick-portal" image-size="M1Small" load-balancer="testLB" >
+        <security-group-ref security-group-name="SecGroupTest" security-group-id="" />
+        <boot-actions shell="/bin/bash">
+            <script url="https://s3.amazonaws.com/ncc.misc/agentConf.sh" >
+                <param value="${ud.host}" />
+                <param value="${ud.port}" />
+                <param value="${server.name}" />
+            </script>
+            <script url="https://s3.amazonaws.com/ncc.misc/setupTomcat.sh" />
+        </boot-actions>
+        <post-create-actions>
+            <ssh user="ubuntu" cmds="echo TEST > /home/ubuntu/test.tt" />
+        </post-create-actions>
+    </instance>
+    
+    <instance name="herp" id="" ami-id="ami-707ca619" subnet-name="OurSubnet" count="1"
+            subnet-id="" elastic-ip="true" elastic-ip-alloc-id="" elastic-ip-address=""
+            private-key-ref="nick-portal" image-size="M1Small" load-balancer="testLB" >
+        <security-group-ref security-group-name="SecGroupTest" security-group-id="" />
+        <boot-actions shell="/bin/bash">
+            <script url="https://s3.amazonaws.com/ncc.misc/agentConf.sh" shell="/bin/bash">
+                <param value="${ud.host}" />
+                <param value="${ud.port}" />
+                <param value="${server.name}" />
+            </script>
+            <script url="https://s3.amazonaws.com/ncc.misc/setupTomcat.sh" />
+        </boot-actions>
+    </instance>
+    
+    <load-balancer name="testLB" subnet-name="OurSubnet" app-cookie-name="" >
+        <listener protocol="http" instance-port="80" load-balancer-port="80" cert-id="" />
+        <listener protocol="http" instance-port="8080" load-balancer-port="8080" cert-id="" />
+        <!-- <listener protocol="https" instance-port="8443" load-balancer-port="8443" cert-id="cert-5LVBODECOJENX77FGG4RCAFSBJQKB6QC" />  -->
+        <health-check interval="30" timeout="20" unhealthy-count="2" healthy-count="10" protocol="http" port="8080" path="/" />
+        <!--  <availability-zone zone="" /> -->
+    </load-balancer>
+  </environment>
+</context>
