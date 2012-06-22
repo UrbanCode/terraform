@@ -27,7 +27,7 @@ public class CredentialsFactory {
 
     private static CredentialsFactory instance = new CredentialsFactory();
 
-    static protected String homeDir = System.getProperty("com.urbancode.uprovision.storage.dir")
+    static protected String homeDir = System.getProperty("user.home") + ".terraform"
             + File.separator + "var" + File.separator;
 
     //----------------------------------------------------------------------------------------------
