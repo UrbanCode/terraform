@@ -437,7 +437,7 @@ public class InstanceTask extends Task {
                     }
                     
                     if (keyPair != null && !keyPair.isEmpty()) {
-                        String basePath = "/home/ncc/.ec2";
+                        String basePath = System.getProperty("user.home") + File.separator + ".terraform";
                         String keyPairPath = basePath + File.separator + keyPair + ".pem";
                         pca.setIdFile(keyPairPath);
                     }
