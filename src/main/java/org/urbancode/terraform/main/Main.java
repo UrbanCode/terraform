@@ -1,6 +1,7 @@
 package org.urbancode.terraform.main;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -10,9 +11,9 @@ import java.util.UUID;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-
 import org.apache.log4j.Logger;
 import org.urbancode.terraform.credentials.Credentials;
+import org.urbancode.terraform.credentials.CredentialsException;
 import org.urbancode.terraform.credentials.CredentialsFactory;
 import org.urbancode.terraform.credentials.CredentialsParserRegistry;
 import org.urbancode.terraform.credentials.aws.CredentialsAWS;
@@ -39,7 +40,7 @@ public class Main {
 
     //----------------------------------------------------------------------------------------------
     static public void main(String[] args)
-    throws Exception {
+    throws IOException, XmlParsingException, CredentialsException {
         File inputXmlFile = null;
         File creds = null;
         List<String> unparsedArgs = new ArrayList<String>();
@@ -55,7 +56,7 @@ public class Main {
             else {
                 String msg = "Invalid first argument: "+args[0];
                 log.fatal(msg);
-                throw new Exception(msg);
+                throw new IOException(msg);
             }
 
             inputXmlFile = createFile(args[1]);
@@ -71,15 +72,14 @@ public class Main {
             log.fatal("Invalid number of arguments!\n" +
                     "Found " + args.length + "\n" +
                     "Expected at least 3");
-            throw new Exception("args");
+            throw new IOException("improper args");
         }
 
         Main myMain = new Main(doCreate, inputXmlFile, creds, unparsedArgs);
         myMain.execute();
     }
 
-    static private File createFile(String filePath)
-    throws Exception {
+    static private File createFile(String filePath) throws FileNotFoundException {
         File result = null;
 
         if (!"".equals(filePath)) {
@@ -93,20 +93,20 @@ public class Main {
                     if (!result.canRead()) {
                         String msg = "Input file does not exist: "+filePath;
                         log.fatal(msg);
-                        throw new Exception(msg);
+                        throw new FileNotFoundException(msg);
                     }
                 }
                 else {
                     String msg = "Input file is not a file: "+filePath;
                     log.fatal(msg);
-                    throw new Exception(msg);
+                    throw new FileNotFoundException(msg);
                 }
             }
             else {
                 // it doesn't exist
                 String msg = "Input file does not exist: "+filePath;
                 log.fatal(msg);
-                throw new Exception(msg);
+                throw new FileNotFoundException(msg);
             }
         }
 
@@ -144,30 +144,36 @@ public class Main {
 
     //----------------------------------------------------------------------------------------------
     public void execute()
-    throws Exception {
-        // parse xml and set context
-        Context context = parseContext(inputXmlFile);
+    throws XmlParsingException, IOException, CredentialsException {
+        try {
+            // parse xml and set context
+            Context context = parseContext(inputXmlFile);
 
-        Credentials credentials = CredentialsFactory.getInstance().restoreFromFile(credsFile);
-        context.setCredentials(credentials);
+            Credentials credentials = CredentialsFactory.getInstance().restoreFromFile(credsFile);
+            context.setCredentials(credentials);
 
-        log.debug("Create = " + isCreate);
-        if (isCreate) {
-            log.debug("Calling create() on context");
-            context.create();
+            log.debug("Create = " + isCreate);
+            if (isCreate) {
+                log.debug("Calling create() on context");
+                context.create();
 
-            // create new file if creating a new environment
-            outputXmlFile = new File("env-" + context.getEnvironment().getName() + "-" +
-                                 UUID.randomUUID().toString().substring(0,4) + ".xml");
-            writeEnvToXml(outputXmlFile, context);
+                // create new file if creating a new environment
+                outputXmlFile = new File("env-" + context.getEnvironment().getName() + "-" +
+                                     UUID.randomUUID().toString().substring(0,4) + ".xml");
+                writeEnvToXml(outputXmlFile, context);
+            }
+            else {
+                log.debug("Calling destroy() on context");
+                context.destroy();
+                inputXmlFile.delete();
+            }
         }
-        else {
-            log.debug("Calling destroy() on context");
-            context.destroy();
-            inputXmlFile.delete();
+        catch(ParserConfigurationException e1) {
+            throw new XmlParsingException("ParserConfigurationException: " + e1.getMessage(), e1);
         }
-
-
+        catch(SAXException e2) {
+            throw new XmlParsingException("SAXException: " + e2.getMessage(), e2);
+        }
     }
 
     //----------------------------------------------------------------------------------------------
@@ -198,7 +204,7 @@ public class Main {
 
     //----------------------------------------------------------------------------------------------
     private Property parseProperty(String arg)
-    throws Exception {
+    throws IOException {
         log.debug("Parsing: " + arg);
         String[] args;
         Property result = null;
@@ -208,20 +214,26 @@ public class Main {
         }
         else {
             log.error("bad property! Check your format. \nFound: " + arg);
-            throw new Exception("bad parameter format");
+            throw new IOException("bad parameter format");
         }
         return result;
     }
 
     //----------------------------------------------------------------------------------------------
     public void writeEnvToXml(File file, Context context)
-    throws Exception {
-        XmlWrite write = new XmlWrite();
-        DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-        DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-        Document doc = dBuilder.newDocument();
-        write.makeXml(context, doc, null);
-        write.writeDocToFile(file, doc);
+    throws XmlParsingException {
+        try {
+            XmlWrite write = new XmlWrite();
+            DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+            Document doc = dBuilder.newDocument();
+            write.makeXml(context, doc, null);
+            write.writeDocToFile(file, doc);
+        }
+        catch(Exception e) {
+            throw new XmlParsingException("Exception while writing out XML: " + e.getMessage(), e);
+        }
+
     }
 
     //----------------------------------------------------------------------------------------------
@@ -230,3 +242,4 @@ public class Main {
         CredentialsParserRegistry.getInstance().register(CredentialsVmware.class.getName(), CredentialsParserVmware.class);
     }
 }
+
