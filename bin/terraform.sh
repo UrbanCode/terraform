@@ -3,7 +3,7 @@
 # == BEGIN INSTALLER MODIFICATIONS ===============================================
 
 #UPRO_HOME="@UPRO_HOME@"
-JAVA_OPTS="-DUPRO_HOME=$UPRO_HOME -Dcom.urbancode.uprovision.storage.dir=$UPRO_HOME -cp"
+JAVA_OPTS="-DUPRO_HOME=$TERRAFORM_HOME -Dcom.urbancode.uprovision.storage.dir=$TERRAFORM_HOME -cp"
 #JAVA_DEBUG_OPTS="@JAVA_DEBUG_OPTS@"
 #JAVA_HOME="@JAVA_HOME@"
 #ANT_HOME="$ANTHILL_HOME/opt/apache-ant-1.7.1"
@@ -21,15 +21,15 @@ javacmd="$JAVA_HOME/bin/java"
 INPUT_FILE=$2
 INPUT_FILE=`readlink -f $INPUT_FILE`
 CREDS=$3
-start_class=com.urbancode.uprovision.main.Main
-stop_class=com.urbancode.uprovision.main.Main
+start_class=org.urbancode.terraform.main.Main
+stop_class=org.urbancode.terraform.main.Main
 
 export JAVA_HOME
 export INPUT_FILE
 export CREDS
 
 # -- Start ---------------------------------------------------------------------
-CP="$UPRO_HOME/lib/*:$UPRO_HOME/build/main/jar/*:$UPRO_HOME/src/conf"
+CP="$TERRAFORM_HOME/lib/*:$TERRAFORM_HOME/build/main/jar/*:$TERRAFORM_HOME/src/conf:$TERRAFORM_HOME/dist/*"
 PROPS=""
 
 for ARG in $@; do
@@ -46,10 +46,10 @@ done
 echo "Properties: $PROPS" 
 
 if [ "$1" = "start" ] ; then
-  cd "$UPRO_HOME/bin"
+  cd "$TERRAFORM_HOME/bin"
   command_line="\"$javacmd\" $JAVA_OPTS 
     \"$CP\" \
-    $start_class create \"$INPUT_FILE\" \"$CREDS\" $PROPS >\"$UPRO_HOME/bin/stdout\" 2>&1 &"
+    $start_class create \"$INPUT_FILE\" \"$CREDS\" $PROPS >\"$TERRAFORM_HOME/bin/stdout\" 2>&1 &"
   echo $command_line
   eval $command_line
 
@@ -59,10 +59,10 @@ elif [ "$1" = "stop" ] ; then
 
   shift
   FORCE=0
-  cd "$UPRO_HOME/bin"
+  cd "$TERRAFORM_HOME/bin"
   command_line="exec \"$javacmd\" $JAVA_OPTS 
     \"$CP\" \
-    $stop_class destroy \"$INPUT_FILE\" \"$CREDS\" >\"$UPRO_HOME/bin/stdout\" 2>&1 &"
+    $stop_class destroy \"$INPUT_FILE\" \"$CREDS\" >\"$TERRAFORM_HOME/bin/stdout\" 2>&1 &"
   echo $command_line
   eval $command_line
 

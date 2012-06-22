@@ -13,9 +13,8 @@
         </vpc-security-group>
     </vpc>
     
-    <instance name="derp" id="" ami-id="ami-707ca619" subnet-name="OurSubnet" count="1"
-            subnet-id="" elastic-ip="true" elastic-ip-alloc-id="" elastic-ip-address=""
-            private-key-ref="nick-portal" image-size="M1Small" load-balancer="testLB" >
+    <instance name="derp" ami-id="ami-707ca619" subnet-name="OurSubnet" count="1"
+            elastic-ip="true" private-key-ref="nick-portal" image-size="small" >
         <security-group-ref security-group-name="SecGroupTest" security-group-id="" />
         <boot-actions shell="/bin/bash">
             <script shell="/bin/bash" url="https://s3.amazonaws.com/ncc.misc/agentConf.sh" >

@@ -14,3 +14,5 @@
 /dist
 /lib
 /ecbin
+
+/bin/stdout
