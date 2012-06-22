@@ -78,7 +78,8 @@ public class ScriptTask extends PostCreateSubTask {
     public void create() {
         
         String userData = "";
-        userData += "curl " + getUrl() + " | bash -s ";
+//        userData += "curl " + getUrl() + " | bash -s ";
+        userData += getShell() + " `wget " + getUrl() + "`";
         if (getParams() != null && !getParams().isEmpty()) {
             for (ParamTask param : getParams()) {
                 userData += " " + param.getValue();

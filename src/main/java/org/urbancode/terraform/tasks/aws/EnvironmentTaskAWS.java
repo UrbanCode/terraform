@@ -211,17 +211,24 @@ public class EnvironmentTaskAWS extends EnvironmentTask {
         setStartTime(System.currentTimeMillis());
         
         try {
+            log.debug("Starting Vpc Creation");
             getVpc().create();
+            log.debug("Finished Vpc Creation");
             
             // launch load balancers before we launch instances
             // we do this so we can just hold a ref to lb on the 
             // instance and we need to register the it on the lb.
+            log.debug("Starting Loadbalancers");
             launchLoadBalancers(loadBalancers);
+            log.debug("Finished Loadbalancers");
             
+            log.debug("Launching instances");
             if (instances != null) {
                 List<InstanceTask> newInstances = new ArrayList<InstanceTask>();
+                log.debug("Found " + instances.size() + " instances.");
                 for (InstanceTask instance : instances) {
                     instance.setName(instance.getName() + "0");
+                    log.debug("Starting instance: " + instance.getName());
                     InstanceTask newInstance = null;
                     // make a list of all the new instances
                     for (int i=1; i<instance.getCount(); i++) {
@@ -233,49 +240,88 @@ public class EnvironmentTaskAWS extends EnvironmentTask {
                     // add 0
                     instance.setName(instance.getName() + "0");
                     instance.setCount(1);
+                    
+                    if (instance != null) {
+                        log.debug("Finished setup for instance: " + instance.getName());
+                    }
                 }
                 // add new instances to old instances
                 instances.addAll(newInstances);
             }
             
             // setup launch groups
+            log.debug("Preparing to launch instances");
             Comparator<InstanceTask> comparer = new InstancePriorityComparator();
             PriorityQueue<InstanceTask> queue = new PriorityQueue<InstanceTask>(3, comparer);
             
             for (InstanceTask instance : getInstances()) {
+                log.debug("Adding instance to queue: " + instance.getName());
                 queue.add(instance);
             }
+            log.debug("Priority Queue length: " + queue.size());
+            log.debug("Priority Queue first item: " + queue.peek());
             
-            InstanceTask currentInst;
+            InstanceTask currentInst = queue.poll();
             // get instance at first of queue, continue if not null...
-            while ((currentInst = queue.poll())!= null) {
+            while (currentInst != null) {   // = queue.poll())
+                log.debug("Queue iter: " + currentInst);
                 // create new LaunchGroup
                 List<InstanceTask> launchGroup = new ArrayList<InstanceTask>();
                 // add instance to launchGroup
                 launchGroup.add(currentInst);
                 // get current priority of instance
                 int currentPri = currentInst.getPriority();
+                int nextPri = -1;
                 
                 // get priority of next instance, see if it matches current priority
-                if (queue.peek() != null && currentPri == queue.peek().getPriority()) {
-                    // if so, takeit out of the queue and add to launchGroup
-                    launchGroup.add(queue.poll());
+                
+                // add all instances with same priority
+                InstanceTask nextInst = queue.poll();
+                log.debug("Next instance: " + nextInst);
+                while (nextInst != null) {
+                    if (currentPri == nextInst.getPriority()) {
+                        log.debug("Same priority " + currentPri);
+                        launchGroup.add(nextInst);
+                    }
+                    else {
+                        nextPri = nextInst.getPriority();
+                        log.debug("Differnet priority: " + nextPri);
+                        break;
+                    }
+                    nextInst = queue.poll();
                 }
+                currentInst = nextInst;
+                
                 // otherwise we have a new priorty
-                else {
+                if (currentPri != nextPri) {
+                    log.debug("Same priority; launching group"); 
                     // if the group has members
                     if (launchGroup != null && !launchGroup.isEmpty()) {
                         // launch the group
                         String msg = "Launching Instances: ";
                         msg += "\n\tGroup: " + launchGroup.get(0).getPriority();
-                        for (InstanceTask toLaunch : launchGroup) {
-                            msg += "\n\t\t" + toLaunch.getName();
+                        if (launchGroup != null) {
+                            for (InstanceTask toLaunch : launchGroup) {
+                                if (toLaunch != null) {
+                                    msg += "\n\t\t" + toLaunch.getName();
+                                }
+                                else {
+                                    log.error("Instance toLaunch is null; this shouldn't happen. Priority: " + currentPri);
+                                }
+                            }
+                            
+                            log.info(msg);
+                            handleInstances(launchGroup, true);
                         }
-                        log.info(msg);
-                        
-                        handleInstances(launchGroup, true);
+                    }
+                    else {
+                        log.info("Launch group is empty! " + currentPri);
                     }
                 }
+                else {
+                    log.debug("Differnet priority!");
+                }
+//                currentInst = nextInst;
             }
         }
         catch (Exception e) {

@@ -47,8 +47,10 @@ public class InstanceTask extends Task {
     private String userData;
     private String loadBalancer;
     private String privateIp;
-    private int count;
-    private int priority;
+    
+    // default values
+    private int count = 1;
+    private int priority = 1;
     
     private BootActionsTask bootActions;
     private PostCreateActionsTask pca;
@@ -248,6 +250,7 @@ public class InstanceTask extends Task {
         return sec;
     }
     
+    //----------------------------------------------------------------------------------------------
     private boolean verifyElasticIp(Instance instance) {
         boolean result = false;
         boolean hasEIP = instance.getPublicIpAddress() != null;
@@ -362,6 +365,7 @@ public class InstanceTask extends Task {
                 verified = verify();
             }
             
+            log.debug("Setting up Boot Actions");
             if (getBootActions() != null) {
                 getBootActions().create();
                 userData = getBootActions().getUserData();
@@ -394,7 +398,6 @@ public class InstanceTask extends Task {
                 
                 // set the instanceId
                 instanceId = helper.launchAmi(amiId, subnetId, keyPair, size, userData, groupIds, blockMaps, ec2Client);
-                
                 
                 // wait for instance to start and pass status checks
                 helper.waitForState(instanceId, "running", 8, ec2Client);
@@ -447,7 +450,6 @@ public class InstanceTask extends Task {
                     pca.create();
                 }
             }
-            
         }
         catch (Exception e) {
             log.error("Did not start instance " + name + " completely");
