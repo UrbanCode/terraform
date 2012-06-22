@@ -31,7 +31,7 @@ public class CloneVmCreatedEventListener extends ExtensionTask implements TaskEv
     //**********************************************************************************************
     static private final Logger log = Logger.getLogger(CloneVmCreatedEventListener.class);
     static protected final String confDir = System.getProperty("user.home") + File.separator +
-            ".uprovision" + File.separator + "conf" + File.separator;
+            ".terraform" + File.separator + "conf" + File.separator;
 
     //**********************************************************************************************
     // INSTANCE
