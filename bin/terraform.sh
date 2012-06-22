@@ -2,8 +2,7 @@
 
 # == BEGIN INSTALLER MODIFICATIONS ===============================================
 
-#UPRO_HOME="@UPRO_HOME@"
-JAVA_OPTS="-DUPRO_HOME=$TERRAFORM_HOME -Dcom.urbancode.uprovision.storage.dir=$TERRAFORM_HOME -cp"
+JAVA_OPTS="-cp"
 #JAVA_DEBUG_OPTS="@JAVA_DEBUG_OPTS@"
 #JAVA_HOME="@JAVA_HOME@"
 #ANT_HOME="$ANTHILL_HOME/opt/apache-ant-1.7.1"
@@ -21,14 +20,14 @@ javacmd="$JAVA_HOME/bin/java"
 INPUT_FILE=$2
 INPUT_FILE=`readlink -f $INPUT_FILE`
 CREDS=$3
-start_class=org.urbancode.terraform.main.Main
-stop_class=org.urbancode.terraform.main.Main
+create_class=org.urbancode.terraform.main.Main
+destroy_class=org.urbancode.terraform.main.Main
 
 export JAVA_HOME
 export INPUT_FILE
 export CREDS
 
-# -- Start ---------------------------------------------------------------------
+# -- Create ---------------------------------------------------------------------
 CP="$TERRAFORM_HOME/lib/*:$TERRAFORM_HOME/build/main/jar/*:$TERRAFORM_HOME/src/conf:$TERRAFORM_HOME/dist/*"
 PROPS=""
 
@@ -45,32 +44,32 @@ for ARG in $@; do
 done
 echo "Properties: $PROPS" 
 
-if [ "$1" = "start" ] ; then
+if [ "$1" = "create" ] ; then
   cd "$TERRAFORM_HOME/bin"
   command_line="\"$javacmd\" $JAVA_OPTS 
     \"$CP\" \
-    $start_class create \"$INPUT_FILE\" \"$CREDS\" $PROPS >\"$TERRAFORM_HOME/bin/stdout\" 2>&1 &"
+    $create_class create \"$INPUT_FILE\" \"$CREDS\" $PROPS >\"$TERRAFORM_HOME/bin/stdout\" 2>&1 &"
   echo $command_line
   eval $command_line
 
-# -- Stop ----------------------------------------------------------------------
+# -- Destroy ----------------------------------------------------------------------
 
-elif [ "$1" = "stop" ] ; then
+elif [ "$1" = "destroy" ] ; then
 
   shift
   FORCE=0
   cd "$TERRAFORM_HOME/bin"
   command_line="exec \"$javacmd\" $JAVA_OPTS 
     \"$CP\" \
-    $stop_class destroy \"$INPUT_FILE\" \"$CREDS\" >\"$TERRAFORM_HOME/bin/stdout\" 2>&1 &"
+    $destroy_class destroy \"$INPUT_FILE\" \"$CREDS\" >\"$TERRAFORM_HOME/bin/stdout\" 2>&1 &"
   echo $command_line
   eval $command_line
 
 # -- Usage ---------------------------------------------------------------------
 
 else
-#	Also, start -debug|run -debug to instruct java to listen on port 10000
+#	Also, create -debug|run -debug to instruct java to listen on port 10000
 #	for remote JPDA Debugger connections.
-  echo "Usage: uprovision {start|stop} {input-file} {credentials-file} {prop1=val1 prop2=val2 ... }"
+  echo "Usage: uprovision {create|destroy} {input-file} {credentials-file} {prop1=val1 prop2=val2 ... }"
   exit 1
 fi
