@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<uprolib:environment xmlns:uprolib="com.urbancode.uprovision.tasks.vmware"
+<uprolib:environment xmlns:uprolib="org.urbancode.terraform.tasks.vmware"
 env-name="uc-vmw-test-1" 
 dest-path="/Urbancode/kas-test" 
 datastore-path="/Urbancode/vm-dev1-2" 
