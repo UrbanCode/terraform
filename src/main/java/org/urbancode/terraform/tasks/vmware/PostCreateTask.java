@@ -22,7 +22,7 @@ public class PostCreateTask extends ExtensionTask {
     //**********************************************************************************************
     static private final Logger log = Logger.getLogger(PostCreateTask.class);
     static protected final String confDir = System.getProperty("user.home") + File.separator +
-            ".uprovision" + File.separator + "conf" + File.separator;
+            ".terraform" + File.separator + "conf" + File.separator;
 
     //**********************************************************************************************
     // INSTANCE
