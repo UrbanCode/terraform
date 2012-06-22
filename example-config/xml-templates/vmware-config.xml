@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <context
-xmlns="com.urbancode.uprovision.tasks.vmware"
-xmlns:udeploy="com.urbancode.uprovision.tasks.vmware.udeploy">
+xmlns="org.urbancode.terraform.tasks.vmware"
+xmlns:udeploy="org.urbancode.terraform.tasks.vmware.udeploy">
     <environment 
     name="uc-vmw-test-1" 
     folder-name="uc-vmw-test-1">
