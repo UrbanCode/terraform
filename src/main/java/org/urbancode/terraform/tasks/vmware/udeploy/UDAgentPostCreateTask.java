@@ -58,7 +58,8 @@ public class UDAgentPostCreateTask extends PostCreateTask {
     }
 
     //----------------------------------------------------------------------------------------------
-    public void configure() throws IOException, InterruptedException {
+    public void configure() 
+    throws IOException, InterruptedException {
         String udDir = "/opt/urbandeploy/agent/bin/";
         Thread.sleep(5000);
         log.info("configuring agent");

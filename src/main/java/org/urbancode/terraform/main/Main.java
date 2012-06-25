@@ -1,11 +1,14 @@
 package org.urbancode.terraform.main;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Properties;
 import java.util.UUID;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -14,7 +17,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.apache.log4j.Logger;
 import org.urbancode.terraform.credentials.Credentials;
 import org.urbancode.terraform.credentials.CredentialsException;
-import org.urbancode.terraform.credentials.CredentialsFactory;
+import org.urbancode.terraform.credentials.CredentialsParser;
 import org.urbancode.terraform.credentials.CredentialsParserRegistry;
 import org.urbancode.terraform.credentials.aws.CredentialsAWS;
 import org.urbancode.terraform.credentials.aws.CredentialsParserAWS;
@@ -148,8 +151,9 @@ public class Main {
         try {
             // parse xml and set context
             Context context = parseContext(inputXmlFile);
-
-            Credentials credentials = CredentialsFactory.getInstance().restoreFromFile(credsFile);
+            
+            Credentials credentials = parseCredentials(credsFile);
+            
             context.setCredentials(credentials);
 
             log.debug("Create = " + isCreate);
@@ -179,6 +183,74 @@ public class Main {
     //----------------------------------------------------------------------------------------------
     private PropertyResolver createResolver() {
         return new PropertyResolver(props);
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    private Credentials parseCredentials(File credsFile) {
+        Credentials result = null;
+
+        Properties props = loadPropertiesFromFile(credsFile);
+
+        result = parseCredsFromProps(props);
+
+        if (result != null) {
+            log.info("Restored Credentials: " + credsFile + " : " + result.getName());
+        }
+        else {
+            log.info("Did not restore Credentials for " + credsFile);
+        }
+
+        return result;
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    private Properties loadPropertiesFromFile(File propFile) {
+        Properties result = new Properties();
+        
+        String path = propFile.getAbsolutePath();
+        
+        InputStream in = null;
+        try {
+            in = new FileInputStream(propFile);
+            result.load(in);
+        }
+        catch (FileNotFoundException e) {
+            log.error("Unable to load properties from " + path, e);
+        // TODO - throw
+        }
+        catch (IOException e) {
+            log.error("IOException when loading properties from " + path, e);
+        // swallow
+        }
+        finally {
+            try {
+                if (in != null) {
+                    in.close();
+                }
+            }
+          catch (IOException e) {
+                // swallow
+            }
+        }
+    
+        return result;
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    private Credentials parseCredsFromProps(Properties props) {
+        Credentials result = null;
+
+        String type = props.getProperty("type");
+
+        if (type == null || "".equals(type)) {
+            throw new NullPointerException("No credentials type specified in props: " + props);
+        }
+
+        CredentialsParser parser = CredentialsParserRegistry.getInstance().getParser(type);
+
+        result = parser.parse(props);
+
+        return result;
     }
 
     //----------------------------------------------------------------------------------------------

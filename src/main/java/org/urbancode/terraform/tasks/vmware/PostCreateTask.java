@@ -31,7 +31,7 @@ public class PostCreateTask extends ExtensionTask {
     protected CloneTask cloneTask;
     protected VirtualMachine vmToConfig;
 
-    // TODO hard-coded user and password
+    // defaults
     protected String vmUser = "root";
     protected String vmPassword = "password";
 
@@ -55,6 +55,16 @@ public class PostCreateTask extends ExtensionTask {
         this.vmToConfig = cloneTask.fetchVm();
     }
 
+    //----------------------------------------------------------------------------------------------
+    public void setPassword(String password) {
+        vmPassword = password;
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    public void setUser(String user) {
+        vmUser = user;
+    }
+    
     //----------------------------------------------------------------------------------------------
     @Override
     public void create() {
