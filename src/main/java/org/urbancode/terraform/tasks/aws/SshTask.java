@@ -114,45 +114,51 @@ public class SshTask extends SubTask {
         SshHelper sshHelper = new SshHelper();
         
         try {
-        if (idFilePath != null && !idFilePath.isEmpty()) {
-            File idFile = new File(idFilePath);
-            if (idFile.exists() && idFile.isFile() && idFile.canRead()) {
-                ssh = new SshConnection(host, user, idFile);
+            if (idFilePath != null && !idFilePath.isEmpty()) {
+                File idFile = new File(idFilePath);
+                if (idFile.exists() && idFile.isFile() && idFile.canRead()) {
+                    ssh = new SshConnection(host, user, idFile);
+                }
+                else {
+                    log.error("Unable to read file: " + idFile);
+                }
+            }
+            else if (pass != null && !pass.isEmpty()) {
+                ssh = new SshConnection(host, user, pass);
             }
             else {
-                log.error("Unable to read file: " + idFile);
+                log.error("No id file or password specifed. No way to connect to instance " + host);
             }
-        }
-        else if (pass != null && !pass.isEmpty()) {
-            ssh = new SshConnection(host, user, pass);
-        }
-        else {
-            log.error("No id file or password specifed. No way to connect to instance " + host);
-        }
-        
-        // resolve any props in the cmds
-        cmds = context.resolve(cmds);
-        
-        SshHelper.waitForPort(host, port); 
-        
-        ChannelExec channel = ssh.run(cmds);
-        channel.getOutputStream().close();
-        
-        Future<String> output = sshHelper.getOutputString(channel);
-        Future<String> error = sshHelper.getErrorString(channel);
-        
-        String outputText = output.get();
-        String errorText = error.get();
-        
-        while (true) {
-            if (channel.isClosed()) {
-                int exitCode = channel.getExitStatus();
-                if (exitCode != 0) {
-                    throw new IOException("Command failed with code " + exitCode + " : " + errorText);
+            
+            if (ssh == null) {
+                log.error("Attempted SSH connection: " + user + "@" + host + " || password: " + pass 
+                          + " || id-file: " + idFilePath);
+                throw new PostCreateException("Could not make SSH connection!");
+            }
+            
+            // resolve any props in the cmds
+            cmds = context.resolve(cmds);
+            
+            SshHelper.waitForPort(host, port); 
+            
+            ChannelExec channel = ssh.run(cmds);
+            channel.getOutputStream().close();
+            
+            Future<String> output = sshHelper.getOutputString(channel);
+            Future<String> error = sshHelper.getErrorString(channel);
+            
+            String outputText = output.get();
+            String errorText = error.get();
+            
+            while (true) {
+                if (channel.isClosed()) {
+                    int exitCode = channel.getExitStatus();
+                    if (exitCode != 0) {
+                        throw new IOException("Command failed with code " + exitCode + " : " + errorText);
+                    }
+                    break;
                 }
-                break;
-            }
-            Thread.sleep(1000);
+                Thread.sleep(1000);
         }
         
         log.debug("Command out: " + outputText);
@@ -188,8 +194,8 @@ public class SshTask extends SubTask {
     //----------------------------------------------------------------------------------------------
     @Override
     public void destroy() {
-        // TODO Auto-generated method stub
-        
+        // Don't think we have anything to do here
+        // unless we should implement shutdown cmds
     }
 
 }
