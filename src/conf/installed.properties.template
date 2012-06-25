@@ -1,8 +1,0 @@
-#stores system properties
-#Format: property.name=property.value
-#Example: install.db.type=derby
-
-#place where WARs store data
-#Mine is the following, double check to make sure it's right for you!
-#classes.dir and jar.dir are NOT needed any more in installed.properties
-com.urbancode.uprovision.storage.dir=/home/kensie

@@ -3,68 +3,7 @@
  name="terraform" workflow="build workflow [master]">
   <dependencies conflictStrategy="FAIL">
     <!-- Dependencies Here -->
-    <!-- Example Anthill Project Dependency
-    <dependency>
-      <ah-project name="Anthill Project" workflow="build workflow [master]"/>
-      <criteria status="success"/>
-      <delivery artifact-set="Library">
-        <directory>lib</directory>
-      </delivery>
-    </dependency>
-    -->
-    <!-- Example Codestation Project Dependency
-    <dependency>
-      <cs-project name="Codestation Project"/>
-      <criteria stamp="1.*" />
-      <delivery artifact-set="Library">
-        <directory>lib</directory>
-      </delivery>
-    </dependency>
-    -->
 
-    <dependency>
-      <cs-project name="Json-lib"/>
-      <criteria status="success" />
-      <delivery artifact-set="lib">
-        <directory>lib</directory>
-      </delivery>
-    </dependency>
-
-    <dependency>
-      <cs-project name="Mockito"/>
-      <criteria status="success" />
-      <delivery artifact-set="Library">
-        <directory>lib/test</directory>
-      </delivery>
-    </dependency>
-    
-    <dependency>
-          <ah-project name="WebExt-Common" workflow="Build [master]"/>
-          <criteria status="success"/>
-          <delivery artifact-set="Compilation Libraries">
-            <directory>lib</directory>
-          </delivery>
-          <delivery artifact-set="WAR contents">
-            <directory>build/webext-common</directory>
-          </delivery>
-        </dependency>
-    
-    <dependency>
-      <cs-project name="Servlet API"/>
-      <criteria status="success" />
-      <delivery artifact-set="Default">
-        <directory>lib/build</directory>
-      </delivery>
-    </dependency>
-
-    <dependency>
-      <cs-project name="Jakarta Commons IO"/>
-      <criteria status="success" />
-      <delivery artifact-set="Default">
-        <directory>lib</directory>
-      </delivery>
-    </dependency>
-    
     <!-- MAIN -->
     <dependency>
       <ah-project name="Commons-Util" workflow="build workflow [trunk]"/>
@@ -148,30 +87,6 @@
     </dependency>
 
     <dependency>
-      <cs-project name="Cobertura"/>
-      <criteria status="success"/>
-      <delivery artifact-set="Default">
-        <directory>lib/test</directory>
-      </delivery>
-    </dependency>
-    
-    <dependency>
-      <cs-project name="Cucumber-JVM" />
-      <criteria stamp="1.0.0.RC7" />
-      <delivery artifact-set="Default">
-          <directory>lib/test</directory>
-      </delivery>
-    </dependency>
-    
-    <dependency>
-      <cs-project name="Selenium" />
-      <criteria stamp="2.15.0" />
-      <delivery artifact-set="Default">
-          <directory>lib</directory>
-      </delivery>
-    </dependency>
-    
-    <dependency>
       <cs-project name="Jakarta Commons Codec"/>
       <criteria status="success"/>
       <delivery artifact-set="Default">
@@ -179,30 +94,6 @@
       </delivery>
     </dependency>
 
-    <dependency>
-      <cs-project name="Java Mail" />
-      <criteria status="success" />
-      <delivery artifact-set="Default">
-        <directory>lib</directory>
-      </delivery>
-    </dependency>
-
-    <dependency>
-      <cs-project name="Apache HttpComponents"/>
-      <criteria status="success"/>
-      <delivery artifact-set="lib">
-        <directory>lib</directory>
-      </delivery>
-    </dependency>
-    
-    <dependency>
-      <cs-project name="Jakarta Commons HttpClient"/>
-      <criteria status="success"/>
-      <delivery artifact-set="Default">
-        <directory>lib</directory>
-      </delivery>
-    </dependency>
-    
     <dependency>
       <cs-project name="Jakarta Commons Collections"/>
       <criteria status="success"/>
@@ -220,20 +111,21 @@
     </dependency>   
     
     <dependency>
-      <cs-project name="Jersey"/>
-      <criteria status="success"/>
-      <delivery artifact-set="Runtime Libraries">
+      <cs-project name="Jakarta Commons IO"/>
+      <criteria status="success" />
+      <delivery artifact-set="Default">
         <directory>lib</directory>
       </delivery>
-    </dependency> 
-
+    </dependency>
+    
     <dependency>
-      <cs-project name="Apache Tomcat Ant Tasks"/>
-      <criteria stamp="5.5.20"/>
+      <cs-project name="Cobertura"/>
+      <criteria status="success"/>
       <delivery artifact-set="Default">
-        <directory>lib/deploy</directory>
+        <directory>lib/test</directory>
       </delivery>
-    </dependency> 
+    </dependency>
+    
      
   </dependencies>
 </project>

@@ -11,6 +11,7 @@
 
 # ignore compilation related directories in the root of the project
 /build
+/compile
 /dist
 /lib
 /ecbin

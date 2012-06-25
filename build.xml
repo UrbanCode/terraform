@@ -141,7 +141,7 @@
     <!-- ==================================================================
          COMPILE
          ================================================================== -->
-    <target name="compile-main">
+    <target name="compile-main" depends="resolve" unless="resolve.no">
         <mkdir dir="${build.main.classes.dir}" />
 
         <javac srcdir="${src.main.java.dir}"
