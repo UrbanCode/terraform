@@ -31,6 +31,7 @@ public class PersistenceConfig {
 
     final private String NAMESPACE_FILE = "terralib.classes";
 
+    // <NameSpace, <ElementName, ClassName>>
     private Map<String, BidiMap> nameSpaces = new HashMap<String, BidiMap>();
 
     //----------------------------------------------------------------------------------------------
