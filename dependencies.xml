@@ -118,6 +118,14 @@
       </delivery>
     </dependency>
     
+    <dependency>
+      <cs-project name="Cobertura"/>
+      <criteria status="success"/>
+      <delivery artifact-set="Default">
+        <directory>lib/test</directory>
+      </delivery>
+    </dependency>
+    
      
   </dependencies>
 </project>
