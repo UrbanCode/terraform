@@ -22,10 +22,11 @@ SHELL_PATH=`dirname ${SHELL_NAME}`
 if [ "." = "$SHELL_PATH" ]
 then
   SHELL_PATH=`pwd`
+  #SHELL_PATH=`dirname $TERRAFORM_HOME`
 fi
 
 TERRAFORM_HOME=`dirname $SHELL_PATH`
-
+echo "TERRAFORM_HOME=$TERRAFORM_HOME"
 jarfile="$TERRAFORM_HOME/dist"
 
 export JAVA_HOME
@@ -51,7 +52,6 @@ done
 echo "Properties: $PROPS" 
 
 if [ "$1" = "create" ] ; then
-  cd "$TERRAFORM_HOME/bin"
   command_line="\"$javacmd\" $JAVA_OPTS 
     -cp \"$CP\" \
     $create_class create \"$INPUT_FILE\" \"$CREDS\" $PROPS"
@@ -65,7 +65,6 @@ elif [ "$1" = "destroy" ] ; then
 
   shift
   FORCE=0
-  cd "$TERRAFORM_HOME/bin"
   command_line="exec \"$javacmd\" $JAVA_OPTS 
     -cp \"$CP\" \
     $destroy_class destroy \"$INPUT_FILE\" \"$CREDS\""

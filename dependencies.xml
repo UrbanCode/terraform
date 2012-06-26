@@ -36,9 +36,25 @@
         <directory>lib</directory>
       </delivery>
     </dependency>
+
+    <dependency>
+      <cs-project name="Apache HttpComponents"/>
+      <criteria status="success"/>
+      <delivery artifact-set="lib">
+        <directory>lib</directory>
+      </delivery>
+    </dependency>
     
     <dependency>
      <cs-project name="Jakarta Commons Lang"/>
+     <criteria status="success"/>
+     <delivery artifact-set="Default">
+       <directory>lib</directory>
+     </delivery>
+   </dependency>
+
+   <dependency>
+     <cs-project name="Jakarta Commons HttpClient"/>
      <criteria status="success"/>
      <delivery artifact-set="Default">
        <directory>lib</directory>
