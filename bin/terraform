@@ -15,21 +15,35 @@ CREDS=$3
 create_class=org.urbancode.terraform.main.Main
 destroy_class=org.urbancode.terraform.main.Main
 
+# set TERRAFORM_HOME
+SHELL_NAME=$0
+SHELL_PATH=`dirname ${SHELL_NAME}`
+
+if [ "." = "$SHELL_PATH" ]
+then
+  SHELL_PATH=`pwd`
+fi
+
+TERRAFORM_HOME=`dirname $SHELL_PATH`
+
+jarfile="$TERRAFORM_HOME/dist"
+
 export JAVA_HOME
+export TERRAFORM_HOME
 export INPUT_FILE
 export CREDS
 
 # -- Create ---------------------------------------------------------------------
-CP="$TERRAFORM_HOME/lib/*:$TERRAFORM_HOME/build/main/jar/*:$TERRAFORM_HOME/src/conf:$TERRAFORM_HOME/dist/*"
+CP="$TERRAFORM_HOME/lib/*:$TERRAFORM_HOME/dist/*:$TERRAFORM_HOME/conf"
 PROPS=""
 
 for ARG in $@; do
   if [ "$ARG" = "$1" ]; then
-   echo "skip"
+   echo "$ARG"
   elif [ "$ARG" = "$2" ] ; then
-   echo "skip"
+   echo "$ARG"
   elif [ "$ARG" = "$3" ] ; then
-   echo "skip"
+   echo "$ARG"
   else 
     PROPS="$PROPS $ARG" 
   fi
