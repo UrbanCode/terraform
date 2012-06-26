@@ -1,0 +1,120 @@
+<!-- 
+
+This is an Environment Template used to create an environment with Amazon Web Services
+
+-->
+
+<!-- The context points to what Tasks to use for each element of the template-->
+<context xmlns="org.urbancode.terraform.tasks.aws" >
+  <!-- The name of your instances will be prefixed with your environment name-->
+  <environment name="durr" >
+    <!-- The Virtual Private Cloud is the network in Amazon that the instances
+         will be launch in. More specifically, you launch instances into the 
+         subnets of the VPC. The VPC has a CIDR which defines the network. --> 
+    <vpc cidr="192.168.1.0/16">
+        <!-- Define any subnets here, with their zones and cidr. You cannot launch
+             instances without a subnet. Instances are launched into subnets.
+             Note: make sure that your subnet CIDRs work with together and in the VPC--> 
+        <subnet name="myHouse" zone="us-east-1d" cidr="192.168.2.0/24" />
+        <subnet name="yourHouse" zone="us-east-1d" cidr="192.168.3.0/24" />
+
+        <!-- An InternetGateway grants your instances the ability to reach the internet. -->
+        <inet-gwy name="myGateway" />
+
+        <!-- Define some Route Tables. These can be associated with a subnet. You can 
+             have one and only one Main Route Table. -->
+        <route-table subnet-name="myHouse" default="true">
+                <!-- The 'target' for a Route can be an InternetGateway, a NAT, or an
+                     Elastic Network Interface. See the AWS docs for more info -->
+                <!-- <route id="" target-name="myGateway" dest="0.0.0.0/0" route-table-id="" /> -->
+        </route-table>
+        <route-table subnet-name="yourHouse" default="false">
+                <!-- <route id="" target-name="myGateway" dest="0.0.0.0/0" route-table-id="" /> -->
+        </route-table>
+
+        <!-- Security Groups are VPC specific. Which means that they are unique per VPC
+             and are different from EC2 Security Groups, which work similar  -->
+        <vpc-security-group name="GuardDog" description="Allow traffic for ssh and uDeploy Agent">
+            <!-- By default, Amazon allows outbound traffic -->
+            <rule source="0.0.0.0/0" protocol="tcp" start-port="7918" end-port="7918" inbound="true" />
+            <rule source="0.0.0.0/0" protocol="tcp" start-port="22" end-port="22" inbound="true" />
+        </vpc-security-group>
+        <vpc-security-group name="lbDog" description="You can apply these Security Groups
+                                                      to an Elastic Load Balancer." />
+    </vpc>
+    
+    <!-- This is an instance to launch. It has a name, an Amazon Machine Image. 
+         the name of the subnet to launch in to, the number of these instances you 
+         want to launch, whether or not it should get an Elastic Ip, the SSH key
+         to use, and the size. See the README for more info or check out AWS docs.-->
+    <instance name="derp" ami-id="ami-707ca619" subnet-name="myHouse" count="1"
+            elastic-ip="true" private-key-ref="nick-portal" image-size="M1Small" >
+        <!-- This is just telling what Security Groups to apply to this instance.
+             You can have multiple of these. -->
+        <security-group-ref security-group-name="GuardDog" />
+        <!-- These are actions that will be ran as 'root' on first boot of the 
+             instance. Known in AWS as user-data. The shell can be specified, but
+             it is recommended you use bash if possible. -->
+        <boot-actions shell="/bin/bash">
+            <!-- This particular boot-action will grab a script from a URL and run
+                 it with the specified shell. In this example it is a bash script 
+                 taken from Amazon S3 and used to configure a uDeploy Agent on the
+                 machine. -->
+            <script url="https://s3.amazonaws.com/ncc.misc/agentConf.sh" >
+                <!-- These are parameters for the script above. They're passed in 
+                     top to bottom order -->
+                <param value="${ud.host}" />
+                <param value="${ud.port}" />
+                <param value="${server.name}" />
+            </script>
+            <script url="https://s3.amazonaws.com/ncc.misc/setupTomcat.sh" />
+        </boot-actions>
+        <!-- These are actions that are run after the instance has fully started 
+             in Amazon (Once it hits the 'running' state and 'ok' status). -->
+        <post-create-actions>
+            <!-- This runs a collection of commands via ssh as the given user.
+                 This will attempt to look for the ssh key that the instance was
+                 launched with (Amazon gives you this). -->
+            <ssh user="ubuntu" cmds="echo TEST > /home/ubuntu/test.tt" />
+        </post-create-actions>
+    </instance>
+    
+    <!-- This instance has elastic-ip="false" so it can not be reached directly
+         from the outside. This instance also has a count="2" so this instance
+         will be launched twice, as in, you will have two seperate instances 
+         with these details. All instance names carry a number suffix. For this
+         example there will be herp00 and herp01 -->
+    <instance name="herp" ami-id="ami-707ca619" subnet-name="yourHouse" count="2"
+            elastic-ip="false" private-key-ref="nick-portal" image-size="M1Small"
+            load-balancer="balanceLoader" >
+        <security-group-ref security-group-name="GuardDog" />
+        <boot-actions shell="/bin/bash">
+            <script url="https://s3.amazonaws.com/ncc.misc/agentConf.sh" shell="/bin/bash">
+                <param value="${ud.host}" />
+                <param value="${ud.port}" />
+                <param value="${server.name}" />
+            </script>
+            <script url="https://s3.amazonaws.com/ncc.misc/setupTomcat.sh" />
+        </boot-actions>
+    </instance>
+    
+    <!-- This is a load balancer provided by Amazon Elastic Load Balancing. It has a name,
+         a subnet that it is associated with (only instances in that subnet can be on this LB)
+         and an Application Cookie Name (leave it empty if you want the LB to handle to cookies)
+     -->
+    <load-balancer name="testLB" subnet-name="OurSubnet" app-cookie-name="" >
+        <!-- Listeners are basically what you want the Load Balancer to 'load-balance'.
+             You have the port the LB listens on, the port you want to go to on the instance, 
+             the protocol to use, and the SSL certification-id. The cert-id is only needed
+             for secure protocols and should be on your AWS account.  -->
+        <listener protocol="http" instance-port="80" load-balancer-port="80" cert-id="" />
+        <listener protocol="http" instance-port="8080" load-balancer-port="8080" cert-id="" />
+        <!-- The health check is used to determine if an instance is health or not. It checks for
+             a status 200 OK to determine if the instance is healthy or not. See the AWS docs
+              or the README for more details. --> 
+        <health-check interval="30" timeout="20" unhealthy-count="2" healthy-count="10" protocol="http" port="8080" path="/" />
+        <!--  <availability-zone zone="" /> -->
+    </load-balancer>
+  </environment>
+</context>
+
