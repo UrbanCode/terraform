@@ -45,8 +45,8 @@ public class CloneVmCreatedEventListener extends ExtensionTask implements TaskEv
     // CLASS
     //**********************************************************************************************
     static private final Logger log = Logger.getLogger(CloneVmCreatedEventListener.class);
-    static protected final String confDir = System.getProperty("user.home") + File.separator +
-            ".terraform" + File.separator + "conf" + File.separator;
+    static protected final String confDir = System.getenv("TERRAFORM_HOME") + 
+                                               File.separator + "conf" + File.separator;
 
     //**********************************************************************************************
     // INSTANCE
@@ -55,7 +55,6 @@ public class CloneVmCreatedEventListener extends ExtensionTask implements TaskEv
     private CloneTask routerTask;
     private VirtualMachine router;
 
-    // TODO hard-coded user and password
     private String vmUser = "root";
     private String vmPassword = "password";
 
@@ -95,6 +94,11 @@ public class CloneVmCreatedEventListener extends ExtensionTask implements TaskEv
         if (subTask instanceof CloneTask) {
             cloneTask = (CloneTask) subTask;
             if (!subTask.equals(routerTask)) {
+                
+                // set user/pass
+                vmUser = ((CloneTask) subTask).getUser();
+                vmPassword = ((CloneTask) subTask).getPassword();
+                
                 try {
                     cloneTask.powerOnVm();
                 }
@@ -128,9 +132,7 @@ public class CloneVmCreatedEventListener extends ExtensionTask implements TaskEv
                     catch (InterruptedException e) {
                         log.warn("InterruptedException while waiting for IP address", e);
                     }
-
                 }
-
             }
         }
     }

@@ -69,8 +69,7 @@ public class GlobalIpAddressPool {
     private Properties parseIpPoolFile() {
         Properties result = new Properties();
         
-        // TODO - make this file configurable?
-        String ipPoolFilePath = System.getProperty("user.home") + File.separator + ".terraform" + File.separator + "ippool.conf";
+        String ipPoolFilePath = System.getenv("TERRAFORM_HOME") + File.separator + "ippool.conf";
         
         File poolFile = new File(ipPoolFilePath); 
         
@@ -80,12 +79,12 @@ public class GlobalIpAddressPool {
             result.load(in);
         } 
         catch (FileNotFoundException e) {
-            log.fatal("Could not find file " + ipPoolFilePath);
-//            throw new FileNotFoundException("Unable to find file: " + ipPoolFilePath);
+            log.fatal("Could not find file " + ipPoolFilePath, e);
+//            throw e;
         }
         catch (IOException e) {
-            log.fatal("Could not read properties from " + ipPoolFilePath);
-//            throw new IOException("Unable to read properties from: " + ipPoolFilePath);
+            log.fatal("Could not read properties from " + ipPoolFilePath, e);
+//            throw e;
         }
         finally {
             if (in != null) {

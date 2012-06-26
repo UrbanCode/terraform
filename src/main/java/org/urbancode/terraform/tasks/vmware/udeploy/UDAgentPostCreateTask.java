@@ -15,6 +15,7 @@
  ******************************************************************************/
 package org.urbancode.terraform.tasks.vmware.udeploy;
 
+import java.io.File;
 import java.io.IOException;
 
 import org.apache.log4j.Logger;
@@ -34,6 +35,7 @@ public class UDAgentPostCreateTask extends PostCreateTask {
     // INSTANCE
     //**********************************************************************************************
     private ContextVmware context;
+    private String agentPath = "/opt/urbandeploy/agent";
 
     //----------------------------------------------------------------------------------------------
     public UDAgentPostCreateTask() {
@@ -44,6 +46,16 @@ public class UDAgentPostCreateTask extends PostCreateTask {
     public UDAgentPostCreateTask(CloneTask cloneTask) {
         super();
         this.cloneTask = cloneTask;
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    public void setAgentPath(String agentPath) {
+        this.agentPath = agentPath;
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    public String getAgentPath() {
+        return agentPath;
     }
 
     //----------------------------------------------------------------------------------------------
@@ -75,20 +87,27 @@ public class UDAgentPostCreateTask extends PostCreateTask {
     //----------------------------------------------------------------------------------------------
     public void configure() 
     throws IOException, InterruptedException {
-        String udDir = "/opt/urbandeploy/agent/bin/";
-        Thread.sleep(5000);
-        log.info("configuring agent");
-        runCommand(vmUser, vmPassword, "runProgramInGuest", "/bin/sh", udDir + "udagent", "stop");
-        runCommand(vmUser, vmPassword, "runProgramInGuest", "/bin/sleep", "5");
-        //String cfgCommand = "${ud.host} ${ud.port} ${ud.agent.name}";
-        String cfgCommand = "${ud.host} ${ud.port} ${env.instance.name}";
-        String resolvedCommand = context.resolve(cfgCommand);
-        log.debug("resolved command: " + resolvedCommand);
-        String[] split = resolvedCommand.split(" ");
-        String agentName = split[2] + "-" + cloneTask.getInstanceName();
-        log.debug("vmx path: " + environment.fetchVirtualHost().getVmxPath(vmToConfig));
-        runCommand(vmUser, vmPassword, "runProgramInGuest", "/bin/sh", udDir + "configure-agent", split[0], split[1], agentName);
-        runCommand(vmUser, vmPassword, "runProgramInGuest", "/bin/sleep", "5");
-        runCommand(vmUser, vmPassword, "runProgramInGuest", "/bin/sh", udDir + "udagent", "start");
+        String udDir = "";
+        if (agentPath != null && !agentPath.isEmpty()) {
+            udDir = agentPath + File.separator + "bin" + File.separator;
+            
+            Thread.sleep(5000);
+            log.info("configuring agent");
+            runCommand(vmUser, vmPassword, "runProgramInGuest", "/bin/sh", udDir + "udagent", "stop");
+            runCommand(vmUser, vmPassword, "runProgramInGuest", "/bin/sleep", "5");
+            //String cfgCommand = "${ud.host} ${ud.port} ${ud.agent.name}";
+            String cfgCommand = "${ud.host} ${ud.port} ${env.instance.name}";
+            String resolvedCommand = context.resolve(cfgCommand);
+            log.debug("resolved command: " + resolvedCommand);
+            String[] split = resolvedCommand.split(" ");
+            String agentName = split[2] + "-" + cloneTask.getInstanceName();
+            log.debug("vmx path: " + environment.fetchVirtualHost().getVmxPath(vmToConfig));
+            runCommand(vmUser, vmPassword, "runProgramInGuest", "/bin/sh", udDir + "configure-agent", split[0], split[1], agentName);
+            runCommand(vmUser, vmPassword, "runProgramInGuest", "/bin/sleep", "5");
+            runCommand(vmUser, vmPassword, "runProgramInGuest", "/bin/sh", udDir + "udagent", "start");
+        }
+        else {
+            log.error("No UD Agent path specified!");
+        }
     }
 }
