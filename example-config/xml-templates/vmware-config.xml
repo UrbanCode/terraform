@@ -1,36 +1,43 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <context
-xmlns="org.urbancode.terraform.tasks.vmware"
-xmlns:udeploy="org.urbancode.terraform.tasks.vmware.udeploy">
+xmlns="org.urbancode.terraform.tasks.vmware">
     <environment 
-    name="uc-vmw-test-1" 
-    folder-name="uc-vmw-test-1">
+    name="my-environment" 
+    folder-name="terraform">
         
         <network network-name="my-net-web" port-count="32"/>
         <security-group name="default-group">
-            <port-range first-port="22" last-port="80"/>
+            <port-range first-port="22" last-port="22"/>
+            <port-range first-port="80" last-port="80"/>
             <port-range first-port="3306" last-port="3306"/>
-            <port-range first-port="8080" last-port="9090"/>
+            <port-range first-port="8080" last-port="8081"/>
         </security-group>
+    <!-- Required attributes for all clone elements: instance-name, image-path, snapshot-name
+         Recommended attributes: order (specifies order in which clones are created, lowest first) -->
     
+    <!-- Creates a clone of a router (from a Debian router image)
+         Required elements for routers: post-create-task, event-listener (from default namespace)
+         Recommended attributes: order="1"
+         point network-ref to index of the NIC that will belong on the private network switch -->
         <clone instance-name="router-1"
                   order="1"
-                  image-path="/Urbancode/cloud/router-dev-snapshot"
-                  snapshot-name="initial-snapshot">
+                  image-path="/MyDatacenter/myFolder/my-router-image"
+                  snapshot-name="my-snapshot">
             <network-ref network-name="my-net-web" nic-index="1"/>
             <post-create-task/>
             <event-listener/>
         </clone>
-                  
+        <!-- Creates a server instance on the private network
+             assign-host-ip=true is required for router to assign server a private IP
+             order attribute must be higher than that of the router -->
         <clone instance-name="instance-1"
                   order="2"
-                  image-path="/Urbancode/cloud/linux-ud-agent-snapshot"
-                  snapshot-name="initial-snapshot"
+                  image-path="/MyDatacenter/myFolder/my-server-image"
+                  snapshot-name="my-snapshot"
                   assign-host-ip="true"
                   server-count="1">
             <security-group-ref name="default-group"/>
             <network-ref network-name="my-net-web" nic-index="0"/>
-            <udeploy:post-create-task/>
         </clone>
         
     </environment>
