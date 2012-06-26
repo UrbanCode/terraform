@@ -1,0 +1,114 @@
+Installation Instructions
+*************************
+
+terraform/
+├── bin/
+│   └── terraform
+├── dist/
+│   └── terraform.jar
+├── conf/
+│   ├── log4j.properties
+│   ├── ippool.conf
+│   ├── dhcpd.conf
+│   ├── dhcpd.conf.temp
+│   ├── interfaces
+│   ├── interfaces.temp
+│   ├── iptables.conf
+│   ├── iptables.conf.temp
+│   ├── isc-dhcp-server
+│   └── isc-dhcp-server.temp
+├── lib/
+│   └── *.jar
+├── LICENSE
+└── README
+
+
+Basic Installation
+===================
+ 	You will find a shell script in terraform/bin. This is used
+ to run Terraform. 
+
+How to run terraform: 
+ terraform [create/destory] [input-xml-file] [input-credentials-file]
+ 
+ Include any key-pair (.pem) files from Amazon in ~/.terraform
+
+
+
+VMware
+===================
+ ( include vmware notes here )
+
+
+
+Amazon Web Services 
+===================
+
+	In order for any Post Create Actions to run on an Amazon EC2 
+instance, the instance must have an Elastic Ip Address assigned 
+to it. You must also have the key-pair (ssh key) that the instance 
+was created with in your ~/.terraform directory. 
+
+	The Elastic Ip Address is neccessary since the instances are 
+launched inside of a Virtual Private Cloud. The EIP allows you to 
+communicate with those instances from outside of the VPC.
+File Information
+
+	The key-pair file is needed for connecting to the server. You
+must also know what user that key-pair was associated with. This is 
+determined when the AMI (Amazon Machine Image) is created. 
+
+
+
+Conf File Information
+===================
+
+ [  Global  ]
+
+
+ * log4j.properties
+  This file contains the properties used to configure logging. 
+ ____________
+ 
+ 
+ [   AWS    ]
+ ____________
+ 
+ 
+ [  VMware  ]
+ 
+ * ippool.conf
+  Contains the start and end points for the IP pool used by vcenter.
+ The start is the begining IP address to start allocating for VMs.
+ It should be in the following format:
+   start=192.168.2.1
+   end=192.168.2.250
+ 
+ 
+ * dhcpd.conf
+ 
+ 
+ * dhcpd.conf.temp
+ 
+ 
+ * interfaces
+ 
+ 
+ * interfaces.temp
+ 
+ 
+ * iptables.conf
+ 
+ 
+ * iptables.conf.temp
+ 
+ 
+ * isc-dhcp-server
+ 
+ 
+ * isc-dhcp-server.temp
+ 
+ ____________
+  
+
+===================
