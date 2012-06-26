@@ -35,8 +35,8 @@ public class PostCreateTask extends ExtensionTask {
     // CLASS
     //**********************************************************************************************
     static private final Logger log = Logger.getLogger(PostCreateTask.class);
-    static protected final String confDir = System.getProperty("user.home") + File.separator +
-            ".terraform" + File.separator + "conf" + File.separator;
+    static protected final String confDir = System.getenv("TERRAFORM_HOME") + File.separator + 
+                                                "conf" + File.separator;
 
     //**********************************************************************************************
     // INSTANCE
