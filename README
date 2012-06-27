@@ -229,8 +229,8 @@ Amazon Web Services
       which specified which package to look in for the map of element name to 
       classname. The package it points to should contain a properties file named:
       terralib.classes 
-	for VMware use: 
-	for AWS use: 
+	for VMware use: xmlns="com.urbancode.uprovision.tasks.vmware"
+	for AWS use: xmlns="com.urbancode.uprovision.tasks.aws"
 
     environment: The environment contains the Virtual Private Cloud (only 1 
       VPC per environment). The name of the environment is used as a prefix 
@@ -308,6 +308,8 @@ Conf File Information
  
  [  VMware  ]
  
+ * .temp files - these are the beginning forms of the conf files listed below. Content is added to them and placed in the appropriate conf file.
+ 
  * ippool.conf
   Contains the start and end points for the IP pool used by vcenter.
  The start is the begining IP address to start allocating for VMs.
@@ -317,27 +319,27 @@ Conf File Information
  
  
  * dhcpd.conf
+ This is the standard DHCPD configuration file for dhcpd, the Internet Systems Consortium DHCP Server.
  
- 
- * dhcpd.conf.temp
- 
+ See http://linux.die.net/man/5/dhcpd.conf
  
  * interfaces
+ This is a debian/ubuntu networking configuration file for the interfaces on the router machine.
  
- 
- * interfaces.temp
- 
+ See http://support.arpnetworks.com/kb/vps/example-etcnetworkinterfaces-for-debian-and-ubuntu
  
  * iptables.conf
  
+ This is the standard iptables configuration file for configuring a firewall and allowable network traffic.
  
- * iptables.conf.temp
- 
+ See http://linux.die.net/man/8/iptables
  
  * isc-dhcp-server
  
- 
- * isc-dhcp-server.temp
+ This file indicates which network interfaces will be serving up DHCP addresses. It is typically located in /etc/default and referenced by /etc/init.d/isc-dhcp-server .
+ The only required content of this file is one line, as below
+ INTERFACES="eth1 eth2"
+ Quotation marks included. All network interfaces to be served DHCP addresses should be listed, separated by one space.
  
  ____________
   
