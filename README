@@ -47,7 +47,7 @@ To create a new vmware template - clones are not in a private network
 All vmware templates must include this:
 
 <context
-xmlns="com.urbancode.uprovision.tasks.vmware">
+xmlns="org.urbancode.terraform.tasks.vmware">
     <environment 
     name="terra-env" 
     folder-name="terra-folder">
@@ -111,7 +111,7 @@ Finally, an example template with a private network, an application server, and 
 
 <?xml version="1.0" encoding="UTF-8"?>
 <context
-xmlns="com.urbancode.uprovision.tasks.vmware">
+xmlns="org.urbancode.terraform.tasks.vmware">
     <environment 
     name="terra-env" 
     folder-name="terra-folder">
@@ -225,51 +225,128 @@ Amazon Web Services
   -----------
     The following is a list of elements available in the xml:
 
-    context: The context holds the whole environment. It has one attribute, xmlns, 
+    o context: The context holds the whole environment. It has one attribute, xmlns, 
       which specified which package to look in for the map of element name to 
       classname. The package it points to should contain a properties file named:
       terralib.classes 
 	for VMware use: 
 	for AWS use: 
 
-    environment: The environment contains the Virtual Private Cloud (only 1 
+    o environment: The environment contains the Virtual Private Cloud (only 1 
       VPC per environment). The name of the environment is used as a prefix 
       on the name tags in AWS.
 
-    vpc: This is the core network. It is made with a CIDR (x.x.x.x/y). 
+    o vpc: This is the core network. It is made with a CIDR (x.x.x.x/y). 
       For more information on CIDR notation, see: 
   	http://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing
 
-    subnet: Subnets are smaller networks inside of the VPC. They each have their
+    o subnet: Subnets are smaller networks inside of the VPC. They each have their
       own CIDR which is a sub-set of the VPC's CDIR. Each subnet has a zone property
       which specifies a region that the subnet will be located in. If any instances
       in this subnet need to be behind an Elastic Load Balancer, the zone of this
       subnet must match that of the load balancer.
       
-    inet-gwy: The Internet Gateway attaches to a VPC and allows internet access
+    o inet-gwy: The Internet Gateway attaches to a VPC and allows internet access
       from inside the VPC.
 
-    route-table: Each VPC has a "Main" route table that cannot be deleted
-    route:
+    o route-table: Each VPC has a "Main" route table that cannot be deleted. Route 
+      Tables can be associated with a single subnet subnet. There can only be one
+      "default" Route Table, which all new subnets will use if no Route Table is
+      specified.
 
-    vpc-security-group:
-    rule:
+    o route: Routes are elements of a Route Table. They contain a target, which can
+      be an Internet Gateway, a NAT (a specially configured instance), or an ENI 
+      (Elastic Network Interface). They also contain a destination, which is 
+      described by a CIDR block. 
 
-    instance:
+      * For more information on Route Tables and Routes, see: 
+        http://docs.amazonwebservices.com/AmazonVPC/latest/UserGuide/VPC_Routing.html        
 
-    security-group-ref:
+
+    o vpc-security-group: A Security Group essentially acts as a firewall. They can 
+      be applied to multiple instances (and/or load balancers) and allow or disallow
+      incoming or outgoing traffic on specified ports. A Security Group contains a 
+      collection of Rules, which contain the details on the traffic rules. They also
+      have a name and description.
+
+    o rule: A Rule contains a source, which will apply to rule to just traffic from 
+      the specified CIDR. A Rule also contains a protocol, which the rule will apply 
+      only to traffic using that protocol, a port range, which is the range of ports
+      the rule will apply to, and an inbound flag, which if set to false, will apply 
+      the rule to outbound traffic. 
+
+    o instance: The representation of the EC2 instance that will be launched.
+      -name: the name of the instance
+      -ami-id: the id of of the Amazon Machine Image to use for the instance
+      -subnet-name: the name of the subnet to launch the instance into
+      -count: the number of instances with these same details you would like to launch
+      -elastic-ip: a flag that if set to true, will assign an Elastic Ip Address to 
+         this instance. This allows you to reach the instance from outside of the VPC.
+         * AWS has a default of 5 EIPs per account. For more info, see: 
+	   http://aws.amazon.com/contact-us/eip_limit_request/
+      -private-key-ref: The Key Pair (SSH key) that the instance will be accessable by.
+         You can find these in your AWS account. This is also the key that will be used 
+         to run the SSH Post Create Actions.
+      -image-size: The size, or type, of the instance you want to create. 
+         valid values: m1.small, c1.medium, m1.medium, m1.large, m1.xlarge, m2.xlarge, 
+         m2.2xlarge, m2.4xlarge, c1.xlarge
+         For more info, see: 
+	 http://aws.amazon.com/ec2/instance-types/
+      -load-balancer: the name of the load balancer the instance will be registered with
+
+    o security-group-ref: This is just a reference to the Security Group you would like 
+      to apply to the instance. You can have multiple of these.
     
-    boot-actions:
-    script:
-    param:
+    o boot-actions: This is a list of actions that will be run at FIRST BOOT of the instance.
+      These actions are run as root and are referered to as User-Data by Amazon. This 
+      will automatically convert the script to Base64 as required by Amazon. The whole
+      user-data script (but not including the contents of external scripts) will be resolved
+      for any properties that may show up. Script can be 16KB max.
+      -shell: This is the shell that the user-data script will be run with.
+
+    o script: This is a action that will grab a script from the given URL and run it with the 
+      specified shell. This grabs the script using 'wget'. You can have multiple script 
+      elements.
+
+    o param: These are parameters for a given script. They will be ran in order from first 
+        to last defined. 
     
-    post-create-actions:
-    ssh:
+    o post-create-actions: This contains all the actions to be ran after the instance has 
+      fully started.
 
-    load-balancer:
-    lister:
+    o ssh: Connects to an instance via ssh. The instance should have an Elastic Ip, allowing
+      outside traffic in, along with allowing inbound traffic on port 22. you must also have
+      the .pem file used to launch the instance in your ~/.terraform directory in order for
+      terraform to be able to connect to the instance. The specified user to connect as must
+      also use the same ssh key.
 
-    health-check:
+    o load-balancer: An Elastic Load Balancer by Amazon for load balancing instances.
+        -name: the name of the load balancer. MUST BE UNIQUE ON YOUR AWS ACCOUNT!
+        -subnet-name: the subnet to associate with the load balancer
+        -app-cookie-name: the name of the cookie your application uses. You can leave
+           this blank if you want the load balancer to handle the cookies.
+
+    o listener: This specified how the load balancer should balance the loads
+         -protocol: Valid values: http, https, tcp, ssh
+         -instance-port: The port on the instance to send traffic to
+         -load-balancer-port: The port on the load balancer to listen for traffic
+         -cert-id: Use only if you are using a secure protocol
+
+    o health-check: This is how the load balancer determines whether or not an 
+        instance is health and can accept traffic or not. The instance must 
+        return a status 200 OK in order to be considered a successful check.
+        -interval: the frequency of checks on instances
+        -timeout: how long before a check on the instance will timeout
+        -unhealthy-count: How many consecutive checks before an instance is determined
+           to be unhealthy
+        -healthy-count: How many consecuctive checks before an instance is determined 
+           to be healthy
+        -protocol: the protocol on which to check the instance
+        -port: the port to check the instance on
+        -path: the path on the instance to check
+
+* For more information on any of these elements, check the Amazon Web Services
+documentation. 
 
   -----------
   Other Notes
