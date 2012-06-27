@@ -226,6 +226,7 @@
             <zipfileset dir="." prefix="${project}">
                 <include name="README"/>
                 <include name="LICENSE"/>
+                <include name="DEPENDENCIES"/>
                 <include name="build.xml"/>
             </zipfileset>
             <zipfileset dir="${src.dir}" prefix="${project}/src">
@@ -254,6 +255,7 @@
             <zipfileset dir="." prefix="${project}">
                 <include name="README"/>
                 <include name="LICENSE"/>
+                <include name="DEPENDENCIES"/>
             </zipfileset>
             <zipfileset dir="${dist.dir}" prefix="${project}">
                <include name="terraform.jar"/>
@@ -266,7 +268,7 @@
                <include name="**/*"/>
             </zipfileset>
             <zipfileset dir="${lib.dir}" prefix="${project}/lib">
-               <include name="**/*.jar"/>
+               <include name="*.jar"/>
             </zipfileset>
         </zip>
     </target>

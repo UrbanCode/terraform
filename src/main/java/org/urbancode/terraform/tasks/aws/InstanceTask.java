@@ -48,7 +48,8 @@ public class InstanceTask extends Task {
     private AWSHelper helper;
     protected ContextAWS context;
     
-    private boolean elasticIp;
+    // by default, do not assign an EIP
+    private boolean elasticIp = false;
     
     private String name;
     private String instanceId;
@@ -213,10 +214,10 @@ public class InstanceTask extends Task {
         return amiId;
     }
     
-    //----------------------------------------------------------------------------------------------
-    public String getSubnetId() {
-        return subnetId;
-    }
+//    //----------------------------------------------------------------------------------------------
+//    public String getSubnetId() {
+//        return subnetId;
+//    }
     
     //----------------------------------------------------------------------------------------------
     public String getSubnetName() {
@@ -389,8 +390,22 @@ public class InstanceTask extends Task {
             
             log.info("Instance is being launched with following user-data script:\n\n" + userData);
             
+            String size = sizeType;
+            if (size == null || size.isEmpty()) {
+                log.warn("No instance size specified. Default to m1.small");
+                size = "m1.small";
+            }
+            
+            // TODO - make this format check better
+            if (size.indexOf(".") == -1) {
+                size = null;
+            }
+            
             String keyPair = keyRef;
-            String size = context.getSizeByName(sizeType.toLowerCase());
+            if (keyPair == null || keyPair.isEmpty()) {
+                log.warn("No key-pair specified. You may not be able to connect to instance " + name);
+            }
+            
             
             if (!verified) {
                 setId(null);
@@ -411,7 +426,13 @@ public class InstanceTask extends Task {
                     }
                 }
                 
-                // set the instanceId
+                if (amiId == null) {
+                    String msg = "No AMI ID specified for instance " + name + ". There is no image to use.";
+                    log.fatal(msg);
+                    throw new EnvironmentCreationException(msg);
+                }
+                
+                // launch the instance and set the Id
                 instanceId = helper.launchAmi(amiId, subnetId, keyPair, size, userData, groupIds, blockMaps, ec2Client);
                 
                 // wait for instance to start and pass status checks
