@@ -248,6 +248,7 @@ Amazon Web Services
 
 
     The following is a list of elements available in the xml:
+	[ The hierarchy represents which elements go under which in the xml ]
 
     o context: The context holds the whole environment. It has one attribute, xmlns, 
       which specified which package to look in for the map of element name to 
