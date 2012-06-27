@@ -20,6 +20,8 @@
         </not>
     </condition>
 
+    <available file="dependencies.xml" property="dep.xml.present"/>
+
     <!-- ==================================================================
          PROJECT CONFIGURATION 
          ================================================================== -->
@@ -51,10 +53,16 @@
     <property name="lib.dir" location="lib" />
     <property name="lib.test.dir" location="lib/test" />
 
+    <property name="conf.dir" location="conf" />
+
+    <property name="bin.dir" location="bin" />
+
     <!-- ==================================================================
          LOCATIONS OF BUILD ARTIFACTS
          ================================================================== -->
     <property name="dist.dir" location="dist" />
+    <property name="dist.src.dir" location="${dist.dir}/dist-src" />
+    <property name="dist.bin.dir" location="${dist.dir}/dist-bin" />
     <property name="dist.test.dir" location="${dist.dir}/test" />
     <property name="dist.cobertura.dir" location="${dist.dir}/cobertura" />
 
@@ -120,7 +128,7 @@
     <!-- ==================================================================
          ARTIFACT HANDLING
          ================================================================== -->
-    <target name="resolve" unless="resolve.no" 
+    <target name="resolve" if="dep.xml.present" unless="resolve.no" 
             description="Resolve all dependencies">
             <mkdir dir="${lib.dir}"/>
             <mkdir dir="${lib.test.dir}"/>
@@ -205,7 +213,61 @@
     <!-- ==================================================================
          DIST
          ================================================================== -->
-    <target name="dist-main" depends="jar-main"/>
+    <target name="dist-main" depends="dist-src, dist-bin">
+    </target>
+
+    <!-- ==================================================================
+         DIST-SRC
+         ================================================================== -->
+    <target name="dist-src" depends=""
+            description="Generate source distribution">
+        <zip destfile="${dist.src.dir}/${project}-src-dist.zip">
+            <zipfileset dir="." prefix="${project}">
+                <include name="README"/>
+                <include name="LICENSE"/>
+                <include name="build.xml"/>
+            </zipfileset>
+            <zipfileset dir="${src.dir}" prefix="${project}/src">
+               <include name="**/*"/>
+            </zipfileset>
+            <zipfileset dir="${bin.dir}" prefix="${project}/bin"
+                        filemode="755">
+               <include name="terraform"/>
+            </zipfileset>
+            <zipfileset dir="${conf.dir}" prefix="${project}/conf">
+               <include name="**/*"/>
+            </zipfileset>
+            <zipfileset dir="${lib.dir}" prefix="${project}/lib">
+               <include name="**/*.jar"/>
+            </zipfileset>
+        </zip>
+    </target>
+
+    <!-- ==================================================================
+         DIST-BIN
+         ================================================================== -->
+    <target name="dist-bin" depends="jar-main"
+            description="Generate binary distribution">
+        <zip destfile="${dist.bin.dir}/${project}-bin-dist.zip">
+            <zipfileset dir="." prefix="${project}">
+                <include name="README"/>
+                <include name="LICENSE"/>
+            </zipfileset>
+            <zipfileset dir="${dist.dir}" prefix="${project}">
+               <include name="terraform.jar"/>
+            </zipfileset>
+            <zipfileset dir="${bin.dir}" prefix="${project}/bin"
+                        filemode="755">
+               <include name="terraform"/>
+            </zipfileset>
+            <zipfileset dir="${conf.dir}" prefix="${project}/conf">
+               <include name="**/*"/>
+            </zipfileset>
+            <zipfileset dir="${lib.dir}" prefix="${project}/lib">
+               <include name="**/*.jar"/>
+            </zipfileset>
+        </zip>
+    </target>
 
     <!-- ==================================================================
          TEST
