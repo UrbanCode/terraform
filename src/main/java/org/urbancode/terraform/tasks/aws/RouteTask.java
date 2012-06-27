@@ -54,10 +54,10 @@ public class RouteTask extends SubTask {
         return routeId;
     }
 
-    //----------------------------------------------------------------------------------------------
-    public String getRouteTableId() {
-        return routeTableId;
-    }
+//    //----------------------------------------------------------------------------------------------
+//    public String getRouteTableId() {
+//        return routeTableId;
+//    }
     
     //----------------------------------------------------------------------------------------------
     public String getTarget() {

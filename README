@@ -1,211 +1,246 @@
-Installation Instructions
-*************************
 
-terraform/
-├── bin/
-│   └── terraform
-├── dist/
-│   └── terraform.jar
-├── conf/
-│   ├── log4j.properties
-│   ├── ippool.conf
-│   ├── dhcpd.conf
-│   ├── dhcpd.conf.temp
-│   ├── interfaces
-│   ├── interfaces.temp
-│   ├── iptables.conf
-│   ├── iptables.conf.temp
-│   ├── isc-dhcp-server
-│   └── isc-dhcp-server.temp
-├── lib/
-│   └── *.jar
-├── LICENSE
-└── README
+**************************************************
+  _____ ___ ___ ___    _   ___ ___  ___ __  __ 
+ |_   _| __| _ \ _ \  /_\ | __/ _ \| _ \  \/  |
+   | | | _||   /   / / _ \| _| (_) |   / |\/| |
+   |_| |___|_|_\_|_\/_/ \_\_| \___/|_|_\_|  |_|
+
+**************************************************                                              
+
+
+Installation Instructions
+**************************************************
+
+ Need:
+   Java
+   vmrun (only for VMware environments)
+   Apache Ant (for building) 
+
+
+    To use the VMware portion of Terraform, you will need to have access to
+  a VCenter server.
+
+    To use the Amazon Web Services portion of Terraform, you will need to have 
+  an AWS Account with the EC2 services. This service is free, but see Amazon
+  for limitations.
+      ( to get an AWS account: https://console.aws.amazon.com/console/home )
+
+
+
+Building Terraform
+======================================
+Set your current working directory to the extracted terraform directory.
+To build terraform, run:
+     $ ant dist
+
 
 
 Basic Installation
-===================
- 	You will find a shell script in terraform/bin. This is used
+======================================
+ You will find a shell script in terraform/bin. This is used
  to run Terraform. 
 
-How to run terraform: 
- terraform [create/destory] [input-xml-file] [input-credentials-file] [prop1=val1 prop2=val2 ...]
+  How to run terraform: 
+    terraform [create/destory] [input-xml-file] [input-credentials-file] [prop1=val1 prop2=val2 ...]
 
- 
-	If using any Post Create Actions on an Amazon Web Services instance, include the used 
-key-pair (.pem) file(s) from Amazon in ~/.terraform
+  The Amazon Web Services Templates do not require any properties. 
+    For more information on the AWS portion of Terraform, see the AWS section below.
 
-
-Credentials
-===================
+  The VMware Templates require specific properties. See below for more details.
+    For more information on the VMware portion of Terraform, see the VMware section below.
 
 
 
 VMware
-===================
-To create a new vmware template - clones are not in a private network
-All vmware templates must include this:
+======================================
 
-<context
-xmlns="org.urbancode.terraform.tasks.vmware">
-    <environment 
-    name="terra-env" 
-    folder-name="terra-folder">
-    </environment>
-</context>
+  Example command line call to Terraform with a VMware template:
 
-To add clones, insert "clone" elements in to the environment element. Clone elements look like this:
-
-<clone instance-name="instance-1"
-          order="1"
-          image-path="/mydatacenter/myimagefolder/linux-clone-image"
-          snapshot-name="my-snapshot"
-          server-count="1">
-</clone>
-
-Required attributes on a clone element: instance-name(string), order(positive int), image-path(string), snapshot-name(string), user(string), password(string)
-If no server count attribute is specified it will default to "1". User and password should be a valid login on the VM. 
-The order attribute distinguishes the order VMs will be created - lowest to highest. If clones have the same number they are created in parallel. The order in which they complete can be unpredictable.
-
-Terraform also supports multiple different clone elements - useful if you want them to have different name prefixes or orders in which they are created.
-
-An important note about vSphere images: they should be virtual machines, not templates, with at least one snapshot on them.
-
-For creating a private netowrk, include a network element in the environment for each subnet.
-
-<network network-name="my-net-web" port-count="32"/>
-
-A network element must have a network-name(string) and a port-count(int). This creates a virtual switch and port group.
-
-All cloness on the private network must have a network-ref element pertaining to the proper network, referenced by name.
-
-<network-ref network-name="my-net-web" nic-index="1"/>
-
-The name should be the same as the network name they are on. The nic-index corresponds to the network card which will be on the network.
-
-If you are creating a router to use for the private network, you must use a Linux image that can act as a router.
-You must also include these elements on the clone:
-
-<post-create-task/>
-<event-listener/>
-
-These elements will configure the networking files on the router. It's highly recommended that the router be created BEFORE any clones that are on its network (specify using the order attribute).
-In addition, for any non-router clone on the router, add this attribute: assign-host-ip="true" . This will tell the clone to get its IP from the router instead of from your DHCP service.
-
-By default, on a private network, all incoming traffic to ports on the network are blocked. You can open ports by adding a security group element to the environment.
-
-<security-group name="default-group">
-    <port-range first-port="22" last-port="22"/>
-    <port-range first-port="80" last-port="80"/>
-    <port-range first-port="3306" last-port="3306"/>
-    <port-range first-port="8080" last-port="9090"/>
-</security-group>
-
-This security group will open ports 22, 80, 3306, and 8080-9090 on any instance that references this security group. To reference a security group on a clone, add this element to the clone:
-
-<security-group-ref name="default-group"/>
-
-The name should be equal to the security group name. This feature only works if you have a router in your template.
-
-Finally, an example template with a private network, an application server, and a database server:
-
-<?xml version="1.0" encoding="UTF-8"?>
-<context
-xmlns="org.urbancode.terraform.tasks.vmware">
-    <environment 
-    name="terra-env" 
-    folder-name="terra-folder">
-        
-        <network network-name="my-net-web" port-count="32"/>
-        <security-group name="default-group">
-            <port-range first-port="22" last-port="22"/>
-            <port-range first-port="80" last-port="80"/>
-            <port-range first-port="3306" last-port="3306"/>
-            <port-range first-port="8080" last-port="9090"/>
-        </security-group>
-    
-        <clone instance-name="router-1"
-                  order="1"
-                  image-path="/mydatacenter/myimagefolder/router-image"
-                  snapshot-name="my-snapshot">
-            <network-ref network-name="my-net-web" nic-index="1"/>
-            <post-create-task/>
-            <event-listener/>
-        </clone>
-                  
-        <clone instance-name="app-instance-1"
-                  order="2"
-                  image-path="/mydatacenter/myimagefolder/linux-clone-image"
-                  snapshot-name="my-snapshot"
-                  assign-host-ip="true"
-                  server-count="1">
-            <security-group-ref name="default-group"/>
-            <network-ref network-name="my-net-web" nic-index="0"/>
-        </clone>
-        
-        <clone instance-name="db-instance-1"
-                  order="2"
-                  image-path="/mydatacenter/myimagefolder/linux-clone-image"
-                  snapshot-name="my-snapshot"
-                  assign-host-ip="true"
-                  server-count="1">
-            <security-group-ref name="default-group"/>
-            <network-ref network-name="my-net-web" nic-index="0"/>
-        </clone>
-        
-    </environment>
-</context>
+  terraform create vmware-template.xml vmware-1.key datacenter=my-datacenter host.name=my-host.mysite.com datastore=my-datastore destination=path/to/  my-destination/folder
+  
+  To destroy an instance:
+  
+  Call terraform.sh with the following arguments:
+  First argument: destroy
+  Second argument: the xml instance file generated when you created your instance (NOT the original template)
+  Third argument: the credentials file
+  
+  No properties are required to destroy an instance.
+  Example command line call to Terraform:
+  
+  terraform destroy terra-env-1234.xml vmware-1.key
+  
+  This will power down the VMs, delete them, delete the folder that Terraform created, and delete any virtual switches it created.
+  To create a new vmware template - clones are not in a private network
 
 
-How to create credentials
-A credentials file is a text file ending in a .key suffix. It contains name=value pairs separated by lines.
-Example file - creds-example.key
+  -----------
+  Templates
+  -----------
 
-Contents:
+  All vmware templates must include this:
 
-type=org.urbancode.terraform.credentials.vmware.CredentialsVmware
-name=my.vmware.creds
-username=my-vcenter-user
-password=my-vcenter-password
-url=https://vcenter.mysite.com/sdk
+  <context
+  xmlns="org.urbancode.terraform.tasks.vmware">
+      <environment 
+      name="terra-env" 
+      folder-name="terra-folder">
+      </environment>
+  </context>
 
-For vmware, the "type", "name", "username", "password", and "url" properties are all mandatory.
-Name is just whatever you want to name your credentials. Should not contain spaces.
-Username is your vcenter login name.
-Password is your vcenter password.
-Url is the url pointing to your vcenter server, followed by a /sdk suffix.
+  To add clones, insert "clone" elements in to the environment element. Clone elements look like this:
+  
+  <clone instance-name="instance-1"
+            order="1"
+            image-path="/mydatacenter/myimagefolder/linux-clone-image"
+            snapshot-name="my-snapshot"
+            server-count="1">
+  </clone>
+  
+  Required attributes on a clone element: instance-name(string), order(positive int), image-path(string), 
+  snapshot-name(string), user(string), password(string)
+  If no server count attribute is specified it will default to "1". User and password should be a valid 
+  login on the VM. 
+  The order attribute distinguishes the order VMs will be created - lowest to highest. If clones have the 
+  same number they are created in parallel. The order in which they complete can be unpredictable.
+  
+  Terraform also supports multiple different clone elements - useful if you want them to have different 
+  name prefixes or orders in which they are created.
+  
+  An important note about vSphere images: they should be virtual machines, not templates, with at least 
+  one snapshot on them.
+  
+  For creating a private netowrk, include a network element in the environment for each subnet.
+  
+  <network network-name="my-net-web" port-count="32"/>
+  
+  A network element must have a network-name(string) and a port-count(int). This creates a virtual 
+  switch and port group.
+  
+  All cloness on the private network must have a network-ref element pertaining to the proper network,
+  referenced by name.
+  
+  <network-ref network-name="my-net-web" nic-index="1"/>
+  
+  The name should be the same as the network name they are on. The nic-index corresponds to the network 
+  card which will be on the network.
+  
+  If you are creating a router to use for the private network, you must use a Linux image that can act 
+  as a router.
+  
+  You must also include these elements on the clone:
+  <post-create-task/>
+  <event-listener/>
+  
+  These elements will configure the networking files on the router. It's highly recommended that the 
+  router be created BEFORE any clones that are on its network (specify using the order attribute).
+  In addition, for any non-router clone on the router, add this attribute: assign-host-ip="true" . 
+  This will tell the clone to get its IP from the router instead of from your DHCP service.
+  
+  By default, on a private network, all incoming traffic to ports on the network are blocked. You can 
+  open ports by adding a security group element to the environment.
+  
+  <security-group name="default-group">
+      <port-range first-port="22" last-port="22"/>
+      <port-range first-port="80" last-port="80"/>
+      <port-range first-port="3306" last-port="3306"/>
+      <port-range first-port="8080" last-port="9090"/>
+  </security-group>
+  
+  This security group will open ports 22, 80, 3306, and 8080-9090 on any instance that references 
+  this security group. To reference a security group on a clone, add this element to the clone:
+  
+  <security-group-ref name="default-group"/>
+  
+  The name should be equal to the security group name. This feature only works if you have a 
+  router in your template.
+  
+  Finally, an example template with a private network, an application server, and a database server:
+  
+  <?xml version="1.0" encoding="UTF-8"?>
+  <context
+  xmlns="org.urbancode.terraform.tasks.vmware">
+      <environment 
+      name="terra-env" 
+      folder-name="terra-folder">
+          
+          <network network-name="my-net-web" port-count="32"/>
+          <security-group name="default-group">
+              <port-range first-port="22" last-port="22"/>
+              <port-range first-port="80" last-port="80"/>
+              <port-range first-port="3306" last-port="3306"/>
+              <port-range first-port="8080" last-port="9090"/>
+          </security-group>
+      
+          <clone instance-name="router-1"
+                    order="1"
+                    image-path="/mydatacenter/myimagefolder/router-image"
+                    snapshot-name="my-snapshot">
+              <network-ref network-name="my-net-web" nic-index="1"/>
+              <post-create-task/>
+              <event-listener/>
+          </clone>
+                    
+          <clone instance-name="app-instance-1"
+                    order="2"
+                    image-path="/mydatacenter/myimagefolder/linux-clone-image"
+                    snapshot-name="my-snapshot"
+                    assign-host-ip="true"
+                    server-count="1">
+              <security-group-ref name="default-group"/>
+              <network-ref network-name="my-net-web" nic-index="0"/>
+          </clone>
+          
+          <clone instance-name="db-instance-1"
+                    order="2"
+                    image-path="/mydatacenter/myimagefolder/linux-clone-image"
+                    snapshot-name="my-snapshot"
+                    assign-host-ip="true"
+                    server-count="1">
+              <security-group-ref name="default-group"/>
+              <network-ref network-name="my-net-web" nic-index="0"/>
+          </clone>
+          
+      </environment>
+  </context>
 
-Vmware environments have 4 required properties when creating an environment. EC2 environments have none. Here are the four required properties for vmware that must be passed in the command line arguments:
 
-datacenter=my-datacenter
-host.name=my-host.mysite.com
-destination=path/to/my-destination/folder
-datastore=my-datastore
+  -----------
+  Credentials
+  -----------
+  A credentials file is a text file ending in a .key suffix. It contains name=value pairs 
+  separated by lines.
 
-These correspond to the vSphere datacenter name, the name of the host the VMs will be created on, the destination folder for the environment folder, and the datastore for the VMs.
+  Example file - creds-example.key
+  Contents:
 
-Example command line call to Terraform:
+  type=org.urbancode.terraform.credentials.vmware.CredentialsVmware
+  name=my.vmware.creds
+  username=my-vcenter-user
+  password=my-vcenter-password
+  url=https://vcenter.mysite.com/sdk
+  
+  For vmware, the "type", "name", "username", "password", and "url" properties are all mandatory.
+  Name is just whatever you want to name your credentials. Should not contain spaces.
+  Username is your vcenter login name.
+  Password is your vcenter password.
+  Url is the url pointing to your vcenter server, followed by a /sdk suffix.
+  
+  Vmware environments have 4 required properties when creating an environment. EC2 environments have none.
+  Here are the four required properties for vmware that must be passed in the command line arguments:
 
-./terraform.sh create vmware-template.xml vmware-1.key datacenter=my-datacenter host.name=my-host.mysite.com datastore=my-datastore destination=path/to/my-destination/folder
+  datacenter=my-datacenter
+  host.name=my-host.mysite.com
+  destination=path/to/my-destination/folder
+  datastore=my-datastore
 
-To destroy an instance:
-
-Call terraform.sh with the following arguments:
-First argument: destroy
-Second argument: the xml instance file generated when you created your instance (NOT the original template)
-Third argument: the credentials file
-
-No properties are required to destroy an instance.
-Example command line call to Terraform:
-
-./terraform.sh destroy terra-env-1234.xml vmware-1.key
-
-This will power down the VMs, delete them, delete the folder that Terraform created, and delete any virtual switches it created.
+  These correspond to the vSphere datacenter name, the name of the host the VMs will be created on, the 
+  destination folder for the environment folder, and the datastore for the VMs.
 
 
 
 Amazon Web Services 
-===================
+======================================
 
   -----------
   Credentials
@@ -277,15 +312,17 @@ Amazon Web Services
           o route-table: Each VPC has a "Main" route table that cannot be deleted. Route 
             Tables can be associated with a single subnet subnet. There can only be one
             "default" Route Table, which all new subnets will use if no Route Table is
-            specified.
+            specified. The default Route Table will attempt to make a Route to allow 
+	    instances to reach the internet if an Internet Gateway exists. 
+	    
 
             o route: Routes are elements of a Route Table. They contain a target, which can
               be an Internet Gateway, a NAT (a specially configured instance), or an ENI 
               (Elastic Network Interface). They also contain a destination, which is 
               described by a CIDR block. 
 
-      * For more information on Route Tables and Routes, see: 
-        http://docs.amazonwebservices.com/AmazonVPC/latest/UserGuide/VPC_Routing.html        
+	      * For more information on Route Tables and Routes, see: 
+		http://docs.amazonwebservices.com/AmazonVPC/latest/UserGuide/VPC_Routing.html        
 
 
           o vpc-security-group: A Security Group essentially acts as a firewall. They can 
@@ -318,6 +355,11 @@ Amazon Web Services
              For more info, see: 
 	     http://aws.amazon.com/ec2/instance-types/
           -load-balancer: the name of the load balancer the instance will be registered with
+          -priority: This is the order in which the instance will be launched in. The instances
+             with the lowest priority will be completely launched first. This means that the 
+             instance will hit the 'running' state, the 'ok' status, all boot-actions will be 
+             ran, then the post-create-actions will be ran. You can have multiple instances 
+             with the same priority and they will all be launched at once.
 
           o security-group-ref: This is just a reference to the Security Group you would like 
             to apply to the instance. You can have multiple of these.
@@ -340,10 +382,8 @@ Amazon Web Services
             fully started.
 
             o ssh: Connects to an instance via ssh. The instance should have an Elastic Ip, allowing
-              outside traffic in, along with allowing inbound traffic on port 22. you must also have
-              the .pem file used to launch the instance in your ~/.terraform directory in order for
-              terraform to be able to connect to the instance. The specified user to connect as must
-              also use the same ssh key.
+              outside traffic in, along with allowing inbound traffic on port 22. 
+		* include any used key-pair files obtained from Amazon (.pem) in ~/.terraform/
 
         o load-balancer: An Elastic Load Balancer by Amazon for load balancing instances.
             -name: the name of the load balancer. MUST BE UNIQUE ON YOUR AWS ACCOUNT!
@@ -371,41 +411,39 @@ Amazon Web Services
               -path: the path on the instance to check
 
 * For more information on any of these elements, check the Amazon Web Services
-documentation. 
+documentation at: http://aws.amazon.com/documentation/ec2/
 
   -----------
   Other Notes
   -----------
 	Check the example AWS template in the example-config/xml-templates
-for more information on creating templates.
+     for more information on creating templates.
 
 	In order for any Post Create Actions to run on an Amazon EC2 
-instance, the instance must have an Elastic Ip Address assigned 
-to it. You must also have the key-pair (ssh key) that the instance 
-was created with in your ~/.terraform directory. 
+     instance, the instance must have an Elastic Ip Address assigned 
+     to it. You must also have the key-pair (ssh key) that the instance 
+     was created with in your ~/.terraform directory. 
 	The Elastic Ip Address is neccessary since the instances are 
-launched inside of a Virtual Private Cloud. The EIP allows you to 
-communicate with those instances from outside of the VPC.
-File Information
+     launched inside of a Virtual Private Cloud. The EIP allows you to 
+     communicate with those instances from outside of the VPC.
+     File Information
 	The key-pair file is needed for connecting to the server. You
-must also know what user that key-pair was associated with. This is 
-determined when the AMI (Amazon Machine Image) is created. 
+     must also know what user that key-pair was associated with. This is 
+     determined when the AMI (Amazon Machine Image) is created. 
 
 
 
 Conf File Information
-===================
+======================================
 
  [  Global  ]
 
 
  * log4j.properties
   This file contains the properties used to configure logging. 
- ____________
  
  
  [   AWS    ]
- ____________
  
  
  [  VMware  ]
@@ -442,8 +480,6 @@ Conf File Information
  The only required content of this file is one line, as below
  INTERFACES="eth1 eth2"
  Quotation marks included. All network interfaces to be served DHCP addresses should be listed, separated by one space.
- 
- ____________
   
+======================================
 
-===================
