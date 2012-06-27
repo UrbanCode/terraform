@@ -221,6 +221,7 @@
          ================================================================== -->
     <target name="dist-src" depends=""
             description="Generate source distribution">
+	<mkdir dir="${dist.src.dir}"/>
         <zip destfile="${dist.src.dir}/${project}-src-dist.zip">
             <zipfileset dir="." prefix="${project}">
                 <include name="README"/>
@@ -248,6 +249,7 @@
          ================================================================== -->
     <target name="dist-bin" depends="jar-main"
             description="Generate binary distribution">
+	<mkdir dir="${dist.bin.dir}"/>
         <zip destfile="${dist.bin.dir}/${project}-bin-dist.zip">
             <zipfileset dir="." prefix="${project}">
                 <include name="README"/>
