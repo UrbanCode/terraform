@@ -120,14 +120,12 @@ public class HealthCheckTask extends SubTask {
     //----------------------------------------------------------------------------------------------
     @Override
     public void create() {
-        // TODO Auto-generated method stub
         
     }
 
     //----------------------------------------------------------------------------------------------
     @Override
     public void destroy() {
-        // TODO Auto-generated method stub
         
     }
     
