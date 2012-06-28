@@ -120,11 +120,10 @@ public class SshTask extends SubTask {
     public String getCmds() {
         return cmds;
     }
-
-    //----------------------------------------------------------------------------------------------
-    @Override
-    public void create() 
-    throws PostCreateException {
+    
+    private SshConnection startSshConnection() 
+    throws PostCreateException, JSchException {
+        SshConnection result = null;
         
         // see if we have anything to connect to
         if (host == null || host.isEmpty()) {
@@ -140,29 +139,37 @@ public class SshTask extends SubTask {
             throw new PostCreateException(msg);
         }
         
-        SshConnection ssh = null;
-        SshHelper sshHelper = new SshHelper();
-        
-        try {
-            // are we connecting with a id-file?
-            if (idFilePath != null && !idFilePath.isEmpty()) {
-                File idFile = new File(idFilePath);
-                if (idFile.exists() && idFile.isFile() && idFile.canRead()) {
-                    ssh = new SshConnection(host, user, idFile);
-                }
-                else {
-                    log.error("Unable to read file: " + idFile);
-                }
+        // are we connecting with a id-file?
+        if (idFilePath != null && !idFilePath.isEmpty()) {
+            File idFile = new File(idFilePath);
+            if (idFile.exists() && idFile.isFile() && idFile.canRead()) {
+                result = new SshConnection(host, user, idFile);
             }
-            // or are we connecting with a password?
-            else if (pass != null && !pass.isEmpty()) {
-                ssh = new SshConnection(host, user, pass);
-            }
-            // we can't connect without either an id-file or password
             else {
-                log.error("No id file or password specifed. No way to connect to instance " + host);
+                log.error("Unable to read file: " + idFile);
             }
-            
+        }
+        // or are we connecting with a password?
+        else if (pass != null && !pass.isEmpty()) {
+            result = new SshConnection(host, user, pass);
+        }
+        // we can't connect without either an id-file or password
+        else {
+            log.error("No id file or password specifed. No way to connect to instance " + host);
+        }
+        
+        return result;
+    }
+
+    //----------------------------------------------------------------------------------------------
+    @Override
+    public void create() 
+    throws PostCreateException {
+        
+        SshConnection ssh = null;
+        try {
+            SshHelper sshHelper = new SshHelper();
+            ssh = startSshConnection();
             // see if we made a connection
             if (ssh == null) {
                 log.error("Attempted SSH connection: " + user + "@" + host + " || password: " + pass 
@@ -196,11 +203,9 @@ public class SshTask extends SubTask {
                     break;
                 }
                 Thread.sleep(1000);
-        }
-        
-        log.debug("Command out: " + outputText);
-        log.debug("Command err: " + errorText);
-                
+            }
+            log.debug("Command out: " + outputText);
+            log.debug("Command err: " + errorText);
         } 
         catch (RemoteException e) {
             log.error("Timeout while waiting for port: " + port + " on host: " + host, e);
