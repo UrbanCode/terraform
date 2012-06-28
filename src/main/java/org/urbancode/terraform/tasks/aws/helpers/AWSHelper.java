@@ -878,6 +878,13 @@ public class AWSHelper {
     }
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * 
+     * @param routeTableId
+     * @param subnetId
+     * @param ec2Client
+     * @return
+     */
     public String associateRouteTableWithSubnet(String routeTableId, String subnetId, AmazonEC2 ec2Client) {
         AssociateRouteTableRequest request = new AssociateRouteTableRequest()
                                                   .withRouteTableId(routeTableId)
@@ -889,6 +896,12 @@ public class AWSHelper {
     }
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * 
+     * @param vpcId
+     * @param ec2Client
+     * @return
+     */
     public String createRouteTable(String vpcId, AmazonEC2 ec2Client) {
         CreateRouteTableRequest request = new CreateRouteTableRequest()
                                                .withVpcId(vpcId);
@@ -899,6 +912,11 @@ public class AWSHelper {
     }
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * 
+     * @param routeTableId
+     * @param ec2Client
+     */
     public void deleteRouteTable(String routeTableId, AmazonEC2 ec2Client) {
         DeleteRouteTableRequest request = new DeleteRouteTableRequest()
                                                .withRouteTableId(routeTableId);
@@ -906,6 +924,11 @@ public class AWSHelper {
     }
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * 
+     * @param associationId
+     * @param ec2Client
+     */
     public void disassociateRouteTableFromSubnet(String associationId, AmazonEC2 ec2Client) {
         DisassociateRouteTableRequest request = new DisassociateRouteTableRequest()
                                                      .withAssociationId(associationId);
@@ -913,6 +936,16 @@ public class AWSHelper {
     }
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * 
+     * @param groupId
+     * @param protocol
+     * @param startPort
+     * @param endPort
+     * @param cidr
+     * @param inbound
+     * @param ec2Client
+     */
     public void createRuleForSecurityGroup(String groupId, String protocol, int startPort,
                                                 int endPort, String cidr, boolean inbound,
                                                 AmazonEC2 ec2Client) {
@@ -943,6 +976,16 @@ public class AWSHelper {
     }
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * 
+     * @param groupId
+     * @param protocol
+     * @param startPort
+     * @param endPort
+     * @param cidr
+     * @param inbound
+     * @param ec2Client
+     */
     public void deleteRuleForSecurityGroup(String groupId, String protocol, int startPort,
                                                 int endPort, String cidr, boolean inbound,
                                                 AmazonEC2 ec2Client) {
@@ -967,6 +1010,14 @@ public class AWSHelper {
     }
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * 
+     * @param vpcId
+     * @param cidr
+     * @param zone
+     * @param ec2Client
+     * @return
+     */
     public String createSubnet(String vpcId, String cidr, String zone, AmazonEC2 ec2Client) {
         CreateSubnetRequest request = new CreateSubnetRequest()
                                            .withVpcId(vpcId)
@@ -979,6 +1030,11 @@ public class AWSHelper {
     }
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * 
+     * @param subnetId
+     * @param ec2Client
+     */
     public void deleteSubnet(String subnetId, AmazonEC2 ec2Client) {
         DeleteSubnetRequest request = new DeleteSubnetRequest()
                                            .withSubnetId(subnetId);
@@ -986,6 +1042,12 @@ public class AWSHelper {
     }
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * 
+     * @param subnetIds
+     * @param ec2Client
+     * @return
+     */
     public List<Subnet> describeSubnets(List<String> subnetIds, AmazonEC2 ec2Client) {
         DescribeSubnetsRequest request = new DescribeSubnetsRequest();
 
@@ -998,6 +1060,12 @@ public class AWSHelper {
     }
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * 
+     * @param groupIds
+     * @param ec2Client
+     * @return
+     */
     public List<SecurityGroup> describeSecurityGroups(List<String> groupIds, AmazonEC2 ec2Client) {
         DescribeSecurityGroupsRequest request = new DescribeSecurityGroupsRequest();
 
@@ -1010,6 +1078,14 @@ public class AWSHelper {
     }
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * 
+     * @param groupName
+     * @param vpcId
+     * @param descr
+     * @param ec2Client
+     * @return
+     */
     public String createSecurityGroup(String groupName, String vpcId, String descr, AmazonEC2 ec2Client) {
         CreateSecurityGroupRequest request = new CreateSecurityGroupRequest()
                                                   .withGroupName(groupName)
@@ -1021,6 +1097,11 @@ public class AWSHelper {
     }
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * 
+     * @param groupId
+     * @param ec2Client
+     */
     public void deleteSecurityGroup(String groupId, AmazonEC2 ec2Client) {
         DeleteSecurityGroupRequest request = new DeleteSecurityGroupRequest()
                                                   .withGroupId(groupId);
@@ -1028,6 +1109,12 @@ public class AWSHelper {
     }
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * 
+     * @param cidr
+     * @param ec2Client
+     * @return
+     */
     public String createVpc(String cidr, AmazonEC2 ec2Client) {
         CreateVpcRequest request = new CreateVpcRequest().withCidrBlock(cidr);
         CreateVpcResult result = ec2Client.createVpc(request);
@@ -1037,12 +1124,23 @@ public class AWSHelper {
     }
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * 
+     * @param vpcId
+     * @param ec2Client
+     */
     public void deleteVpc(String vpcId, AmazonEC2 ec2Client) {
         DeleteVpcRequest request = new DeleteVpcRequest().withVpcId(vpcId);
         ec2Client.deleteVpc(request);
     }
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * 
+     * @param gatewayIds
+     * @param ec2Client
+     * @return
+     */
     public List<InternetGateway> describeInternetGateways(List<String> gatewayIds, AmazonEC2 ec2Client) {
         DescribeInternetGatewaysRequest request = new DescribeInternetGatewaysRequest();
 
@@ -1055,6 +1153,12 @@ public class AWSHelper {
     }
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * 
+     * @param instanceIds
+     * @param ec2Client
+     * @return
+     */
     public List<Instance> describeInstances(List<String> instanceIds, AmazonEC2 ec2Client) {
         DescribeInstancesRequest request = new DescribeInstancesRequest();
 
@@ -1078,6 +1182,13 @@ public class AWSHelper {
     }
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * 
+     * @param routeIds
+     * @param routeTableId
+     * @param ec2Client
+     * @return
+     */
     public List<Route> describeRoutes(List<String> routeIds, String routeTableId, AmazonEC2 ec2Client) {
         List<String> routeTableIds = new ArrayList<String>();
         routeTableIds.add(routeTableId);
@@ -1088,6 +1199,13 @@ public class AWSHelper {
     }
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * 
+     * @param interfaceIds
+     * @param vpcId
+     * @param ec2Client
+     * @return
+     */
     public List<NetworkInterface> describeNetworkInterfaces(List<String> interfaceIds, String vpcId, AmazonEC2 ec2Client) {
         DescribeNetworkInterfacesRequest request = new DescribeNetworkInterfacesRequest();
 
@@ -1105,6 +1223,11 @@ public class AWSHelper {
     }
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * 
+     * @param attachIds
+     * @param ec2Client
+     */
     public void detachNetworkInterfaces(List<String> attachIds, AmazonEC2 ec2Client) {
         if (attachIds != null) {
             for (String attachId : attachIds) {
@@ -1116,6 +1239,11 @@ public class AWSHelper {
     }
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * 
+     * @param interfaceIds
+     * @param ec2Client
+     */
     public void deleteNetworkInterfaces(List<String> interfaceIds, AmazonEC2 ec2Client) {
         if (interfaceIds != null) {
             for (String interfaceId : interfaceIds) {
@@ -1127,6 +1255,13 @@ public class AWSHelper {
     }
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * 
+     * @param instanceId
+     * @param tag
+     * @param value
+     * @param ec2Client
+     */
     public void tagInstance(String instanceId, String tag, String value, AmazonEC2 ec2Client) {
         CreateTagsRequest request = new CreateTagsRequest();
         request = request.withResources(instanceId)
@@ -1185,6 +1320,12 @@ public class AWSHelper {
     }
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * 
+     * @param instanceId
+     * @param ec2Client
+     * @return
+     */
     public String getPrivateIp(String instanceId, AmazonEC2 ec2Client) {
         String privateIp = null;
 
