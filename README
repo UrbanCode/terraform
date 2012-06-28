@@ -50,13 +50,31 @@ Basic Installation
     For more information on the VMware portion of Terraform, see the VMware section below.
 
 
+Environment Templates
+======================================
+  Environment Template examples can be found in example-config/xml-templates
+
+  A template is the structure of an environment, the blueprints. They are formatted in xml
+  and have a required structure to them. The root element of every template must be <context>
+  and must have an xmlns attribute. Underneath the <context> must be an <environment> element.
+  What sits under the <environment> depends on the type of environment you want to create.
+  See each individual provider section below.
+
+  Properties can be used in the XML template with ${property.name} and. The properties are 
+  passed in as arguments on the command line (anything after the 3rd argument will be interpreted
+  as a property). 
+    e.g. if you set uDeploy.host=12.34.56.78 and uDeploy.port=7918, you can then use these 
+      with <param value="${uDeploy.host}"/> <param value="${uDeploy.host}"/>
+
+  Some properties are defined by the provider. See each provider's section below (VMware / AWS).
+
 
 VMware
 ======================================
 
   Example command line call to Terraform with a VMware template:
 
-  terraform create vmware-template.xml vmware-1.key datacenter=my-datacenter host.name=my-host.mysite.com datastore=my-datastore destination=path/to/  my-destination/folder
+  terraform create vmware-template.xml vmware-1.key datacenter=my-datacenter host.name=my-host.mysite.com datastore=my-datastore destination=path/to/ my-destination/folder
   
   To destroy an instance:
   
@@ -338,7 +356,10 @@ Amazon Web Services
               the rule to outbound traffic. 
 
         o instance: The representation of the EC2 instance that will be launched.
-          -name: the name of the instance
+          -name: the name of the instance. The number of the instance will be automatically
+             appended to the end of the instance name once it has been launched. 
+	     e.g. an instance with the name "web" and count "2" will launch instances:
+                  web00 and web01
           -ami-id: the id of of the Amazon Machine Image to use for the instance
           -subnet-name: the name of the subnet to launch the instance into
           -count: the number of instances with these same details you would like to launch
@@ -349,7 +370,8 @@ Amazon Web Services
           -private-key-ref: The Key Pair (SSH key) that the instance will be accessable by.
              You can find these in your AWS account. This is also the key that will be used 
              to run the SSH Post Create Actions.
-          -image-size: The size, or type, of the instance you want to create. 
+          -image-size: The size, or type, of the instance you want to create. VPCs currently
+             cannot support instances of size t1.micro.
              valid values: m1.small, c1.medium, m1.medium, m1.large, m1.xlarge, m2.xlarge, 
              m2.2xlarge, m2.4xlarge, c1.xlarge
              For more info, see: 
@@ -416,6 +438,17 @@ documentation at: http://aws.amazon.com/documentation/ec2/
   -----------
   Other Notes
   -----------
+	
+	When an instance is launched, two properties are set. One for 
+     the public ip address, and one for the private ip address. These
+     can be used with ${INSTANCENAME.public.ip} ${INSTANCENAME.private.ip}
+     e.g. If you launch an instance with name "web" and count "2", you can
+       access the ips of the two instances with these properties:
+         ${web00.private.ip} ${web01.public.ip} etc
+     Note: a public ip address (aka Elastic IP) will only be assigned if 
+       the elastic-ip flag on an instance is set to true.
+
+
 	Check the example AWS template in the example-config/xml-templates
      for more information on creating templates.
 

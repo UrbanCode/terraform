@@ -125,10 +125,26 @@ public class SshTask extends SubTask {
     @Override
     public void create() 
     throws PostCreateException {
+        
+        // see if we have anything to connect to
+        if (host == null || host.isEmpty()) {
+            String msg = "No host specified to connect to";
+            log.error(msg);
+            throw new PostCreateException(msg);
+        }
+        
+        // see if we have a user to connect as
+        if (user == null || user.isEmpty()) {
+            String msg = "No user specified to connect as for instance " + host;
+            log.error(msg);
+            throw new PostCreateException(msg);
+        }
+        
         SshConnection ssh = null;
         SshHelper sshHelper = new SshHelper();
         
         try {
+            // are we connecting with a id-file?
             if (idFilePath != null && !idFilePath.isEmpty()) {
                 File idFile = new File(idFilePath);
                 if (idFile.exists() && idFile.isFile() && idFile.canRead()) {
@@ -138,13 +154,16 @@ public class SshTask extends SubTask {
                     log.error("Unable to read file: " + idFile);
                 }
             }
+            // or are we connecting with a password?
             else if (pass != null && !pass.isEmpty()) {
                 ssh = new SshConnection(host, user, pass);
             }
+            // we can't connect without either an id-file or password
             else {
                 log.error("No id file or password specifed. No way to connect to instance " + host);
             }
             
+            // see if we made a connection
             if (ssh == null) {
                 log.error("Attempted SSH connection: " + user + "@" + host + " || password: " + pass 
                           + " || id-file: " + idFilePath);
@@ -154,8 +173,10 @@ public class SshTask extends SubTask {
             // resolve any props in the cmds
             cmds = context.resolve(cmds);
             
+            // wait until we can make a connection - default port is 22
             SshHelper.waitForPort(host, port); 
             
+            // run the commands
             ChannelExec channel = ssh.run(cmds);
             channel.getOutputStream().close();
             
@@ -165,6 +186,7 @@ public class SshTask extends SubTask {
             String outputText = output.get();
             String errorText = error.get();
             
+            // check the exit status of the commands
             while (true) {
                 if (channel.isClosed()) {
                     int exitCode = channel.getExitStatus();
