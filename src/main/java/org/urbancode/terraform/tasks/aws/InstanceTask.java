@@ -214,11 +214,6 @@ public class InstanceTask extends Task {
         return amiId;
     }
     
-//    //----------------------------------------------------------------------------------------------
-//    public String getSubnetId() {
-//        return subnetId;
-//    }
-    
     //----------------------------------------------------------------------------------------------
     public String getSubnetName() {
         return subnetName;

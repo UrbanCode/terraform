@@ -304,10 +304,6 @@ public class VpcTask extends Task {
         log.info("Destroying Vpc...");
         
         try {
-            // detach all gateways
-    //        helper.detachGateway(getInetGwy().getId(), vpcId, ec2Client);
-            // disassociate all route tables
-    
             helper.waitForPublicAddresses(ec2Client);
             
             getInetGwy().setVpcId(vpcId);
