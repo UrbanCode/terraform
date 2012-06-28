@@ -387,18 +387,22 @@ public class InstanceTask extends Task {
                 userData = getBootActions().getUserData();
                 userData = context.resolve(userData);
             }
-            
             log.info("Instance is being launched with following user-data script:\n\n" + userData);
             
             String size = sizeType;
-            if (size == null || size.isEmpty()) {
-                log.warn("No instance size specified. Default to m1.small");
-                size = "m1.small";
-            }
             
             // TODO - make this format check better
             if (size.indexOf(".") == -1) {
                 size = null;
+            }
+            if (size == null || size.isEmpty()) {
+                log.warn("No instance size specified. Default to m1.small");
+                size = "m1.small";
+            }
+            else if (size.equalsIgnoreCase("t1.micro")) {
+                size = "m1.small";
+                log.warn("Amazon does not support t1.micro instances in Virtual Private Clouds!" +
+                         "\nChanging size to " + size);
             }
             
             String keyPair = keyRef;
