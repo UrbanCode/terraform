@@ -88,6 +88,7 @@ import com.amazonaws.services.ec2.model.Image;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.InternetGateway;
 import com.amazonaws.services.ec2.model.IpPermission;
+import com.amazonaws.services.ec2.model.ModifyInstanceAttributeRequest;
 import com.amazonaws.services.ec2.model.NetworkInterface;
 import com.amazonaws.services.ec2.model.ReleaseAddressRequest;
 import com.amazonaws.services.ec2.model.Reservation;
@@ -670,12 +671,13 @@ public class AWSHelper {
     //----------------------------------------------------------------------------------------------
     /**
      * Creates a route with given info. Attach Id can be either an instance (as a NAT) or an
-     *  gateway.
+     *  gateway. I f the attachId is an instance (starts with "i-") then the src/destination check
+     *  on the instance will be disabled to allow it to act as a NAT.
      *
-     * @param routeTableId
-     * @param destCidr
-     * @param attachId
-     * @param ec2Client
+     * @param routeTableId the id of the route table to add this route to 
+     * @param destCidr 
+     * @param attachId of the instance or internet gateway
+     * @param ec2Client AmazonEC2 connection
      */
     public void createRoute(String routeTableId, String destCidr, String attachId, AmazonEC2 ec2Client) {
         CreateRouteRequest request = new CreateRouteRequest()
@@ -683,11 +685,56 @@ public class AWSHelper {
                                           .withRouteTableId(routeTableId);
         if (attachId.startsWith("i-")) {
             request = request.withInstanceId(attachId);
+            // disable src/dest check to allow instance to run as NAT
+            setSrcDestCheck(false, attachId, ec2Client);
         }
         else if (attachId.startsWith("igw-")) {
             request = request.withGatewayId(attachId);
         }
         ec2Client.createRoute(request);
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    /** 
+     * Modifies the instance's "SrcDestCheck" attribute
+     * Sets the source/destination check on an instance. The src/dest check only allows traffic meant 
+     * for the given instance. When you disable the src/dest check, the instance can then act as a NAT.
+     * 
+     * @param value true/false for the src/dest check
+     * @param attachId the id of the instance 
+     * @param ec2Client
+     */
+    public void setSrcDestCheck(boolean value, String attachId, AmazonEC2 ec2Client) {
+        String attribute = "SrcDestCheck";
+        String valueString = Boolean.toString(value);
+        modifyInstanceAttribute(attachId, attribute, valueString, ec2Client);
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    public void modifyInstanceAttribute(String instanceId, String attribute, String value, AmazonEC2 ec2Client) {
+        ModifyInstanceAttributeRequest request = new ModifyInstanceAttributeRequest();
+        
+        if (instanceId != null && !instanceId.isEmpty()) {
+            request.withInstanceId(instanceId);
+        }
+        else {
+            // no instance id!
+        }
+        
+        if (attribute != null && !attribute.isEmpty()) {
+            if (value != null && !value.isEmpty()) {
+                request = request.withAttribute(attribute);
+                request = request.withValue(value);
+            }
+            else {
+                // no value!
+            }
+        }
+        else {
+            // no attribute!
+        }
+        
+        ec2Client.modifyInstanceAttribute(request);
     }
 
     //----------------------------------------------------------------------------------------------
@@ -1105,7 +1152,7 @@ public class AWSHelper {
         DescribeSecurityGroupsResult result = ec2Client.describeSecurityGroups(request);
 
         if (result != null) {
-            // there should always be a "default" security group, but we'll check anyways
+            // there should always be a "default" security group if there is a vpc, but there may not be a vpc
             if (result.getSecurityGroups() != null) {
                 ownerId = result.getSecurityGroups().get(0).getOwnerId();
             }

@@ -12,7 +12,7 @@ Installation Instructions
 **************************************************
 
  Need:
-   Java
+   Java 1.5
    vmrun (only for VMware environments)
    Apache Ant (for building) 
 
@@ -463,6 +463,21 @@ documentation at: http://aws.amazon.com/documentation/ec2/
 	The key-pair file is needed for connecting to the server. You
      must also know what user that key-pair was associated with. This is 
      determined when the AMI (Amazon Machine Image) is created. 
+
+    IMPORTANT: Launching public images without a key pair ID will leave 
+    them inaccessible. The public key material is made available to the 
+    instance at boot time by placing it in the openssh_id.pub file on a 
+    logical device that is exposed to the instance as /dev/sda2 (the 
+    ephemeral store). The format of this file is suitable for use as an 
+    entry within ~/.ssh/authorized_keys (the OpenSSH format). This can 
+    be done at boot (e.g., as part of rc.local) allowing for secure 
+    access without passwords. Optional user data can be provided in the 
+    launch request. All instances that collectively comprise the launch 
+    request have access to this data For more information, see Instance 
+    Metadata.
+
+    NOTE: If any of the AMIs have a product code attached for which the 
+    user has not subscribed, the instance launch will fail.
 
 
 
