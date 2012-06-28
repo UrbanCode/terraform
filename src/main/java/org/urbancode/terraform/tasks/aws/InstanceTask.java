@@ -567,7 +567,7 @@ public class InstanceTask extends Task {
         // post create actions task
         
         BootActionsTask pcat = result.createBootActions();
-        if (getPostCreateActions() != null) {
+        if (getBootActions() != null) {
             
             if (getBootActions().getShell() != null) {
                 pcat.setShell(getBootActions().getShell());
@@ -584,6 +584,19 @@ public class InstanceTask extends Task {
                         ParamTask nParam = nScript.createParam();
                         nParam.setValue(param.getValue());
                     }
+                }
+            }
+        }
+        
+        PostCreateActionsTask pcat2 = result.createPostCreateActions();
+        if (getPostCreateActions() != null) {
+            if (getPostCreateActions().getPostCreateActions() != null) {
+                for (SshTask ssh : getPostCreateActions().getPostCreateActions()) {
+                    SshTask sshTask = pcat2.createSsh();
+                    sshTask.setCmds(ssh.getCmds());
+                    sshTask.setPassword(ssh.getPassword());
+                    sshTask.setPort(ssh.getPort());
+                    sshTask.setUser(ssh.getUser());
                 }
             }
         }
