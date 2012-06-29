@@ -54,6 +54,8 @@ public class InstanceTask extends Task {
     private String name;
     private String instanceId;
     private String amiId;
+    private String akiId;
+    private String ariId;
     private String subnetName;
     private String subnetId;
     private String elasticIpAllocId;
@@ -147,6 +149,25 @@ public class InstanceTask extends Task {
     //----------------------------------------------------------------------------------------------
     public void setElasticIpAllocId(String id) {
         this.elasticIpAllocId = id;
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    public void setRamdiskId(String ariId) {
+        this.ariId = ariId;
+    }
+    //----------------------------------------------------------------------------------------------
+    public void setKernelId(String akiId) {
+        this.akiId = akiId;
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    public String getRamdiskId() {
+        return ariId;
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    public String getKernelId() {
+        return akiId;
     }
     
     //----------------------------------------------------------------------------------------------
@@ -432,7 +453,8 @@ public class InstanceTask extends Task {
                 }
                 
                 // launch the instance and set the Id
-                instanceId = helper.launchAmi(amiId, subnetId, keyPair, size, userData, groupIds, blockMaps, ec2Client);
+                instanceId = helper.launchAmi(amiId, subnetId, keyPair, size, userData, groupIds, blockMaps,
+                                              ariId, akiId, ec2Client);
                 
                 // wait for instance to start and pass status checks
                 helper.waitForState(instanceId, "running", 8, ec2Client);
@@ -441,6 +463,9 @@ public class InstanceTask extends Task {
                 // name Instances
                 String serverName = context.getEnvironment().getName() + "-" + name;
                 helper.tagInstance(instanceId, "Name", serverName, ec2Client);
+                
+                // tag the instance with the environment
+                helper.tagInstance(instanceId, "tf-env", context.getEnvironment().getName(), ec2Client);
                 
                 // give instance elastic ip
                 if (elasticIp) {

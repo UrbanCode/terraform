@@ -166,7 +166,7 @@ public class LoadBalancerTask extends SubTask {
     //----------------------------------------------------------------------------------------------
     @Override
     public void create() 
-    throws Exception {
+    throws EnvironmentCreationException {
         log.debug("LoadBalancerAWS: create()");
         if (DNSName == null) {
             if (elbClient == null) {
@@ -181,35 +181,42 @@ public class LoadBalancerTask extends SubTask {
             List<String> secGroupIds = null;
             try {
                  subnetIds = resolveSubnetIds(getSubnetName());
-                 secGroupIds = resolveSecGroupIds(getSecRefs());
-    
-                List<Listener> listeners = new ArrayList<Listener>();
-                if (getListeners() != null) {
-                    for (ListenerTask task : getListeners()) {
-                        Listener tmp = new Listener(task.getProtocol(), task.getLoadBalancerPort(), task.getInstancePort());
-                        if (task.isSecure()) {
-                            tmp.setSSLCertificateId(task.getCertId());
+                 if (subnetIds != null) {
+                     secGroupIds = resolveSecGroupIds(getSecRefs());
+        
+                    List<Listener> listeners = new ArrayList<Listener>();
+                    if (getListeners() != null) {
+                        for (ListenerTask task : getListeners()) {
+                            Listener tmp = new Listener(task.getProtocol(), task.getLoadBalancerPort(), task.getInstancePort());
+                            if (task.isSecure()) {
+                                tmp.setSSLCertificateId(task.getCertId());
+                            }
+                            listeners.add(tmp);
                         }
-                        listeners.add(tmp);
                     }
-                }
-                else {
-                    log.error("No listeners specified for LoadBalancer: " + loadBalancerName);
-                }
-                
-                // launch the load balancer
-                DNSName = helper.launchLoadBalancer(getName(), subnetIds, secGroupIds, listeners, elbClient);
-                
-                // configure sticky sessions
-                helper.createStickyPolicy(loadBalancerName, stickyPolicyName, getAppCookieName(), defaultCookieExp, elbClient);
-                
-                // configure the HealthChecks on the instances for them to be registered properly
-                String hcTarget = getHealthCheck().getProtocol() + ":" + getHealthCheck().getPort() + getHealthCheck().getPath();
-                int health = getHealthCheck().getHealthyCount();
-                int unhealth = getHealthCheck().getUnhealthyCount();
-                int interval = getHealthCheck().getInterval();
-                int timeout = getHealthCheck().getTimeout();
-                helper.setupHealthCheck(getName(), hcTarget, health, unhealth, interval, timeout, elbClient);
+                    else {
+                        log.error("No listeners specified for LoadBalancer: " + loadBalancerName);
+                    }
+                    
+                    // launch the load balancer
+                    DNSName = helper.launchLoadBalancer(getName(), subnetIds, secGroupIds, listeners, elbClient);
+                    
+                    // configure sticky sessions
+                    helper.createStickyPolicy(loadBalancerName, stickyPolicyName, getAppCookieName(), defaultCookieExp, elbClient);
+                    
+                    // configure the HealthChecks on the instances for them to be registered properly
+                    String hcTarget = getHealthCheck().getProtocol() + ":" + getHealthCheck().getPort() + getHealthCheck().getPath();
+                    int health = getHealthCheck().getHealthyCount();
+                    int unhealth = getHealthCheck().getUnhealthyCount();
+                    int interval = getHealthCheck().getInterval();
+                    int timeout = getHealthCheck().getTimeout();
+                    helper.setupHealthCheck(getName(), hcTarget, health, unhealth, interval, timeout, elbClient);
+                 } 
+                 else {
+                     String msg = "Could not find subnet " + getSubnetName() + " for load balancer " + getName() + 
+                                  "\nLoad Balancer " + getName() + " not created.";
+                     log.error(msg);
+                 }
             }
             catch (Exception e) {
                 log.error("Could not create load balancer " + loadBalancerName + " completely");
@@ -225,7 +232,7 @@ public class LoadBalancerTask extends SubTask {
     //----------------------------------------------------------------------------------------------
     @Override
     public void destroy() 
-    throws Exception {
+    throws EnvironmentDestructionException {
         if (elbClient == null) {
             elbClient = context.getELBClient();
         }
