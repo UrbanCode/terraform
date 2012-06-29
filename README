@@ -376,6 +376,10 @@ Amazon Web Services
              m2.2xlarge, m2.4xlarge, c1.xlarge
              For more info, see: 
 	     http://aws.amazon.com/ec2/instance-types/
+	  -kernel-id: This is the id of the kernel you would like to use. It is recommended
+             that you leave this empty, as it will use the default kernel for the AMI.
+	  -ramdisk-id: This is the id of the RAM disk you would like to use. It is recommended
+             that you leave this empty, as it will use the default RAM disk for the AMI.
           -load-balancer: the name of the load balancer the instance will be registered with
           -priority: This is the order in which the instance will be launched in. The instances
              with the lowest priority will be completely launched first. This means that the 
