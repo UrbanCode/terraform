@@ -366,7 +366,9 @@ public class AWSHelper {
      * @param ec2Client
      * @return instanceId
      */
-    public String launchAmi(String amiId, String subnetId, String keyPair, String size, String userData, List<String> groups, List<BlockDeviceMapping> blockMaps, AmazonEC2 ec2Client) {
+    public String launchAmi(String amiId, String subnetId, String keyPair, String size, 
+            String userData, List<String> groups, List<BlockDeviceMapping> blockMaps, 
+            String ariId, String akiId, AmazonEC2 ec2Client) {
         String instanceId = null;
         RunInstancesRequest request =  new RunInstancesRequest()
                                             .withImageId(amiId)
@@ -389,6 +391,12 @@ public class AWSHelper {
         }
         if (blockMaps != null && !blockMaps.isEmpty()) {
             request = request.withBlockDeviceMappings(blockMaps);
+        }
+        if (ariId != null && !ariId.isEmpty()) {
+            request = request.withRamdiskId(ariId);
+        }
+        if (akiId != null && !akiId.isEmpty()) {
+            request = request.withKernelId(akiId);
         }
 
         RunInstancesResult result = ec2Client.runInstances(request);
