@@ -90,7 +90,7 @@ You must also include these elements on the clone:
 <event-listener/>
 
 These elements will configure the networking files on the router. It's highly recommended that the router be created BEFORE any clones that are on its network (specify using the order attribute).
-In addition, for any non-router clone on the router, add this attribute: assign-host-ip="true" . This will tell the clone to get its IP from the router instead of from your DHCP service.
+In addition, for any non-router clone on the private network, add this attribute: assign-host-ip="true" . This will tell the clone to get its IP from the router instead of from your DHCP service.
 
 By default, on a private network, all incoming traffic to ports on the network are blocked. You can open ports by adding a security group element to the environment.
 
