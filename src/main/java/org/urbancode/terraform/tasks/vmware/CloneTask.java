@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Urbancode, Inc
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -66,25 +66,25 @@ public class CloneTask extends SubTask implements Cloneable, Comparable<CloneTas
     // **********************************************************************************************
     private String instanceName;
     private String snapshotName = "";
-    
+
     private int serverCount = 1;
     private int order = 1;  // default to front of queue. max int is just ugly
-    
+
     private VirtualMachine vm;
     private Path imagePath;
-    
+
     private boolean poweredOn = false;
     private boolean assignHostIp = false;
     private boolean sentPowerDown = false;
 
     private EnvironmentTaskVmware environment;
-    
+
     private List<Ip4> ipList = new ArrayList<Ip4>();
     private List<NetworkRefTask> networkRefs = new ArrayList<NetworkRefTask>();
     private List<SecurityGroupRefTask> securityGroupRefs = new ArrayList<SecurityGroupRefTask>();
     private List<TaskEventListener> listeners = new ArrayList<TaskEventListener>();
     private List<PostCreateTask> postCreateTaskList = new ArrayList<PostCreateTask>();
-    
+
     private String user;
     private String password;
 
@@ -113,12 +113,12 @@ public class CloneTask extends SubTask implements Cloneable, Comparable<CloneTas
     public String getUser() {
         return user;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public String getPassword() {
         return password;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public Path getImagePath() {
         return this.imagePath;
@@ -191,12 +191,12 @@ public class CloneTask extends SubTask implements Cloneable, Comparable<CloneTas
     public void setUser(String user) {
         this.user = user;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public void setPassword(String password) {
         this.password = password;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public void setInstanceName(String instanceName) {
         this.instanceName = instanceName;
@@ -257,8 +257,13 @@ public class CloneTask extends SubTask implements Cloneable, Comparable<CloneTas
         for (int i=0; i<nicInfos.length; i++) {
             String[] nicInfoIpList = nicInfos[i].getIpAddress();
             for (int j=0; j<nicInfoIpList.length; j++) {
-                Ip4 newIp = new Ip4(nicInfoIpList[j]);
-                ipList.add(newIp);
+                //ip4 addresses only; vsphere 5 likes to return ip4 and ip6
+                String unparsedIp = nicInfoIpList[j];
+                if (!unparsedIp.contains(":")) {
+                    Ip4 newIp = new Ip4(unparsedIp);
+                    ipList.add(newIp);
+                }
+
             }
         }
     }
@@ -328,22 +333,22 @@ public class CloneTask extends SubTask implements Cloneable, Comparable<CloneTas
             for (SecurityGroupRefTask sgr : securityGroupRefs) {
                 sgr.setSecurityGroup(environment.restoreSecurityGroupForName(sgr.getName()));
             }
-        } 
+        }
         catch (RemoteException e) {
             log.warn("remote exception when creating clone task", e);
-        } 
+        }
         catch (InterruptedException e) {
             log.warn("interrupted exception when creating clone task", e);
-        } 
+        }
         catch (Exception e) {
             log.warn("unknown exception when creating clone task", e);
         }
 
         CloneVmCreatedEvent actionEvent = new CloneVmCreatedEvent(this);
         environment.fetchEventService().sendEvent(actionEvent);
-        
+
         runPostCreateTasks();
-        
+
         try {
             powerOnVm();
         }
@@ -363,10 +368,10 @@ public class CloneTask extends SubTask implements Cloneable, Comparable<CloneTas
             }
             powerOffVm();
             removeVm();
-        } 
+        }
         catch (RemoteException e) {
             log.warn("remote exception when deleting clone task", e);
-        } 
+        }
         catch (InterruptedException e) {
             log.warn("interruption exception when deleting clone task", e);
         }
@@ -383,7 +388,7 @@ public class CloneTask extends SubTask implements Cloneable, Comparable<CloneTas
     }
 
     //----------------------------------------------------------------------------------------------
-    public VirtualMachine cloneVM() 
+    public VirtualMachine cloneVM()
     throws RemoteException, InterruptedException {
         VirtualMachine result = null;
 
@@ -453,12 +458,12 @@ public class CloneTask extends SubTask implements Cloneable, Comparable<CloneTas
         }
         return result;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public int fetchServerCount() {
         return this.serverCount;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     private ManagedObjectReference fetchSnapshotRef(VirtualMachine vm,
             String snapshotName) {
@@ -474,7 +479,7 @@ public class CloneTask extends SubTask implements Cloneable, Comparable<CloneTas
     }
 
     //----------------------------------------------------------------------------------------------
-    public Datastore fetchDatastore(Path path) 
+    public Datastore fetchDatastore(Path path)
     throws RemoteException {
         Datastore result = null;
 
@@ -544,7 +549,7 @@ public class CloneTask extends SubTask implements Cloneable, Comparable<CloneTas
     }
 
     //----------------------------------------------------------------------------------------------
-    public Folder fetchFolder(Path path) 
+    public Folder fetchFolder(Path path)
     throws RemoteException {
         Folder result = null;
 
@@ -642,9 +647,9 @@ public class CloneTask extends SubTask implements Cloneable, Comparable<CloneTas
         }
         return result;
     }
-    
+
     //----------------------------------------------------------------------------------------------
-    public void powerOffVm() 
+    public void powerOffVm()
     throws InvalidProperty, RuntimeFault, RemoteException, InterruptedException {
         VirtualMachineRuntimeInfo vmri = vm.getRuntime();
         if (vmri.getPowerState() == VirtualMachinePowerState.poweredOn) {
@@ -656,7 +661,7 @@ public class CloneTask extends SubTask implements Cloneable, Comparable<CloneTas
     }
 
     //----------------------------------------------------------------------------------------------
-    public void powerOnVm() 
+    public void powerOnVm()
     throws InvalidProperty, RuntimeFault, RemoteException, InterruptedException {
         Path hostPath = this.environment.getHostPath();
         VirtualHost host = this.environment.fetchVirtualHost();
@@ -671,7 +676,7 @@ public class CloneTask extends SubTask implements Cloneable, Comparable<CloneTas
     }
 
     //----------------------------------------------------------------------------------------------
-    public void restoreVm() 
+    public void restoreVm()
     throws RemoteException {
         // restore by vm name and folder
         Path folderPath = environment.fetchFolderTask().getFolderRef();
@@ -680,7 +685,7 @@ public class CloneTask extends SubTask implements Cloneable, Comparable<CloneTas
     }
 
     //----------------------------------------------------------------------------------------------
-    public void removeVm() 
+    public void removeVm()
     throws RemoteException, InterruptedException {
         try {
             Task task = vm.destroy_Task();
@@ -697,7 +702,7 @@ public class CloneTask extends SubTask implements Cloneable, Comparable<CloneTas
 
     //----------------------------------------------------------------------------------------------
     @Override
-    public Object clone() 
+    public Object clone()
     throws CloneNotSupportedException {
         return super.clone();
     }

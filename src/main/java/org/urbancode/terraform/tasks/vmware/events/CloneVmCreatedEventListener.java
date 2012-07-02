@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Urbancode, Inc
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -45,7 +45,7 @@ public class CloneVmCreatedEventListener extends ExtensionTask implements TaskEv
     // CLASS
     //**********************************************************************************************
     static private final Logger log = Logger.getLogger(CloneVmCreatedEventListener.class);
-    static protected final String confDir = System.getenv("TERRAFORM_HOME") + 
+    static protected final String confDir = System.getenv("TERRAFORM_HOME") +
                                                File.separator + "conf" + File.separator;
 
     //**********************************************************************************************
@@ -94,16 +94,16 @@ public class CloneVmCreatedEventListener extends ExtensionTask implements TaskEv
         if (subTask instanceof CloneTask) {
             cloneTask = (CloneTask) subTask;
             if (!subTask.equals(routerTask)) {
-                
+
                 // set user/pass
                 vmUser = ((CloneTask) subTask).getUser();
                 vmPassword = ((CloneTask) subTask).getPassword();
-                
+
                 try {
                     cloneTask.powerOnVm();
                 }
                 catch (Exception e) {
-                   log.warn("Exception while powering on VM" + cloneTask.getInstanceName(), e);
+                   log.warn("Exception while powering on VM " + cloneTask.getInstanceName(), e);
                 }
 
                 if (cloneTask.getAssignHostIp()) {

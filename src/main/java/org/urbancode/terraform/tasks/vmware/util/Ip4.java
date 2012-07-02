@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Urbancode, Inc
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -108,23 +108,28 @@ public class Ip4 implements Comparable<Ip4>, Serializable {
     public int stringToInt(String ip) {
         Matcher matcher = ipPattern.matcher(ip);
         if (!matcher.matches()) {
-            throw new IllegalArgumentException("Invalid address");
+            if (ip != null) {
+                throw new IllegalArgumentException("Invalid address: " + ip);
+            }
+            else {
+                throw new IllegalArgumentException("Invalid (null) address");
+            }
         }
         int byte1 = Integer.parseInt(matcher.group(1));
         int byte2 = Integer.parseInt(matcher.group(2));
         int byte3 = Integer.parseInt(matcher.group(3));
         int byte4 = Integer.parseInt(matcher.group(4));
         if (byte1 < 0 || byte1 > 255) {
-            throw new IllegalArgumentException("Invalid address");
+            throw new IllegalArgumentException("Invalid address at first byte: " + byte1);
         }
         if (byte2 < 0 || byte2 > 255) {
-            throw new IllegalArgumentException("Invalid address");
+            throw new IllegalArgumentException("Invalid address at second byte: " + byte2);
         }
         if (byte3 < 0 || byte3 > 255) {
-            throw new IllegalArgumentException("Invalid address");
+            throw new IllegalArgumentException("Invalid address at third byte: " + byte3);
         }
         if (byte4 < 0 || byte4 > 255) {
-            throw new IllegalArgumentException("Invalid address");
+            throw new IllegalArgumentException("Invalid address at fourth byte: " + byte4);
         }
         return byte1 << 24 | byte2 << 16 | byte3 << 8 | byte4;
     }
