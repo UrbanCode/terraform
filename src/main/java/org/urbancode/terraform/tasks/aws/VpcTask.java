@@ -198,15 +198,24 @@ public class VpcTask extends Task {
     //----------------------------------------------------------------------------------------------
     private void startRouteTables() 
     throws Exception {
-        boolean first = true;
+        boolean mainfound = false;
         if (getRouteTables() != null && !getRouteTables().isEmpty()) {
             for (RouteTableTask table : getRouteTables()) {
                 if (table.getId() == null) {
-                    if ( first ) { 
-                        table.setRouteTarget(inetGwy.getId());
+                    if (table.getDefault()) {
+                        if (inetGwy != null) {
+                            table.setRouteTarget(inetGwy.getId());
+                        }
                         table.setMainTable(true);
-                        first = false;
+                        mainfound = true;
                     }
+                    
+                    if (mainfound && table.getDefault()) {
+                        log.error("Found multiple default Route Tables." +
+                                  "There can only be one default Route Table per VPC." +
+                                  "Not setting table as default since we already have one.");
+                    }
+                    
                     log.info("Starting Route Table...");
                     table.setVpcId(vpcId);
                     table.create();
@@ -216,7 +225,13 @@ public class VpcTask extends Task {
                 }
             }
         }
-        log.info("No Route Tables specified.");
+        else {
+            log.info("No Route Tables specified.");
+        }
+        
+        if (!mainfound) {
+            log.warn("No default Route Table found.");
+        }
     }
     
     //----------------------------------------------------------------------------------------------
@@ -289,10 +304,6 @@ public class VpcTask extends Task {
         log.info("Destroying Vpc...");
         
         try {
-            // detach all gateways
-    //        helper.detachGateway(getInetGwy().getId(), vpcId, ec2Client);
-            // disassociate all route tables
-    
             helper.waitForPublicAddresses(ec2Client);
             
             getInetGwy().setVpcId(vpcId);

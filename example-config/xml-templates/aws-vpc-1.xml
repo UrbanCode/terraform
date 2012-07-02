@@ -39,8 +39,8 @@ This is an Environment Template used to create an environment with Amazon Web Se
             <rule source="0.0.0.0/0" protocol="tcp" start-port="7918" end-port="7918" inbound="true" />
             <rule source="0.0.0.0/0" protocol="tcp" start-port="22" end-port="22" inbound="true" />
         </vpc-security-group>
-        <vpc-security-group name="lbDog" description="You can apply these Security Groups
-                                                      to an Elastic Load Balancer." />
+	<!-- descriptions can only contain alphanumeric, dash(-), underscore(_), and empty spaces -->
+        <vpc-security-group name="lbDog" description="You can apply these Security to an Elastic Load Balancer" />
     </vpc>
     
     <!-- This is an instance to launch. It has a name, an Amazon Machine Image. 
@@ -102,7 +102,7 @@ This is an Environment Template used to create an environment with Amazon Web Se
          a subnet that it is associated with (only instances in that subnet can be on this LB)
          and an Application Cookie Name (leave it empty if you want the LB to handle to cookies)
      -->
-    <load-balancer name="testLB" subnet-name="OurSubnet" app-cookie-name="" >
+    <load-balancer name="balanceLoader" subnet-name="yourHouse" app-cookie-name="" >
         <!-- Listeners are basically what you want the Load Balancer to 'load-balance'.
              You have the port the LB listens on, the port you want to go to on the instance, 
              the protocol to use, and the SSL certification-id. The cert-id is only needed

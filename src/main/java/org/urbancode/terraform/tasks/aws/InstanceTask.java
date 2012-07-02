@@ -48,11 +48,14 @@ public class InstanceTask extends Task {
     private AWSHelper helper;
     protected ContextAWS context;
     
-    private boolean elasticIp;
+    // by default, do not assign an EIP
+    private boolean elasticIp = false;
     
     private String name;
     private String instanceId;
     private String amiId;
+    private String akiId;
+    private String ariId;
     private String subnetName;
     private String subnetId;
     private String elasticIpAllocId;
@@ -149,6 +152,25 @@ public class InstanceTask extends Task {
     }
     
     //----------------------------------------------------------------------------------------------
+    public void setRamdiskId(String ariId) {
+        this.ariId = ariId;
+    }
+    //----------------------------------------------------------------------------------------------
+    public void setKernelId(String akiId) {
+        this.akiId = akiId;
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    public String getRamdiskId() {
+        return ariId;
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    public String getKernelId() {
+        return akiId;
+    }
+    
+    //----------------------------------------------------------------------------------------------
     public String getPrivateIp() {
         return privateIp;
     }
@@ -211,11 +233,6 @@ public class InstanceTask extends Task {
     //----------------------------------------------------------------------------------------------
     public String getAmiId() {
         return amiId;
-    }
-    
-    //----------------------------------------------------------------------------------------------
-    public String getSubnetId() {
-        return subnetId;
     }
     
     //----------------------------------------------------------------------------------------------
@@ -386,11 +403,29 @@ public class InstanceTask extends Task {
                 userData = getBootActions().getUserData();
                 userData = context.resolve(userData);
             }
-            
             log.info("Instance is being launched with following user-data script:\n\n" + userData);
             
+            String size = sizeType;
+            
+            // TODO - make this format check better
+            if (size.indexOf(".") == -1) {
+                size = null;
+            }
+            if (size == null || size.isEmpty()) {
+                log.warn("No instance size specified. Default to m1.small");
+                size = "m1.small";
+            }
+            else if (size.equalsIgnoreCase("t1.micro")) {
+                size = "m1.small";
+                log.warn("Amazon does not support t1.micro instances in Virtual Private Clouds!" +
+                         "\nChanging size to " + size);
+            }
+            
             String keyPair = keyRef;
-            String size = context.getSizeByName(sizeType.toLowerCase());
+            if (keyPair == null || keyPair.isEmpty()) {
+                log.warn("No key-pair specified. You may not be able to connect to instance " + name);
+            }
+            
             
             if (!verified) {
                 setId(null);
@@ -411,8 +446,15 @@ public class InstanceTask extends Task {
                     }
                 }
                 
-                // set the instanceId
-                instanceId = helper.launchAmi(amiId, subnetId, keyPair, size, userData, groupIds, blockMaps, ec2Client);
+                if (amiId == null) {
+                    String msg = "No AMI ID specified for instance " + name + ". There is no image to use.";
+                    log.fatal(msg);
+                    throw new EnvironmentCreationException(msg);
+                }
+                
+                // launch the instance and set the Id
+                instanceId = helper.launchAmi(amiId, subnetId, keyPair, size, userData, groupIds, blockMaps,
+                                              ariId, akiId, ec2Client);
                 
                 // wait for instance to start and pass status checks
                 helper.waitForState(instanceId, "running", 8, ec2Client);
@@ -421,6 +463,9 @@ public class InstanceTask extends Task {
                 // name Instances
                 String serverName = context.getEnvironment().getName() + "-" + name;
                 helper.tagInstance(instanceId, "Name", serverName, ec2Client);
+                
+                // tag the instance with the environment
+                helper.tagInstance(instanceId, "tf-env", context.getEnvironment().getName(), ec2Client);
                 
                 // give instance elastic ip
                 if (elasticIp) {
@@ -542,7 +587,7 @@ public class InstanceTask extends Task {
         // post create actions task
         
         BootActionsTask pcat = result.createBootActions();
-        if (getPostCreateActions() != null) {
+        if (getBootActions() != null) {
             
             if (getBootActions().getShell() != null) {
                 pcat.setShell(getBootActions().getShell());
@@ -559,6 +604,19 @@ public class InstanceTask extends Task {
                         ParamTask nParam = nScript.createParam();
                         nParam.setValue(param.getValue());
                     }
+                }
+            }
+        }
+        
+        PostCreateActionsTask pcat2 = result.createPostCreateActions();
+        if (getPostCreateActions() != null) {
+            if (getPostCreateActions().getPostCreateActions() != null) {
+                for (SshTask ssh : getPostCreateActions().getPostCreateActions()) {
+                    SshTask sshTask = pcat2.createSsh();
+                    sshTask.setCmds(ssh.getCmds());
+                    sshTask.setPassword(ssh.getPassword());
+                    sshTask.setPort(ssh.getPort());
+                    sshTask.setUser(ssh.getUser());
                 }
             }
         }

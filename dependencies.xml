@@ -6,7 +6,7 @@
 
     <!-- MAIN -->
     <dependency>
-      <ah-project name="Commons-Util" workflow="build workflow [trunk]"/>
+      <ah-project name="Commons-Util" workflow="build workflow [master]"/>
       <criteria status="success"/>
       <delivery artifact-set="Library">
         <directory>lib</directory>
@@ -14,7 +14,7 @@
     </dependency>
 
     <dependency>
-      <ah-project name="Shell" workflow="build workflow [trunk]"/>
+      <ah-project name="Shell" workflow="build workflow [master]"/>
       <criteria status="success"/>
       <delivery artifact-set="Default">
         <directory>lib</directory>
@@ -22,7 +22,7 @@
     </dependency>
     
     <dependency>
-      <ah-project name="NativeProcess" workflow="build workflow [trunk]" />
+      <ah-project name="NativeProcess" workflow="build workflow [master]" />
       <criteria status="success" />
       <delivery artifact-set="Jars">
         <directory>lib</directory>

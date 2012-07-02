@@ -53,11 +53,6 @@ public class RouteTask extends SubTask {
     public String getId() {
         return routeId;
     }
-
-    //----------------------------------------------------------------------------------------------
-    public String getRouteTableId() {
-        return routeTableId;
-    }
     
     //----------------------------------------------------------------------------------------------
     public String getTarget() {
@@ -109,7 +104,11 @@ public class RouteTask extends SubTask {
         log.info("Creating Route");
         try {
             if (target == null || cidr == null || routeTableId == null) {
-                log.error("Error: Route has bad data.");
+                log.error("Error: Route is missing data:" +
+                          "target: " + target +
+                          "dest: " + cidr +
+                          "RouteTable-Id: " + routeTableId);
+                // TODO - throw exception rather than return
                 return;
             }
             helper.createRoute(routeTableId, cidr, target, ec2Client);

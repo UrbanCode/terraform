@@ -36,9 +36,13 @@ public class ScriptTask extends PostCreateSubTask {
     
     private ContextAWS context;
     
-    private String url;
-    private String shell;
-    private List<ParamTask> params;
+    private String url;     // url where to grab the script
+    private String shell;   // the shell that the script will be ran in
+    private List<ParamTask> params; // list of parameters to be passed to the script
+    
+    // This is the shell that makes up the User-Data, not the shell to run the script in.
+    // This is used for determining how to check for a connection and grab the script.
+    private String runInShell;
     
     //----------------------------------------------------------------------------------------------
     public ScriptTask(ContextAWS context) {
@@ -75,6 +79,11 @@ public class ScriptTask extends PostCreateSubTask {
     public void setUrl(String url) {
         this.url =  url;
     }
+    
+    //----------------------------------------------------------------------------------------------
+    public void setRunInShell(String runInShell) {
+        this.runInShell = runInShell;
+    }
 
     //----------------------------------------------------------------------------------------------
     @Override
@@ -91,18 +100,18 @@ public class ScriptTask extends PostCreateSubTask {
     
     //----------------------------------------------------------------------------------------------
     public void create() {
+        String taskData = "";
         
-        String userData = "";
-//        userData += "curl " + getUrl() + " | bash -s ";
-        userData += getShell() + " `wget " + getUrl() + "`";
+        taskData += getShell() + " `wget " + getUrl() + "`";
+        
         if (getParams() != null && !getParams().isEmpty()) {
             for (ParamTask param : getParams()) {
-                userData += " " + param.getValue();
+                taskData += " " + param.getValue();
             }
         }
-        userData += "; \n";
+        taskData += "; \n";
         
-        setCmds(userData);
+        setCmds(taskData);
     }
     
     //----------------------------------------------------------------------------------------------
