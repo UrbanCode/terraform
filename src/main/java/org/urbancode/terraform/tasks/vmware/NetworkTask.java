@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Urbancode, Inc
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -46,6 +46,7 @@ public class NetworkTask extends SubTask {
     private String switchName;
     private String portGroupName;
     private int portCount;
+    private int vlanId = 0;
     private SwitchResult vSwitch;
     private VirtualHost host = null;
     private Path hostPath = null;
@@ -54,7 +55,7 @@ public class NetworkTask extends SubTask {
     public NetworkTask() {
         super();
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public String getNetworkName() {
         return this.networkName;
@@ -73,6 +74,11 @@ public class NetworkTask extends SubTask {
     //----------------------------------------------------------------------------------------------
     public String getPortGroupName() {
         return this.portGroupName;
+    }
+
+    //----------------------------------------------------------------------------------------------
+    public int getVlanId() {
+        return vlanId;
     }
 
     //----------------------------------------------------------------------------------------------
@@ -113,6 +119,11 @@ public class NetworkTask extends SubTask {
     //----------------------------------------------------------------------------------------------
     public void setSwitch(SwitchResult vSwitch) {
         this.vSwitch = vSwitch;
+    }
+
+    //----------------------------------------------------------------------------------------------
+    public void setVlanId(int vlanId) {
+        this.vlanId = vlanId;
     }
 
     //----------------------------------------------------------------------------------------------
@@ -162,6 +173,7 @@ public class NetworkTask extends SubTask {
         HostPortGroupSpec portGroupSpec = new HostPortGroupSpec();
         portGroupSpec.setName(newPortGroupName);
         portGroupSpec.setVswitchName(newSwitchName);
+        portGroupSpec.setVlanId(vlanId);
         portGroupSpec.setPolicy(new HostNetworkPolicy());
         networkSystem.addPortGroup(portGroupSpec);
 

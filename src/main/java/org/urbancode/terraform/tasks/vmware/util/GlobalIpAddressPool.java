@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Urbancode, Inc
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -47,37 +47,38 @@ public class GlobalIpAddressPool {
         Properties poolConfig = parseIpPoolFile();
         addressPool = createIpPoolFromProps(poolConfig);
     }
-    
+
     //----------------------------------------------------------------------------------------------
     private IpAddressPool createIpPoolFromProps(Properties props) {
-        
+
         if (props == null) {
             // fallback to defaults if we have null props
             props = new Properties();
         }
-        
+
         String start = props.getProperty("start", "10.15.50.1");
         log.info("IpAddressPool start: " + start);
-        
+
         String end = props.getProperty("end", "10.15.50.250");
         log.info("IpAddressPool end: " + end);
-        
+
         return new IpAddressPool(start, end);
     }
 
     //----------------------------------------------------------------------------------------------
     private Properties parseIpPoolFile() {
         Properties result = new Properties();
-        
-        String ipPoolFilePath = System.getenv("TERRAFORM_HOME") + File.separator + "ippool.conf";
-        
-        File poolFile = new File(ipPoolFilePath); 
-        
+
+        String ipPoolFilePath = System.getenv("TERRAFORM_HOME") + File.separator +
+                "conf" + File.separator + "ippool.conf";
+
+        File poolFile = new File(ipPoolFilePath);
+
         InputStream in = null;
         try {
             in = new FileInputStream(poolFile);
             result.load(in);
-        } 
+        }
         catch (FileNotFoundException e) {
             log.fatal("Could not find file " + ipPoolFilePath, e);
 //            throw e;
@@ -96,10 +97,10 @@ public class GlobalIpAddressPool {
                 }
             }
         }
-        
+
         return result;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public IpAddressPool getIpAddressPool() {
         return addressPool;
