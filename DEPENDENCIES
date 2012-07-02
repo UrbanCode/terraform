@@ -1,0 +1,75 @@
+
+## DIST ##
+
+aws-java-sdk-1.3.7.jar
+The Amazon Web Services SDK for Java.
+
+commons-codec.jar
+Jakarta Commons Codec 1.5
+
+commons-collections.jar
+Jakarta Commons Collections 3.2.1
+
+commons-httpclient-3.1.jar
+Jakarta Commons HttpClient 3.1
+
+commons-io.jar
+Jakarta Commons IO 2.0.1
+
+commons-lang.jar
+Jakarta Commons Lang 2.5
+
+commons-logging.jar
+Jakarta Commons Logging 1.1
+
+CommonsUtil.jar
+
+
+dom4j.jar
+Dom4j 1.6.1
+
+httpclient-cache.jar
+Apache HttpComponents 4.1.1
+
+httpclient.jar
+Apache HttpComponents 4.1.1
+
+httpcore.jar
+Apache HttpComponents 4.1.1
+
+httpmime.jar
+Apache HttpComponents 4.1.1
+
+jsch.jar
+JSch 0.1.44
+
+log4j.jar
+Apache Log4j 1.2.16
+
+NativeProcess.jar
+
+
+shell.jar
+
+
+vijava.jar
+VI Java 5.0.0
+
+
+## TEST ##
+
+asm-3.0.jar
+
+
+asm-tree-3.0.jar
+
+
+cobertura.jar
+1.9.2
+
+jakarta-oro-2.0.8.jar
+
+
+junit-4.5.jar
+JUnit 4.5
+

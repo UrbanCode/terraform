@@ -148,13 +148,11 @@ public class PuppetTask extends PostCreateSubTask {
 
     @Override
     public void setCmds(String script) {
-        // TODO Auto-generated method stub
         this.script = script;
     }
 
     @Override
     protected String getCmds() {
-        // TODO Auto-generated method stub
         return script;
     }
 }

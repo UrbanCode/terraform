@@ -120,31 +120,57 @@ public class SshTask extends SubTask {
     public String getCmds() {
         return cmds;
     }
+    
+    private SshConnection startSshConnection() 
+    throws PostCreateException, JSchException {
+        SshConnection result = null;
+        
+        // see if we have anything to connect to
+        if (host == null || host.isEmpty()) {
+            String msg = "No host specified to connect to";
+            log.error(msg);
+            throw new PostCreateException(msg);
+        }
+        
+        // see if we have a user to connect as
+        if (user == null || user.isEmpty()) {
+            String msg = "No user specified to connect as for instance " + host;
+            log.error(msg);
+            throw new PostCreateException(msg);
+        }
+        
+        // are we connecting with a id-file?
+        if (idFilePath != null && !idFilePath.isEmpty()) {
+            File idFile = new File(idFilePath);
+            if (idFile.exists() && idFile.isFile() && idFile.canRead()) {
+                result = new SshConnection(host, user, idFile);
+            }
+            else {
+                log.error("Unable to read file: " + idFile);
+            }
+        }
+        // or are we connecting with a password?
+        else if (pass != null && !pass.isEmpty()) {
+            result = new SshConnection(host, user, pass);
+        }
+        // we can't connect without either an id-file or password
+        else {
+            log.error("No id file or password specifed. No way to connect to instance " + host);
+        }
+        
+        return result;
+    }
 
     //----------------------------------------------------------------------------------------------
     @Override
     public void create() 
     throws PostCreateException {
-        SshConnection ssh = null;
-        SshHelper sshHelper = new SshHelper();
         
+        SshConnection ssh = null;
         try {
-            if (idFilePath != null && !idFilePath.isEmpty()) {
-                File idFile = new File(idFilePath);
-                if (idFile.exists() && idFile.isFile() && idFile.canRead()) {
-                    ssh = new SshConnection(host, user, idFile);
-                }
-                else {
-                    log.error("Unable to read file: " + idFile);
-                }
-            }
-            else if (pass != null && !pass.isEmpty()) {
-                ssh = new SshConnection(host, user, pass);
-            }
-            else {
-                log.error("No id file or password specifed. No way to connect to instance " + host);
-            }
-            
+            SshHelper sshHelper = new SshHelper();
+            ssh = startSshConnection();
+            // see if we made a connection
             if (ssh == null) {
                 log.error("Attempted SSH connection: " + user + "@" + host + " || password: " + pass 
                           + " || id-file: " + idFilePath);
@@ -154,8 +180,10 @@ public class SshTask extends SubTask {
             // resolve any props in the cmds
             cmds = context.resolve(cmds);
             
+            // wait until we can make a connection - default port is 22
             SshHelper.waitForPort(host, port); 
             
+            // run the commands
             ChannelExec channel = ssh.run(cmds);
             channel.getOutputStream().close();
             
@@ -165,6 +193,7 @@ public class SshTask extends SubTask {
             String outputText = output.get();
             String errorText = error.get();
             
+            // check the exit status of the commands
             while (true) {
                 if (channel.isClosed()) {
                     int exitCode = channel.getExitStatus();
@@ -174,11 +203,9 @@ public class SshTask extends SubTask {
                     break;
                 }
                 Thread.sleep(1000);
-        }
-        
-        log.debug("Command out: " + outputText);
-        log.debug("Command err: " + errorText);
-                
+            }
+            log.debug("Command out: " + outputText);
+            log.debug("Command err: " + errorText);
         } 
         catch (RemoteException e) {
             log.error("Timeout while waiting for port: " + port + " on host: " + host, e);
