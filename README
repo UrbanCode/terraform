@@ -74,109 +74,6 @@ VMware
 
   Example command line call to Terraform with a VMware template:
 
-
-To add clones, insert "clone" elements in to the environment element. Clone elements look like this:
-
-<clone instance-name="instance-1"
-          order="1"
-          image-path="/mydatacenter/myimagefolder/linux-clone-image"
-          snapshot-name="my-snapshot"
-          server-count="1">
-</clone>
-
-Required attributes on a clone element: instance-name(string), order(positive int), image-path(string), snapshot-name(string), user(string), password(string)
-If no server count attribute is specified it will default to "1". User and password should be a valid login on the VM. 
-The order attribute distinguishes the order VMs will be created - lowest to highest. If clones have the same number they are created in parallel. The order in which they complete can be unpredictable.
-
-Terraform also supports multiple different clone elements - useful if you want them to have different name prefixes or orders in which they are created.
-
-An important note about vSphere images: they should be virtual machines, not templates, with at least one snapshot on them.
-
-For creating a private network, include a network element in the environment for each subnet.
-
-<network network-name="my-net-web" port-count="32"/>
-
-A network element must have a network-name(string) and a port-count(int). This creates a virtual switch and port group.
-
-All clones on the private network must have a network-ref element pertaining to the proper network, referenced by name.
-
-<network-ref network-name="my-net-web" nic-index="1"/>
-
-The name should be the same as the network name they are on. The nic-index corresponds to the network card which will be on the network.
-
-If you are creating a router to use for the private network, you must use a Linux image that can act as a router.
-You must also include these elements on the clone:
-
-<post-create-task/>
-<event-listener/>
-
-These elements will configure the networking files on the router. It's highly recommended that the router be created BEFORE any clones that are on its network (specify using the order attribute).
-In addition, for any non-router clone on the private network, add this attribute: assign-host-ip="true" . This will tell the clone to get its IP from the router instead of from your DHCP service.
-
-By default, on a private network, all incoming traffic to ports on the network are blocked. You can open ports by adding a security group element to the environment.
-
-<security-group name="default-group">
-    <port-range first-port="22" last-port="22"/>
-    <port-range first-port="80" last-port="80"/>
-    <port-range first-port="3306" last-port="3306"/>
-    <port-range first-port="8080" last-port="9090"/>
-</security-group>
-
-This security group will open ports 22, 80, 3306, and 8080-9090 on any instance that references this security group. To reference a security group on a clone, add this element to the clone:
-
-<security-group-ref name="default-group"/>
-
-The name should be equal to the security group name. This feature only works if you have a router in your template.
-
-Finally, an example template with a private network, an application server, and a database server:
-
-<?xml version="1.0" encoding="UTF-8"?>
-<context
-xmlns="com.urbancode.uprovision.tasks.vmware">
-    <environment 
-    name="terra-env" 
-    folder-name="terra-folder">
-        
-        <network network-name="my-net-web" port-count="32"/>
-        <security-group name="default-group">
-            <port-range first-port="22" last-port="22"/>
-            <port-range first-port="80" last-port="80"/>
-            <port-range first-port="3306" last-port="3306"/>
-            <port-range first-port="8080" last-port="9090"/>
-        </security-group>
-    
-        <clone instance-name="router-1"
-                  order="1"
-                  image-path="/mydatacenter/myimagefolder/router-image"
-                  snapshot-name="my-snapshot">
-            <network-ref network-name="my-net-web" nic-index="1"/>
-            <post-create-task/>
-            <event-listener/>
-        </clone>
-                  
-        <clone instance-name="app-instance-1"
-                  order="2"
-                  image-path="/mydatacenter/myimagefolder/linux-clone-image"
-                  snapshot-name="my-snapshot"
-                  assign-host-ip="true"
-                  server-count="1">
-            <security-group-ref name="default-group"/>
-            <network-ref network-name="my-net-web" nic-index="0"/>
-        </clone>
-        
-        <clone instance-name="db-instance-1"
-                  order="2"
-                  image-path="/mydatacenter/myimagefolder/linux-clone-image"
-                  snapshot-name="my-snapshot"
-                  assign-host-ip="true"
-                  server-count="1">
-            <security-group-ref name="default-group"/>
-            <network-ref network-name="my-net-web" nic-index="0"/>
-        </clone>
-        
-    </environment>
-</context>
-
   terraform create vmware-template.xml vmware-1.key datacenter=my-datacenter host.name=my-host.mysite.com datastore=my-datastore destination=path/to/ my-destination/folder
   
   To destroy an instance:
@@ -193,6 +90,7 @@ xmlns="com.urbancode.uprovision.tasks.vmware">
   
   This will power down the VMs, delete them, delete the folder that Terraform created, and delete any virtual switches it created.
   To create a new vmware template - clones are not in a private network
+
 
   -----------
   Templates
