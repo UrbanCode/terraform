@@ -12,7 +12,7 @@ Installation Instructions
 **************************************************
 
  Need:
-   Java 1.5
+   Java 1.5 (or higher)
    vmrun (only for VMware environments)
    Apache Ant (for building) 
 
@@ -128,14 +128,14 @@ VMware
   An important note about vSphere images: they should be virtual machines, not templates, with at least 
   one snapshot on them.
   
-  For creating a private netowrk, include a network element in the environment for each subnet.
+  For creating a private network, include a network element in the environment for each subnet.
   
   <network network-name="my-net-web" port-count="32"/>
   
   A network element must have a network-name(string) and a port-count(int). This creates a virtual 
   switch and port group.
   
-  All cloness on the private network must have a network-ref element pertaining to the proper network,
+  All clones on the private network must have a network-ref element pertaining to the proper network,
   referenced by name.
   
   <network-ref network-name="my-net-web" nic-index="1"/>
@@ -193,7 +193,9 @@ VMware
           <clone instance-name="router-1"
                     order="1"
                     image-path="/mydatacenter/myimagefolder/router-image"
-                    snapshot-name="my-snapshot">
+                    snapshot-name="my-snapshot"
+                    user="root"
+                    password="mypassword">
               <network-ref network-name="my-net-web" nic-index="1"/>
               <post-create-task/>
               <event-listener/>
