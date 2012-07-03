@@ -293,6 +293,13 @@ public class CloneTask extends SubTask implements Cloneable, Comparable<CloneTas
     }
 
     //----------------------------------------------------------------------------------------------
+    public PostCreateTask addCommand(PostCreateTask task) {
+        task.setValues(this);
+        this.postCreateTaskList.add(task);
+        return task;
+    }
+
+    //----------------------------------------------------------------------------------------------
     public NetworkRefTask createNetworkRef() {
         NetworkRefTask result = new NetworkRefTask();
         this.networkRefs.add(result);

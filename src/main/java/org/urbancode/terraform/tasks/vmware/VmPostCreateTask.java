@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Urbancode, Inc
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -32,53 +32,58 @@ public class VmPostCreateTask extends PostCreateTask {
     // INSTANCE
     //**********************************************************************************************
 
-    private String cmds;
-    
+    private String cmd;
+
+    //----------------------------------------------------------------------------------------------
+    public VmPostCreateTask() {
+        super();
+    }
+
     //----------------------------------------------------------------------------------------------
     public VmPostCreateTask(CloneTask cloneTask) {
         super(cloneTask);
     }
-    
+
     //----------------------------------------------------------------------------------------------
-    public void setCommands(String cmds) {
-        this.cmds = cmds;
+    public void setCmd(String cmd) {
+        this.cmd = cmd;
     }
-    
+
     //----------------------------------------------------------------------------------------------
-    public String getCommands(String cmds) {
-        return cmds;
+    public String getCmd() {
+        return cmd;
     }
-    
+
     //----------------------------------------------------------------------------------------------
-    private void parseAndRunCmd(String cmd) 
+    private void parseAndRunCmd(String myCmd)
     throws IOException, InterruptedException {
-        if (cmd != null && !cmd.isEmpty()) {
-            String[] splitCmd = cmd.split(" ");
-            
+        if (myCmd != null && !myCmd.isEmpty()) {
+            String[] splitCmd = myCmd.split(" ");
+
             List<String> cmdElements = new ArrayList<String>();
             Collections.addAll(cmdElements, splitCmd);
-            
+
             runCommand(vmUser, vmPassword, "runProgramInGuest", cmdElements);
         }
         else {
             log.warn("No command specified");
         }
     }
-    
+
     //----------------------------------------------------------------------------------------------
     private void runCmds() {
-        if (cmds != null && !cmds.isEmpty()) {
-            String[] cmdsArray = cmds.split(";");
-            
+        if (cmd != null && !cmd.isEmpty()) {
+            String[] cmdsArray = cmd.split(";");
+
             for (String cmd : cmdsArray) {
                 try {
                     parseAndRunCmd(cmd);
                 } catch (IOException e) {
-                    log.error("Unable to run command (" + cmd + ") on machine " 
-                              + cloneTask.getInstanceName());
+                    log.error("Unable to run command (" + cmd + ") on machine "
+                              + cloneTask.getInstanceName() + "; " + e.getMessage());
                 } catch (InterruptedException e) {
-                    log.error("Command interrupted (" + cmd + ") on machine " 
-                            + cloneTask.getInstanceName());
+                    log.error("Command interrupted (" + cmd + ") on machine "
+                            + cloneTask.getInstanceName() + "; " + e.getMessage());
                 }
             }
         }
@@ -87,9 +92,9 @@ public class VmPostCreateTask extends PostCreateTask {
     //----------------------------------------------------------------------------------------------
     @Override
     public void create() {
-        this.context = (ContextVmware) environment.fetchContext();
+        this.context = environment.fetchContext();
         this.vmToConfig = cloneTask.fetchVm();
-        
+
         runCmds();
     }
 
@@ -97,5 +102,5 @@ public class VmPostCreateTask extends PostCreateTask {
     @Override
     public void destroy() {
     }
-    
+
 }

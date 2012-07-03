@@ -105,7 +105,8 @@ VMware
             │   ├── network-ref(n)
             │   ├── security-group-ref(n)
             │   ├── post-create-task(n)
-            │   └── event-listener(n)
+                ├── event-listener(n)
+            │   └── command(n)
             ├── network(n)
             └── security-group(n)
                 └──port-range(n)
@@ -141,6 +142,17 @@ VMware
   
   An important note about vSphere images: they should be virtual machines, not templates, with at least 
   one snapshot on them. Support for creating clones from templates will be in a future patch.
+  
+  You can add Unix shell commands to be executed once the VM is created using the "command" element.
+  The command element has one attribute called "cmd" which takes a shell command.
+  You can also put a series of commands to be executed separated by semicolons.
+  Note that you should not use any "shortcuts" in your commands; use fully qualified paths to programs.
+  Example - use /home/myusername instead of ~, use /bin/sh instead of ./ or bash
+  
+  Examples:
+  <command cmd="/bin/sleep 3" />
+  <command cmd="/bin/sh /home/me/scripts/my-shell-script" />
+  <command cmd="/bin/sh /home/me/scripts/my-shell-script;/bin/sh /home/me/scripts/second-script" />
   
   For creating a private network, include a network element in the environment for each subnet.
   
