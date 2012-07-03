@@ -29,16 +29,16 @@ Installation Instructions
 
 Building Terraform
 ======================================
-Set your current working directory to the extracted terraform directory.
-To build terraform, run:
+  Set your current working directory to the extracted terraform directory.
+  To build terraform, run:
      $ ant dist
 
 
 
 Basic Installation
 ======================================
- You will find a shell script in terraform/bin. This is used
- to run Terraform. 
+  You will find a shell script in terraform/bin. This is used
+  to run Terraform. 
 
   How to run terraform: 
     terraform [create/destory] [input-xml-file] [input-credentials-file] [prop1=val1 prop2=val2 ...]
@@ -105,7 +105,8 @@ VMware
             │   ├── network-ref(n)
             │   ├── security-group-ref(n)
             │   ├── post-create-task(n)
-            │   └── event-listener(n)
+                ├── event-listener(n)
+            │   └── command(n)
             ├── network(n)
             └── security-group(n)
                 └──port-range(n)
@@ -142,6 +143,17 @@ VMware
   An important note about vSphere images: they should be virtual machines, not templates, with at least 
   one snapshot on them. Support for creating clones from templates will be in a future patch.
   
+  You can add Unix shell commands to be executed once the VM is created using the "command" element.
+  The command element has one attribute called "cmd" which takes a shell command.
+  You can also put a series of commands to be executed separated by semicolons.
+  Note that you should not use any "shortcuts" in your commands; use fully qualified paths to programs.
+  Example - use /home/myusername instead of ~, use /bin/sh instead of ./ or bash
+  
+  Examples:
+  <command cmd="/bin/sleep 3" />
+  <command cmd="/bin/sh /home/me/scripts/my-shell-script" />
+  <command cmd="/bin/sh /home/me/scripts/my-shell-script;/bin/sh /home/me/scripts/second-script" />
+  
   For creating a private network, include a network element in the environment for each subnet.
   
   <network network-name="my-net-web" port-count="32"/>
@@ -163,7 +175,7 @@ VMware
   card which will be attached to the network.
   
   If you are creating a router to use for the private network, you must use a Linux image that can act 
-  as a router.
+  as a router. We recommend Debian or Ubuntu.
   
   You must also include these elements on the clone:
   <post-create-task/>
@@ -325,8 +337,7 @@ Amazon Web Services
 	[ The hierarchy represents which elements go under which in the xml ]
 
     o context: The context holds the whole environment. It has one or more xmlns attributes, 
-      which specify which package to look in for the map of element name to 
-      classname for a specific namespace. The packages it points to should contain a properties file named:
+      which specify map an xml namespace to a package. The packages it points to should contain a properties file named:
       terralib.classes 
 	      for VMware use: xmlns="com.urbancode.uprovision.tasks.vmware"
 	      for AWS use: xmlns="com.urbancode.uprovision.tasks.aws"
