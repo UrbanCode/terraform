@@ -19,7 +19,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.ProcessBuilder.Redirect;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -39,7 +38,6 @@ import org.urbancode.terraform.tasks.vmware.util.GlobalIpAddressPool;
 import org.urbancode.terraform.tasks.vmware.util.Ip4;
 import org.urbancode.terraform.tasks.vmware.util.VirtualHost;
 
-//import com.urbancode.commons.util.processes.Processes;
 import com.vmware.vim25.mo.VirtualMachine;
 
 public class CloneVmCreatedEventListener extends ExtensionTask implements TaskEventListener {

@@ -19,7 +19,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -29,11 +28,6 @@ import org.urbancode.terraform.tasks.common.ExtensionTask;
 import org.urbancode.terraform.tasks.util.IOUtil;
 import org.urbancode.terraform.tasks.vmware.util.VirtualHost;
 
-//import com.urbancode.commons.util.processes.Processes;
-//import com.urbancode.commons.util.Check;
-//import com.urbancode.commons.util.IO;
-//import com.urbancode.commons.util.concurrent.AbstractNamedCallable;
-//import com.urbancode.commons.util.concurrent.WaitFuture;
 import com.vmware.vim25.mo.VirtualMachine;
 
 public class PostCreateTask extends ExtensionTask {

@@ -15,11 +15,9 @@
  ******************************************************************************/
 package org.urbancode.terraform.tasks.vmware.util;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
-import java.lang.ProcessBuilder.Redirect;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.rmi.RemoteException;
@@ -33,7 +31,6 @@ import javax.naming.NamingException;
 import org.apache.log4j.Logger;
 import org.urbancode.terraform.tasks.util.IOUtil;
 
-//import com.urbancode.commons.util.processes.Processes;
 import com.vmware.vim25.HostNetworkPolicy;
 import com.vmware.vim25.HostPortGroupSpec;
 import com.vmware.vim25.HostVirtualSwitchSpec;
