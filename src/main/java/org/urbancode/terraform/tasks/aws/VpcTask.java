@@ -158,6 +158,7 @@ public class VpcTask extends Task {
         if (vpcId == null) {
             log.info("Starting Vpc...");
             setId(helper.createVpc(cidr, ec2Client));
+            helper.tagInstance(vpcId, "tf.env", context.getEnvironment().getName(), ec2Client);
             log.info("Vpc created with id: " + vpcId);
         }
         else {

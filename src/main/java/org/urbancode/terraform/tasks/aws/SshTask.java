@@ -54,7 +54,6 @@ public class SshTask extends SubTask {
     private String pass;
     
     private String cmds;
-//    private List<String> commandElements = new ArrayList<String>();
     
     //----------------------------------------------------------------------------------------------
     public SshTask(Context context) {

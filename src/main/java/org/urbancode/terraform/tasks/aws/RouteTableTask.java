@@ -139,7 +139,7 @@ public class RouteTableTask extends SubTask {
         List<String> id = new ArrayList<String>();
         id.add(getId());
         
-        List<RouteTable> tables = helper.describeRouteTables(id, ec2Client);
+        List<RouteTable> tables = helper.getRouteTables(id, ec2Client);
         if (tables != null && !tables.isEmpty()) {
             result = true;
         }
@@ -151,7 +151,7 @@ public class RouteTableTask extends SubTask {
         String result = null;
         
         // grab id of first (only) route table in vpc
-        List<RouteTable> tables = helper.describeRouteTables(null, ec2Client);
+        List<RouteTable> tables = helper.getRouteTables(null, ec2Client);
         RouteTable foundTable;
         //assume one route table per vpc 
         
@@ -215,7 +215,8 @@ public class RouteTableTask extends SubTask {
     
     //----------------------------------------------------------------------------------------------
     @Override
-    public void destroy() throws Exception {
+    public void destroy() 
+    throws Exception {
         if (ec2Client == null) {
             ec2Client = context.getEC2Client();
         }
@@ -226,7 +227,7 @@ public class RouteTableTask extends SubTask {
             String subnetId = ((EnvironmentTaskAWS)context.getEnvironment()).getVpc().findSubnetForName(subnetName).getId();
             List<String> id = new ArrayList<String>();
             id.add(routeTableId);
-            List<RouteTable> table = helper.describeRouteTables(id, ec2Client);
+            List<RouteTable> table = helper.getRouteTables(id, ec2Client);
             List<RouteTableAssociation> asses = table.get(0).getAssociations();
             if (asses != null && !asses.isEmpty()) {
                 for (RouteTableAssociation ass : asses) {

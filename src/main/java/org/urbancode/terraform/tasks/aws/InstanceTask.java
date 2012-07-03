@@ -452,6 +452,18 @@ public class InstanceTask extends Task {
                     throw new EnvironmentCreationException(msg);
                 }
                 
+                // check to see what platform the ami is
+                //   if Windows
+                //     not sure yet..
+                //   else if ubuntu/ubuntu cloud guest/Debian
+                //   else if Amazon Linux/ CentOS
+                //   else if OpenSUSE
+                //   else if Red Hat/Fedora
+                //   else if Gentoo
+                //   else if OpenSolaris
+                //   else if Other Linux
+                //   else Don't know??
+                
                 // launch the instance and set the Id
                 instanceId = helper.launchAmi(amiId, subnetId, keyPair, size, userData, groupIds, blockMaps,
                                               ariId, akiId, ec2Client);
@@ -578,6 +590,8 @@ public class InstanceTask extends Task {
         
         // this takes up more memory than needed???
         result.setAmiId(amiId);
+        result.setKernelId(akiId);
+        result.setRamdiskId(ariId);
         result.setElasticIp(elasticIp);
         result.setImageSize(sizeType);
         result.setName(name);

@@ -17,7 +17,6 @@ package org.urbancode.terraform.tasks.vmware.util;
 
 import java.io.Serializable;
 
-import com.urbancode.commons.util.Check;
 import com.vmware.vim25.mo.Network;
 
 public class SwitchResult implements Serializable {
@@ -36,9 +35,16 @@ public class SwitchResult implements Serializable {
 
     //----------------------------------------------------------------------------------------------
     public SwitchResult(Network network, Path switchPath, Path portGroupPath) {
-        Check.nonNull(network, "network");
-        Check.nonNull(switchPath, "switchPath");
-        Check.nonNull(portGroupPath, "portGroupPath");
+        if (network == null) {
+            throw new NullPointerException("Network is null in SwitchResult");
+        }
+        if (switchPath == null) {
+            throw new NullPointerException("switchPath is null in SwitchResult");
+        }
+        if (portGroupPath == null) {
+            throw new NullPointerException("portGroupPath is null in SwitchResult");
+        } 
+        
         this.network = network;
         this.switchPath = switchPath;
         this.portGroupPath = portGroupPath;

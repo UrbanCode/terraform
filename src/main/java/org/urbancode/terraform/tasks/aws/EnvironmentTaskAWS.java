@@ -52,7 +52,6 @@ public class EnvironmentTaskAWS extends EnvironmentTask {
     private AWSHelper helper;
     private ContextAWS context;
     
-    String xmlNs;
     private String name;
     private VpcTask vpc;
     private List<InstanceTask> instances = new ArrayList<InstanceTask>();
