@@ -18,6 +18,7 @@ package org.urbancode.terraform.tasks.vmware.events;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.ProcessBuilder.Redirect;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
@@ -28,6 +29,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.urbancode.terraform.tasks.common.ExtensionTask;
 import org.urbancode.terraform.tasks.common.SubTask;
+import org.urbancode.terraform.tasks.util.IOUtil;
 import org.urbancode.terraform.tasks.vmware.CloneTask;
 import org.urbancode.terraform.tasks.vmware.EnvironmentTaskVmware;
 import org.urbancode.terraform.tasks.vmware.PortRangeTask;
@@ -37,7 +39,7 @@ import org.urbancode.terraform.tasks.vmware.util.GlobalIpAddressPool;
 import org.urbancode.terraform.tasks.vmware.util.Ip4;
 import org.urbancode.terraform.tasks.vmware.util.VirtualHost;
 
-import com.urbancode.commons.util.processes.Processes;
+//import com.urbancode.commons.util.processes.Processes;
 import com.vmware.vim25.mo.VirtualMachine;
 
 public class CloneVmCreatedEventListener extends ExtensionTask implements TaskEventListener {
@@ -289,7 +291,6 @@ public class CloneVmCreatedEventListener extends ExtensionTask implements TaskEv
         String url = host.getUrl();
         String virtualHostUser = host.getUser();
         String virtualHostPassword = host.getPassword();
-        //Processes processes = new Processes();
         List<String> commandLine = new ArrayList<String>();
         commandLine.add("vmrun");
         commandLine.add("-T");
@@ -309,12 +310,11 @@ public class CloneVmCreatedEventListener extends ExtensionTask implements TaskEv
         commandLine.addAll(args);
         ProcessBuilder builder = new ProcessBuilder(commandLine);
         builder.redirectErrorStream(true);
-        File vmRunFile = File.createTempFile("vmrun", ".log");
-        vmRunFile.deleteOnExit();
-        builder.redirectOutput(Redirect.to(vmRunFile));
-        vmRunFile.delete();
         Process process = builder.start();
-        //processes.discardOutput(process);
+        
+        InputStream procIn = process.getInputStream();
+        IOUtil.getInstance().discardStream(procIn);
+        
         int exitCode = process.waitFor();
         if (exitCode != 0) {
             throw new IOException("Command failed with code " + exitCode);

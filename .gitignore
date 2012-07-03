@@ -15,5 +15,5 @@
 /dist
 /lib
 /ecbin
-
+/target
 /bin/stdout
