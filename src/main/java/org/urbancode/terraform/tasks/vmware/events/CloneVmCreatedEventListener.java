@@ -37,7 +37,7 @@ import org.urbancode.terraform.tasks.vmware.util.GlobalIpAddressPool;
 import org.urbancode.terraform.tasks.vmware.util.Ip4;
 import org.urbancode.terraform.tasks.vmware.util.VirtualHost;
 
-import com.urbancode.commons.util.processes.Processes;
+//import com.urbancode.commons.util.processes.Processes;
 import com.vmware.vim25.mo.VirtualMachine;
 
 public class CloneVmCreatedEventListener extends ExtensionTask implements TaskEventListener {
