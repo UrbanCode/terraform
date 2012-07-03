@@ -76,6 +76,8 @@ VMware
 
   terraform create vmware-template.xml vmware-1.key datacenter=my-datacenter host.name=my-host.mysite.com datastore=my-datastore destination=path/to/ my-destination/folder
   
+  VMware vSphere instances require four properties to start, which are detailed later in the VMware section.
+  
   To destroy an instance:
   
   Call terraform.sh with the following arguments:
@@ -89,14 +91,26 @@ VMware
   terraform destroy terra-env-1234.xml vmware-1.key
   
   This will power down the VMs, delete them, delete the folder that Terraform created, and delete any virtual switches it created.
-  To create a new vmware template - clones are not in a private network
-
 
   -----------
   Templates
   -----------
-
-  All vmware templates must include this:
+  
+  Below is a hierarchy of VMware elements in their templates. The number in parentheses
+  represents how many of those elements are allowed.
+  
+        context(1)
+        └── environment(1)
+            ├── clone(n)
+            │   ├── network-ref(n)
+            │   ├── security-group-ref(n)
+            │   ├── post-create-task(n)
+            │   └── event-listener(n)
+            ├── network(n)
+            └── security-group(n)
+                └──port-range(n)
+  
+  All vmware templates must include one context element and one environment element under the context:
 
   <context
   xmlns="org.urbancode.terraform.tasks.vmware">
@@ -126,7 +140,7 @@ VMware
   name prefixes or orders in which they are created.
   
   An important note about vSphere images: they should be virtual machines, not templates, with at least 
-  one snapshot on them.
+  one snapshot on them. Support for creating clones from templates will be in a future patch.
   
   For creating a private network, include a network element in the environment for each subnet.
   
@@ -135,13 +149,18 @@ VMware
   A network element must have a network-name(string) and a port-count(int). This creates a virtual 
   switch and port group.
   
+  There is an optional parameter vlan-id for a network to specify the VLAN ID. By default it is 0, which
+  represents no VLAN.
+  
+  Example: <network network-name="my-net-web" port-count="32" vlan-id="2096" />
+  
   All clones on the private network must have a network-ref element pertaining to the proper network,
   referenced by name.
   
   <network-ref network-name="my-net-web" nic-index="1"/>
   
   The name should be the same as the network name they are on. The nic-index corresponds to the network 
-  card which will be on the network.
+  card which will be attached to the network.
   
   If you are creating a router to use for the private network, you must use a Linux image that can act 
   as a router.
@@ -150,7 +169,7 @@ VMware
   <post-create-task/>
   <event-listener/>
   
-  These elements will configure the networking files on the router. It's highly recommended that the 
+  These elements will configure the networking files on the router. It is highly recommended that the 
   router be created BEFORE any clones that are on its network (specify using the order attribute).
   In addition, for any non-router clone on the router, add this attribute: assign-host-ip="true" . 
   This will tell the clone to get its IP from the router instead of from your DHCP service.
@@ -241,10 +260,10 @@ VMware
   url=https://vcenter.mysite.com/sdk
   
   For vmware, the "type", "name", "username", "password", and "url" properties are all mandatory.
-  Name is just whatever you want to name your credentials. Should not contain spaces.
-  Username is your vcenter login name.
-  Password is your vcenter password.
-  Url is the url pointing to your vcenter server, followed by a /sdk suffix.
+  The "name" property whatever you want to name your credentials. The name should not contain spaces.
+  Username is your vCenter login name.
+  Password is your vCenter password.
+  Url is the url pointing to your vCenter server, followed by a /sdk suffix.
   
   Vmware environments have 4 required properties when creating an environment. EC2 environments have none.
   Here are the four required properties for vmware that must be passed in the command line arguments:
@@ -305,9 +324,9 @@ Amazon Web Services
     The following is a list of elements available in the xml:
 	[ The hierarchy represents which elements go under which in the xml ]
 
-    o context: The context holds the whole environment. It has one attribute, xmlns, 
-      which specified which package to look in for the map of element name to 
-      classname. The package it points to should contain a properties file named:
+    o context: The context holds the whole environment. It has one or more xmlns attributes, 
+      which specify which package to look in for the map of element name to 
+      classname for a specific namespace. The packages it points to should contain a properties file named:
       terralib.classes 
 	      for VMware use: xmlns="com.urbancode.uprovision.tasks.vmware"
 	      for AWS use: xmlns="com.urbancode.uprovision.tasks.aws"
@@ -505,7 +524,7 @@ Conf File Information
  * .temp files - these are the beginning forms of the conf files listed below. Content is added to them and placed in the appropriate conf file.
  
  * ippool.conf
-  Contains the start and end points for the IP pool used by vcenter.
+  Contains the start and end points for the IP pool used by vCenter.
  The start is the begining IP address to start allocating for VMs.
  It should be in the following format:
    start=192.168.2.1
