@@ -36,9 +36,9 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.jvnet.hudson</groupId>
+      <groupId>com.cloudbees.thirdparty</groupId>
       <artifactId>vijava</artifactId>
-      <version>2120100824</version>
+      <version>5.0.0</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
