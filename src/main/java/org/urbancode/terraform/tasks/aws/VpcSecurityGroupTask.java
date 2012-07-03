@@ -114,7 +114,7 @@ public class VpcSecurityGroupTask extends SubTask {
         List<String> id = new ArrayList<String>();
         id.add(groupId);
         
-        List<SecurityGroup> group = helper.describeSecurityGroups(id, ec2Client);
+        List<SecurityGroup> group = helper.getSecurityGroups(id, ec2Client);
         
         if (group != null && !group.isEmpty()) {
             result = true;

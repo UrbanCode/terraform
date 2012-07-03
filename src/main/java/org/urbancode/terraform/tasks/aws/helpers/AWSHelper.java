@@ -22,6 +22,7 @@ import java.util.List;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
 
+import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.model.Address;
 import com.amazonaws.services.ec2.model.AllocateAddressRequest;
@@ -76,6 +77,8 @@ import com.amazonaws.services.ec2.model.DescribeSecurityGroupsRequest;
 import com.amazonaws.services.ec2.model.DescribeSecurityGroupsResult;
 import com.amazonaws.services.ec2.model.DescribeSubnetsRequest;
 import com.amazonaws.services.ec2.model.DescribeSubnetsResult;
+import com.amazonaws.services.ec2.model.DescribeVpcsRequest;
+import com.amazonaws.services.ec2.model.DescribeVpcsResult;
 import com.amazonaws.services.ec2.model.DetachInternetGatewayRequest;
 import com.amazonaws.services.ec2.model.DetachNetworkInterfaceRequest;
 import com.amazonaws.services.ec2.model.DetachVolumeRequest;
@@ -216,7 +219,7 @@ public class AWSHelper {
      */
     public void waitForState(String instanceId, String expectedState, int timeout, AmazonEC2 ec2Client)
     throws RemoteException, InterruptedException {
-        long pollInterval = 3000L;
+        long pollInterval = 5000L;
         long timeoutInterval = timeout * 60L * 1000L;
         long start = System.currentTimeMillis();
 
@@ -229,7 +232,16 @@ public class AWSHelper {
                 throw new RemoteException(
                         "Timeout while waiting for instance to hit " + expectedState + " state.");
             }
-            state = getInstanceState(instanceId, ec2Client);
+            Instance instance = getInstanceById(instanceId, ec2Client);
+            if (instance != null) {
+                state = instance.getState().getName();
+                if (instance.getStateReason() != null && 
+                        "Server.InternalError".equals(instance.getStateReason().getCode())) {
+                    throw new RemoteException(instance.getStateReason().getMessage());
+                }
+            }
+            // check to see if the instance failed at startup 
+            
             Thread.sleep(pollInterval);
         }
         log.info("Instance " + instanceId + " is now in " + state + " state");
@@ -281,6 +293,10 @@ public class AWSHelper {
                         "Timeout while waiting for instance to hit " + expectedStatus + " status.");
             }
             if (status != null) {
+                if (expectedStatus.equals("ok") && status.equals("impaired")) {
+                    // instance hit impaired so we should stop and fail
+                    throw new RemoteException("Status hit " + status + " before " + expectedStatus);
+                }
                 status = getInstanceStatus(instanceId, ec2Client);
                 Thread.sleep(pollInterval);
             }
@@ -636,9 +652,18 @@ public class AWSHelper {
 
     //----------------------------------------------------------------------------------------------
     public void deleteEbsVolume(String volumeId, AmazonEC2 ec2Client) {
-        DeleteVolumeRequest request = new DeleteVolumeRequest()
-                                           .withVolumeId(volumeId);
-        ec2Client.deleteVolume(request);
+        try {
+            log.info("Deleting EBS Volume (" + volumeId + ")");
+            DeleteVolumeRequest request = new DeleteVolumeRequest()
+                                               .withVolumeId(volumeId);
+            ec2Client.deleteVolume(request);
+        }
+        catch (AmazonServiceException e) {
+            log.error("Failed to delete Ebs Volume", e);
+            if (!"InvalidVolume.NotFound".equalsIgnoreCase(e.getErrorCode())) {
+                
+            }
+        }
     }
 
     //----------------------------------------------------------------------------------------------
@@ -769,9 +794,19 @@ public class AWSHelper {
      */
     public void deleteInternetGateway(String gatewayId, AmazonEC2 ec2Client) {
         // TODO check if gateway is attached to anything
-        DeleteInternetGatewayRequest request = new DeleteInternetGatewayRequest()
-                                                    .withInternetGatewayId(gatewayId);
-        ec2Client.deleteInternetGateway(request);
+        
+        try {
+            DeleteInternetGatewayRequest request = new DeleteInternetGatewayRequest()
+                                                        .withInternetGatewayId(gatewayId);
+            ec2Client.deleteInternetGateway(request);
+        }
+        catch (AmazonServiceException e) {
+            log.error("Failed to delete Internet Gateway", e);
+            if (!"InvalidInternetGatewayID.NotFound".equalsIgnoreCase(e.getErrorCode())) {
+                // we're only going to swallow the expcetion if the gateway id was not found
+                throw e;
+            }
+        }
     }
 
     //----------------------------------------------------------------------------------------------
@@ -874,14 +909,14 @@ public class AWSHelper {
      * @param ec2Client
      * @return RouteTables - a List of RouteTables found
      */
-    public List<RouteTable> describeRouteTables(List<String> routeTableIds, AmazonEC2 ec2Client) {
+    public List<RouteTable> getRouteTables(List<String> routeTableIds, AmazonEC2 ec2Client) {
         DescribeRouteTablesRequest request = new DescribeRouteTablesRequest();
 
         if (routeTableIds != null && !routeTableIds.isEmpty()) {
             request = request.withRouteTableIds(routeTableIds);
         }
         DescribeRouteTablesResult result = ec2Client.describeRouteTables(request);
-
+        
         return result.getRouteTables();
     }
 
@@ -926,9 +961,18 @@ public class AWSHelper {
      * @param ec2Client
      */
     public void deleteRouteTable(String routeTableId, AmazonEC2 ec2Client) {
-        DeleteRouteTableRequest request = new DeleteRouteTableRequest()
-                                               .withRouteTableId(routeTableId);
-        ec2Client.deleteRouteTable(request);
+        try {
+            DeleteRouteTableRequest request = new DeleteRouteTableRequest()
+                                                   .withRouteTableId(routeTableId);
+            ec2Client.deleteRouteTable(request);
+        } 
+        catch (AmazonServiceException e) {
+            log.error("Failed to delete subnet", e);
+            if (!"InvalidSubnetID.NotFound".equalsIgnoreCase(e.getErrorCode())) {
+                // we're only going to swallow the expcetion if the subnet id was not found
+                throw e;
+            }
+        }
     }
 
     //----------------------------------------------------------------------------------------------
@@ -1044,9 +1088,19 @@ public class AWSHelper {
      * @param ec2Client
      */
     public void deleteSubnet(String subnetId, AmazonEC2 ec2Client) {
-        DeleteSubnetRequest request = new DeleteSubnetRequest()
-                                           .withSubnetId(subnetId);
-        ec2Client.deleteSubnet(request);
+        try {
+            log.info("Deleting Subnet (" + subnetId + ")");
+            DeleteSubnetRequest request = new DeleteSubnetRequest()
+                                                .withSubnetId(subnetId);
+            ec2Client.deleteSubnet(request);
+        }
+        catch (AmazonServiceException e) {
+            log.error("Failed to delete Subnet", e);
+            if (!"InvalidSubnetId.NotFound".equals(e.getErrorCode())) {
+                throw e;
+            }
+        }
+        
     }
 
     //----------------------------------------------------------------------------------------------
@@ -1056,7 +1110,7 @@ public class AWSHelper {
      * @param ec2Client
      * @return
      */
-    public List<Subnet> describeSubnets(List<String> subnetIds, AmazonEC2 ec2Client) {
+    public List<Subnet> getSubnets(List<String> subnetIds, AmazonEC2 ec2Client) {
         DescribeSubnetsRequest request = new DescribeSubnetsRequest();
 
         if (subnetIds != null && !subnetIds.isEmpty()) {
@@ -1074,7 +1128,7 @@ public class AWSHelper {
      * @param ec2Client
      * @return
      */
-    public List<SecurityGroup> describeSecurityGroups(List<String> groupIds, AmazonEC2 ec2Client) {
+    public List<SecurityGroup> getSecurityGroups(List<String> groupIds, AmazonEC2 ec2Client) {
         DescribeSecurityGroupsRequest request = new DescribeSecurityGroupsRequest();
 
         if (groupIds != null && !groupIds.isEmpty()) {
@@ -1111,9 +1165,18 @@ public class AWSHelper {
      * @param ec2Client
      */
     public void deleteSecurityGroup(String groupId, AmazonEC2 ec2Client) {
-        DeleteSecurityGroupRequest request = new DeleteSecurityGroupRequest()
-                                                  .withGroupId(groupId);
-        ec2Client.deleteSecurityGroup(request);
+        try {
+            log.info("Deleting Securty Group (" + groupId + ")");
+            DeleteSecurityGroupRequest request = new DeleteSecurityGroupRequest()
+                                                       .withGroupId(groupId);
+            ec2Client.deleteSecurityGroup(request);
+        }
+        catch (AmazonServiceException e) {
+            log.error("Failed to delete Security Group", e);
+            if (!"InvalidGroup.NotFound".equals(e.getErrorCode())) {
+                throw e;
+            }
+        }
     }
 
     //----------------------------------------------------------------------------------------------
@@ -1138,8 +1201,17 @@ public class AWSHelper {
      * @param ec2Client
      */
     public void deleteVpc(String vpcId, AmazonEC2 ec2Client) {
-        DeleteVpcRequest request = new DeleteVpcRequest().withVpcId(vpcId);
-        ec2Client.deleteVpc(request);
+        try {
+            log.info("Deleting Vpc (" + vpcId + ")");
+            DeleteVpcRequest request = new DeleteVpcRequest().withVpcId(vpcId);
+            ec2Client.deleteVpc(request);
+        }
+        catch (AmazonServiceException e) {
+            log.error("Failed to delete Vpc", e);
+            if (!"InvalidVpcID.NotFound".equalsIgnoreCase(e.getErrorCode())) {
+                throw e;
+            }
+        }
     }
 
     //----------------------------------------------------------------------------------------------
@@ -1200,7 +1272,7 @@ public class AWSHelper {
     public List<Route> describeRoutes(List<String> routeIds, String routeTableId, AmazonEC2 ec2Client) {
         List<String> routeTableIds = new ArrayList<String>();
         routeTableIds.add(routeTableId);
-        List<RouteTable> tables = describeRouteTables(routeTableIds, ec2Client); // only returns 1 table
+        List<RouteTable> tables = getRouteTables(routeTableIds, ec2Client); // only returns 1 table
         RouteTable table = tables.get(0);
         table.getRoutes().get(0);
         return table.getRoutes();

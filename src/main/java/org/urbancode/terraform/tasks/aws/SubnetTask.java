@@ -117,7 +117,7 @@ public class SubnetTask extends SubTask {
         List<String> id = new ArrayList<String>();
         id.add(subnetId);
         
-        List<Subnet> subnets = helper.describeSubnets(id, ec2Client);
+        List<Subnet> subnets = helper.getSubnets(id, ec2Client);
         
         if (subnets != null && !subnets.isEmpty()) {
             result = true;
@@ -138,7 +138,7 @@ public class SubnetTask extends SubTask {
             List<String> id = new ArrayList<String>();
             id.add(subnetId);
             
-            List<Subnet> subnets = helper.describeSubnets(id, ec2Client);
+            List<Subnet> subnets = helper.getSubnets(id, ec2Client);
             if (subnets != null && !subnets.isEmpty()) {
                 for (Subnet subnet : subnets) {
                     if (subnet.getAvailabilityZone().equalsIgnoreCase(zone)) {

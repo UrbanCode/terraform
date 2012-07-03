@@ -16,11 +16,19 @@
 package org.urbancode.terraform.tasks.aws.helpers;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.Reader;
+import java.io.StringReader;
 import java.io.Writer;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
+import java.nio.CharBuffer;
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetEncoder;
 import java.rmi.RemoteException;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
@@ -28,9 +36,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import com.jcraft.jsch.ChannelExec;
-import com.urbancode.commons.util.IO;
-import com.urbancode.commons.util.concurrent.NamedThreadFactory;
-import com.urbancode.commons.util.concurrent.NamedThreadFactory.ThreadMode;
+//import com.urbancode.commons.util.IO;
+//import com.urbancode.commons.util.concurrent.NamedThreadFactory;
+//import com.urbancode.commons.util.concurrent.NamedThreadFactory.ThreadMode;
 
 
 public class SshHelper {
@@ -41,10 +49,103 @@ public class SshHelper {
 
     private String name = "SshHelper";
     
+    // TODO - change prop name
+    final static private int BUFFER_SIZE =
+            Integer.getInteger("com.urbancode.commons.util.IO.bufferSize", 8192);
+    
     //----------------------------------------------------------------------------------------------
-    public String getName() {
-        return name;
+    static public void copy(Reader in, Appendable appendable)
+    throws IOException {
+        char[] buffer = new char[BUFFER_SIZE];
+        CharBuffer charBuffer = CharBuffer.wrap(buffer);
+        int count;
+        while ((count = in.read(buffer)) != -1) {
+            appendable.append(charBuffer, 0, count);
+        }
     }
+    
+    //----------------------------------------------------------------------------------------------
+    static public void copy(Reader in, Writer out)
+    throws IOException {
+        char[] buffer = new char[BUFFER_SIZE];
+        int count;
+        while ((count = in.read(buffer)) != -1) {
+            out.write(buffer, 0, count);
+        }
+    }
+    
+    static public OutputStreamWriter writer(OutputStream out, String charset) {
+        OutputStreamWriter result;
+        if (charset == null) {
+            result = writer(out);
+        }
+        else {
+            result = writer(out, Charset.forName(charset));
+        }
+        return result;
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    static public OutputStreamWriter writer(OutputStream out, CharsetEncoder encoder) {
+        OutputStreamWriter result;
+        if (encoder == null) {
+            result = writer(out);
+        }
+        else {
+            result = new OutputStreamWriter(out, encoder);
+        }
+        return result;
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    static public OutputStreamWriter writer(OutputStream out, Charset charset) {
+        OutputStreamWriter result;
+        if (charset == null) {
+            result = writer(out);
+        }
+        else {
+            CharsetEncoder encoder;
+            encoder = charset.newEncoder();
+            result = writer(out, encoder);
+        }
+        return result;
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    static public OutputStreamWriter writer(OutputStream out) {
+        OutputStreamWriter result;
+        
+        result = new OutputStreamWriter(out);
+        
+        return result;
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    static public InputStreamReader reader(InputStream in, String charsetName) {
+        InputStreamReader result;
+        if (charsetName == null) {
+            result = reader(in);
+        }
+        else {
+            result = new InputStreamReader(in, Charset.forName(charsetName));
+        }
+        return result;
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    static public StringReader reader(String string) {
+        return new StringReader(string);
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    static public InputStreamReader reader(InputStream in) {
+        InputStreamReader result;
+        
+        result = new InputStreamReader(in);
+            
+        return result;
+    }
+    
     
     //----------------------------------------------------------------------------------------------
     static public boolean isPortActive(String host, int port) {
@@ -96,8 +197,13 @@ public class SshHelper {
     //**********************************************************************************************
     // INSTANCE
     //**********************************************************************************************
-    final private ExecutorService threadPool = Executors.newCachedThreadPool(
-        new NamedThreadFactory("ssh-helper", ThreadMode.DAEMON));
+    final private ExecutorService threadPool = Executors.newCachedThreadPool();
+            //Executors.newCachedThreadPool(new NamedThreadFactory("ssh-helper", ThreadMode.DAEMON));
+    
+    //----------------------------------------------------------------------------------------------
+    public String getName() {
+        return name;
+    }
 
     //----------------------------------------------------------------------------------------------
     public Future<String> getErrorString(final ChannelExec channel) {
@@ -106,9 +212,9 @@ public class SshHelper {
             public String call()
             throws Exception {
                 StringBuilder builder = new StringBuilder();
-                Reader in = IO.reader(channel.getErrStream(), IO.utf8());
+                Reader in = reader(channel.getErrStream(), "UTF-8");
                 try {
-                    IO.copy(in, builder);
+                    copy(in, builder);
                 }
                 finally {
                     in.close();
@@ -125,9 +231,9 @@ public class SshHelper {
             public String call()
             throws Exception {
                 StringBuilder builder = new StringBuilder();
-                Reader in = IO.reader(channel.getInputStream(), IO.utf8());
+                Reader in = reader(channel.getInputStream(), "UTF-8");
                 try {
-                    IO.copy(in, builder);
+                    copy(in, builder);
                 }
                 finally {
                     in.close();
@@ -143,9 +249,9 @@ public class SshHelper {
             @Override
             public Void call()
             throws Exception {
-                Writer out = IO.writer(channel.getOutputStream(), IO.utf8());
+                Writer out = writer(channel.getOutputStream(), "UTF-8");
                 try {
-                    IO.copy(IO.reader(input), out);
+                    copy(reader(input), out);
                 }
                 finally {
                     out.close();

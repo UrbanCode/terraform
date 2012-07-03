@@ -18,6 +18,7 @@ package org.urbancode.terraform.tasks.vmware.events;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.lang.ProcessBuilder.Redirect;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -288,7 +289,7 @@ public class CloneVmCreatedEventListener extends ExtensionTask implements TaskEv
         String url = host.getUrl();
         String virtualHostUser = host.getUser();
         String virtualHostPassword = host.getPassword();
-        Processes processes = new Processes();
+        //Processes processes = new Processes();
         List<String> commandLine = new ArrayList<String>();
         commandLine.add("vmrun");
         commandLine.add("-T");
@@ -308,8 +309,12 @@ public class CloneVmCreatedEventListener extends ExtensionTask implements TaskEv
         commandLine.addAll(args);
         ProcessBuilder builder = new ProcessBuilder(commandLine);
         builder.redirectErrorStream(true);
+        File vmRunFile = File.createTempFile("vmrun", ".log");
+        vmRunFile.deleteOnExit();
+        builder.redirectOutput(Redirect.to(vmRunFile));
+        vmRunFile.delete();
         Process process = builder.start();
-        processes.discardOutput(process);
+        //processes.discardOutput(process);
         int exitCode = process.waitFor();
         if (exitCode != 0) {
             throw new IOException("Command failed with code " + exitCode);

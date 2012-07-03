@@ -7,7 +7,7 @@ This is an Environment Template used to create an environment with Amazon Web Se
 <!-- The context points to what Tasks to use for each element of the template-->
 <context xmlns="org.urbancode.terraform.tasks.aws" >
   <!-- The name of your instances will be prefixed with your environment name-->
-  <environment name="qa-environment" >
+  <environment name="durr" >
     <!-- The Virtual Private Cloud is the network in Amazon that the instances
          will be launch in. More specifically, you launch instances into the 
          subnets of the VPC. The VPC has a CIDR which defines the network. --> 
@@ -47,7 +47,7 @@ This is an Environment Template used to create an environment with Amazon Web Se
          the name of the subnet to launch in to, the number of these instances you 
          want to launch, whether or not it should get an Elastic Ip, the SSH key
          to use, and the size. See the README for more info or check out AWS docs.-->
-    <instance name="myinstance" ami-id="ami-707ca619" subnet-name="myHouse" count="1"
+    <instance name="derp" ami-id="ami-707ca619" subnet-name="myHouse" count="1"
             elastic-ip="true" private-key-ref="nick-portal" image-size="M1Small" >
         <!-- This is just telling what Security Groups to apply to this instance.
              You can have multiple of these. -->
@@ -83,8 +83,8 @@ This is an Environment Template used to create an environment with Amazon Web Se
          from the outside. This instance also has a count="2" so this instance
          will be launched twice, as in, you will have two seperate instances 
          with these details. All instance names carry a number suffix. For this
-         example there will be privateinstance00 and privateinstance01 -->
-    <instance name="privateinstance" ami-id="ami-707ca619" subnet-name="yourHouse" count="2"
+         example there will be herp00 and herp01 -->
+    <instance name="herp" ami-id="ami-707ca619" subnet-name="yourHouse" count="2"
             elastic-ip="false" private-key-ref="nick-portal" image-size="M1Small"
             load-balancer="balanceLoader" >
         <security-group-ref security-group-name="GuardDog" />

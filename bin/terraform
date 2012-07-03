@@ -79,6 +79,10 @@ elif [ "$1" = "destroy" ] ; then
 #    $destroy_class destroy \"$INPUT_FILE\" \"$CREDS\" >\"$TERRAFORM_HOME/bin/stdout\" 2>&1 &"
   echo $command_line
   eval $command_line
+  if [ "$?" -eq 0 ]
+  then
+    rm $INPUT_FILE
+  fi
 
 # -- Usage ---------------------------------------------------------------------
 

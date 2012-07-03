@@ -164,9 +164,10 @@ public class Main {
     //----------------------------------------------------------------------------------------------
     public void execute()
     throws XmlParsingException, IOException, CredentialsException {
+        Context context = null;
         try {
             // parse xml and set context
-            Context context = parseContext(inputXmlFile);
+            context = parseContext(inputXmlFile);
             
             Credentials credentials = parseCredentials(credsFile);
             
@@ -174,18 +175,19 @@ public class Main {
 
             log.debug("Create = " + isCreate);
             if (isCreate) {
-                log.debug("Calling create() on context");
-                context.create();
-
                 // create new file if creating a new environment
                 outputXmlFile = new File("env-" + context.getEnvironment().getName() + "-" +
-                                     UUID.randomUUID().toString().substring(0,4) + ".xml");
-                writeEnvToXml(outputXmlFile, context);
+                        UUID.randomUUID().toString().substring(0,4) + ".xml");
+                
+                log.debug("Calling create() on context");
+                context.create();
             }
             else {
+                // we want to write out the environments whether we succeed in destroying them
+                // or fail (then it will write out whatever is left)
+                outputXmlFile = inputXmlFile;
                 log.debug("Calling destroy() on context");
                 context.destroy();
-                inputXmlFile.delete();
             }
         }
         catch(ParserConfigurationException e1) {
@@ -193,6 +195,12 @@ public class Main {
         }
         catch(SAXException e2) {
             throw new XmlParsingException("SAXException: " + e2.getMessage(), e2);
+        }
+        finally {
+            if (context != null && outputXmlFile != null) {
+                log.debug("Writing context out to " + outputXmlFile);
+                writeEnvToXml(outputXmlFile, context);
+            }
         }
     }
 
