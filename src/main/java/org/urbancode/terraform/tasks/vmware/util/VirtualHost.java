@@ -76,12 +76,6 @@ public class VirtualHost implements Serializable {
     private String password;
 
     //----------------------------------------------------------------------------------------------
-    public VirtualHost(VmHost host)
-    throws RemoteException, MalformedURLException {
-        this(host.getUrl(), host.getUser(), host.getPassword());
-    }
-
-    //----------------------------------------------------------------------------------------------
     public VirtualHost(String url, String user, String password)
     throws RemoteException, MalformedURLException {
         this.url = url;
@@ -385,10 +379,10 @@ public class VirtualHost implements Serializable {
         ProcessBuilder builder = new ProcessBuilder(commandLine);
         builder.redirectErrorStream(true);
         Process process = builder.start();
-        
+
         InputStream procIn = process.getInputStream();
         IOUtil.getInstance().discardStream(procIn);
-        
+
         int exitCode = process.waitFor();
         if (exitCode != 0) {
             throw new IOException("Command failed with code " + exitCode);

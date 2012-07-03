@@ -29,16 +29,16 @@ Installation Instructions
 
 Building Terraform
 ======================================
-Set your current working directory to the extracted terraform directory.
-To build terraform, run:
+  Set your current working directory to the extracted terraform directory.
+  To build terraform, run:
      $ ant dist
 
 
 
 Basic Installation
 ======================================
- You will find a shell script in terraform/bin. This is used
- to run Terraform. 
+  You will find a shell script in terraform/bin. This is used
+  to run Terraform. 
 
   How to run terraform: 
     terraform [create/destory] [input-xml-file] [input-credentials-file] [prop1=val1 prop2=val2 ...]
@@ -163,7 +163,7 @@ VMware
   card which will be attached to the network.
   
   If you are creating a router to use for the private network, you must use a Linux image that can act 
-  as a router.
+  as a router. We recommend Debian or Ubuntu.
   
   You must also include these elements on the clone:
   <post-create-task/>
@@ -325,8 +325,7 @@ Amazon Web Services
 	[ The hierarchy represents which elements go under which in the xml ]
 
     o context: The context holds the whole environment. It has one or more xmlns attributes, 
-      which specify which package to look in for the map of element name to 
-      classname for a specific namespace. The packages it points to should contain a properties file named:
+      which specify map an xml namespace to a package. The packages it points to should contain a properties file named:
       terralib.classes 
 	      for VMware use: xmlns="com.urbancode.uprovision.tasks.vmware"
 	      for AWS use: xmlns="com.urbancode.uprovision.tasks.aws"
