@@ -15,8 +15,11 @@
  ******************************************************************************/
 package org.urbancode.terraform.tasks.vmware.util;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.Serializable;
+import java.lang.ProcessBuilder.Redirect;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.rmi.RemoteException;
@@ -28,8 +31,9 @@ import java.util.UUID;
 import javax.naming.NamingException;
 
 import org.apache.log4j.Logger;
+import org.urbancode.terraform.tasks.util.IOUtil;
 
-import com.urbancode.commons.util.processes.Processes;
+//import com.urbancode.commons.util.processes.Processes;
 import com.vmware.vim25.HostNetworkPolicy;
 import com.vmware.vim25.HostPortGroupSpec;
 import com.vmware.vim25.HostVirtualSwitchSpec;
@@ -361,7 +365,6 @@ public class VirtualHost implements Serializable {
     throws IOException, InterruptedException {
         waitForVmtools(vm);
         String vmx = getVmxPath(vm);
-        Processes processes = new Processes();
         List<String> commandLine = new ArrayList<String>();
         commandLine.add("vmrun");
         commandLine.add("-T");
@@ -385,7 +388,10 @@ public class VirtualHost implements Serializable {
         ProcessBuilder builder = new ProcessBuilder(commandLine);
         builder.redirectErrorStream(true);
         Process process = builder.start();
-        processes.discardOutput(process);
+        
+        InputStream procIn = process.getInputStream();
+        IOUtil.getInstance().discardStream(procIn);
+        
         int exitCode = process.waitFor();
         if (exitCode != 0) {
             throw new IOException("Command failed with code " + exitCode);

@@ -18,15 +18,22 @@ package org.urbancode.terraform.tasks.vmware;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.urbancode.terraform.tasks.common.ExtensionTask;
+import org.urbancode.terraform.tasks.util.IOUtil;
 import org.urbancode.terraform.tasks.vmware.util.VirtualHost;
 
-import com.urbancode.commons.util.processes.Processes;
+//import com.urbancode.commons.util.processes.Processes;
+//import com.urbancode.commons.util.Check;
+//import com.urbancode.commons.util.IO;
+//import com.urbancode.commons.util.concurrent.AbstractNamedCallable;
+//import com.urbancode.commons.util.concurrent.WaitFuture;
 import com.vmware.vim25.mo.VirtualMachine;
 
 public class PostCreateTask extends ExtensionTask {
@@ -104,7 +111,6 @@ public class PostCreateTask extends ExtensionTask {
         String url = host.getUrl();
         String virtualHostUser = host.getUser();
         String virtualHostPassword = host.getPassword();
-        Processes processes = new Processes();
         List<String> commandLine = new ArrayList<String>();
         commandLine.add("vmrun");
         commandLine.add("-T");
@@ -126,7 +132,10 @@ public class PostCreateTask extends ExtensionTask {
         ProcessBuilder builder = new ProcessBuilder(commandLine);
         builder.redirectErrorStream(true);
         Process process = builder.start();
-        processes.discardOutput(process);
+        
+        InputStream procIn = process.getInputStream();
+        IOUtil.getInstance().discardStream(procIn);
+        
         int exitCode = process.waitFor();
         if (exitCode != 0) {
             throw new IOException("Command failed with code " + exitCode);
