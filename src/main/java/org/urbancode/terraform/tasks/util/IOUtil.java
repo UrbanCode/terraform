@@ -16,10 +16,13 @@ public class IOUtil {
     static private final Logger log = Logger.getLogger(IOUtil.class);
     static private final int BUFFER_SIZE = 8192;
 
-    private static IOUtil instance = new IOUtil();
+    private static IOUtil instance = null;
 
     //----------------------------------------------------------------------------------------------
     public static IOUtil getInstance() {
+        if (instance == null) {
+            instance = new IOUtil();
+        }
         return instance;
     }
     
@@ -66,7 +69,7 @@ public class IOUtil {
     //**********************************************************************************************
     // INSTANCE
     //**********************************************************************************************
-
+    
     ExecutorService service = Executors.newCachedThreadPool();
     
     //----------------------------------------------------------------------------------------------
@@ -89,6 +92,7 @@ public class IOUtil {
                 }
             }
         }.withStream(in);
+        
         return result;
     }
     
