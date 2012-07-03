@@ -31,8 +31,6 @@ public class MainTest {
     //----------------------------------------------------------------------------------------------
     @Test
     public void testMain() {
-        //this is a test to placate git for now
-        String howAwesomeIsSteven = "super awesome";
-        Assert.assertEquals(true, "super awesome".equals(howAwesomeIsSteven));
+
     }
 }

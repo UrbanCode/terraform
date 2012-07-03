@@ -14,7 +14,7 @@ Installation Instructions
  Need:
    Java 1.5 (or higher)
    vmrun (only for VMware environments)
-   Apache Ant (for building) 
+   Maven (for building/dependencies) 
 
 
     To use the VMware portion of Terraform, you will need to have access to
@@ -31,7 +31,7 @@ Building Terraform
 ======================================
   Set your current working directory to the extracted terraform directory.
   To build terraform, run:
-     $ ant dist
+     $ mvn package
 
 
 
