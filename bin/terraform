@@ -66,24 +66,22 @@ if [ "$1" = "create" ] ; then
 #    $create_class create \"$INPUT_FILE\" \"$CREDS\" $PROPS >\"$TERRAFORM_HOME/bin/stdout\" 2>&1 &"
   echo $command_line
   eval $command_line
-
 # -- Destroy ----------------------------------------------------------------------
 
 elif [ "$1" = "destroy" ] ; then
 
-  shift
-  FORCE=0
-  command_line="exec \"$javacmd\" $JAVA_OPTS 
+#  shift
+#  FORCE=0
+  command_line="\"$javacmd\" $JAVA_OPTS 
     -cp \"$CP\" \
     $destroy_class destroy \"$INPUT_FILE\" \"$CREDS\""
 #    $destroy_class destroy \"$INPUT_FILE\" \"$CREDS\" >\"$TERRAFORM_HOME/bin/stdout\" 2>&1 &"
   echo $command_line
   eval $command_line
   if [ "$?" -eq 0 ]
-  then
+  then 
     rm $INPUT_FILE
   fi
-
 # -- Usage ---------------------------------------------------------------------
 
 else
