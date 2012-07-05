@@ -25,18 +25,18 @@ import org.apache.commons.collections.BidiMap;
 import org.apache.commons.collections.bidimap.DualHashBidiMap;
 import org.apache.log4j.Logger;
 
-public class PersistenceConfig {
+public class NamespaceConfiguration {
 
     //**********************************************************************************************
     // CLASS
     //**********************************************************************************************
 
-    static private final Logger log = Logger.getLogger(PersistenceConfig.class);
+    static private final Logger log = Logger.getLogger(NamespaceConfiguration.class);
 
-    private static PersistenceConfig instance = new PersistenceConfig();
+    private static NamespaceConfiguration instance = new NamespaceConfiguration();
 
     //----------------------------------------------------------------------------------------------
-    public static PersistenceConfig getInstance() {
+    public static NamespaceConfiguration getInstance() {
         return instance;
     }
 
@@ -50,7 +50,7 @@ public class PersistenceConfig {
     private Map<String, BidiMap> nameSpaces = new HashMap<String, BidiMap>();
 
     //----------------------------------------------------------------------------------------------
-    private PersistenceConfig() {
+    private NamespaceConfiguration() {
 
     }
 
