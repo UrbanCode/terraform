@@ -20,14 +20,12 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.log4j.Logger;
+import org.urbancode.terraform.tasks.EnvironmentCreationException;
+import org.urbancode.terraform.tasks.EnvironmentDestructionException;
 import org.urbancode.terraform.tasks.aws.helpers.AWSHelper;
 import org.urbancode.terraform.tasks.common.SubTask;
 
 import com.amazonaws.services.ec2.AmazonEC2;
-import com.amazonaws.services.ec2.model.CreateSecurityGroupRequest;
-import com.amazonaws.services.ec2.model.CreateSecurityGroupResult;
-import com.amazonaws.services.ec2.model.DeleteSecurityGroupRequest;
-import com.amazonaws.services.ec2.model.DescribeSecurityGroupsRequest;
 import com.amazonaws.services.ec2.model.SecurityGroup;
 
 public class VpcSecurityGroupTask extends SubTask {
@@ -125,7 +123,8 @@ public class VpcSecurityGroupTask extends SubTask {
      
     //----------------------------------------------------------------------------------------------
     @Override
-    public void create() {
+    public void create() 
+    throws EnvironmentCreationException {
         if (ec2Client == null) {
             ec2Client = context.getEC2Client();
         }
@@ -134,11 +133,15 @@ public class VpcSecurityGroupTask extends SubTask {
             log.info("Creating SecurityGroup");
             setId(helper.createSecurityGroup(name, vpcId, descr, ec2Client));
             log.info("SecurityGroup " + name + " created with id: " + groupId);
+            helper.tagInstance(groupId, "terraform.environment", context.getEnvironment().getName(), ec2Client);
             
             for (RuleTask rule : getRules()) {
                 rule.setGroupId(groupId);
                 rule.create();
             }
+        }
+        catch (Exception e) {
+            throw new EnvironmentCreationException("Could not create Security Group completely.", e);
         }
         finally {
             ec2Client = null;
@@ -147,7 +150,8 @@ public class VpcSecurityGroupTask extends SubTask {
     
     //----------------------------------------------------------------------------------------------
     @Override
-    public void destroy() {
+    public void destroy() 
+    throws EnvironmentDestructionException {
         if (ec2Client == null) {
             ec2Client = context.getEC2Client();
         }
@@ -157,6 +161,9 @@ public class VpcSecurityGroupTask extends SubTask {
             helper.deleteSecurityGroup(groupId, ec2Client);
             log.info("SecurityGroup " + name + " : " + groupId + " destroyed");
             setId(null);
+        }
+        catch (Exception e) {
+            throw new EnvironmentDestructionException("Could not destroy Security Group completely.", e);
         }
         finally {
             ec2Client = null;

@@ -77,8 +77,6 @@ import com.amazonaws.services.ec2.model.DescribeSecurityGroupsRequest;
 import com.amazonaws.services.ec2.model.DescribeSecurityGroupsResult;
 import com.amazonaws.services.ec2.model.DescribeSubnetsRequest;
 import com.amazonaws.services.ec2.model.DescribeSubnetsResult;
-import com.amazonaws.services.ec2.model.DescribeVpcsRequest;
-import com.amazonaws.services.ec2.model.DescribeVpcsResult;
 import com.amazonaws.services.ec2.model.DetachInternetGatewayRequest;
 import com.amazonaws.services.ec2.model.DetachNetworkInterfaceRequest;
 import com.amazonaws.services.ec2.model.DetachVolumeRequest;
@@ -93,6 +91,7 @@ import com.amazonaws.services.ec2.model.InternetGateway;
 import com.amazonaws.services.ec2.model.IpPermission;
 import com.amazonaws.services.ec2.model.ModifyInstanceAttributeRequest;
 import com.amazonaws.services.ec2.model.NetworkInterface;
+import com.amazonaws.services.ec2.model.Placement;
 import com.amazonaws.services.ec2.model.ReleaseAddressRequest;
 import com.amazonaws.services.ec2.model.Reservation;
 import com.amazonaws.services.ec2.model.RevokeSecurityGroupEgressRequest;
@@ -112,6 +111,7 @@ import com.amazonaws.services.elasticloadbalancing.model.CreateAppCookieStickine
 import com.amazonaws.services.elasticloadbalancing.model.CreateLBCookieStickinessPolicyRequest;
 import com.amazonaws.services.elasticloadbalancing.model.CreateLoadBalancerRequest;
 import com.amazonaws.services.elasticloadbalancing.model.CreateLoadBalancerResult;
+import com.amazonaws.services.elasticloadbalancing.model.DeleteLoadBalancerRequest;
 import com.amazonaws.services.elasticloadbalancing.model.DeregisterInstancesFromLoadBalancerRequest;
 import com.amazonaws.services.elasticloadbalancing.model.DeregisterInstancesFromLoadBalancerResult;
 import com.amazonaws.services.elasticloadbalancing.model.HealthCheck;
@@ -361,7 +361,7 @@ public class AWSHelper {
 
         return instance;
     }
-
+    
     //----------------------------------------------------------------------------------------------
     /**
      * Launches a single instance with given parameters.
@@ -384,14 +384,25 @@ public class AWSHelper {
      */
     public String launchAmi(String amiId, String subnetId, String keyPair, String size, 
             String userData, List<String> groups, List<BlockDeviceMapping> blockMaps, 
-            String ariId, String akiId, AmazonEC2 ec2Client) {
+            String ariId, String akiId, String zone, AmazonEC2 ec2Client) {
         String instanceId = null;
         RunInstancesRequest request =  new RunInstancesRequest()
                                             .withImageId(amiId)
                                             .withMinCount(1)
                                             .withMaxCount(1);
-        if (subnetId != null) {
+        if (subnetId != null && !subnetId.isEmpty()) {
+            // launch in VPC
             request = request.withSubnetId(subnetId);
+        }
+        else if (zone != null && !zone.isEmpty()) {
+            // launch in EC2
+            // TODO - check for valid zones
+            Placement placement = new Placement().withAvailabilityZone(zone);
+            request = request.withPlacement(placement);
+        }
+        else {
+            log.error("No place to launch the instance specified." +
+                      "\nPlease specify either a subnet or region");
         }
         if (keyPair != null) {
             request = request.withKeyName(keyPair);
@@ -459,10 +470,19 @@ public class AWSHelper {
      * @param ec2Client
      */
     public void detachGateway(String gatewayId, String vpcId, AmazonEC2 ec2Client) {
-        DetachInternetGatewayRequest request = new DetachInternetGatewayRequest()
-                                                    .withInternetGatewayId(gatewayId)
-                                                    .withVpcId(vpcId);
-        ec2Client.detachInternetGateway(request);
+        try {
+            DetachInternetGatewayRequest request = new DetachInternetGatewayRequest()
+                                                        .withInternetGatewayId(gatewayId)
+                                                        .withVpcId(vpcId);
+            ec2Client.detachInternetGateway(request);
+        }
+        catch (AmazonServiceException e) {
+            log.error("Failed to detach Internet Gateway", e);
+            if (!"InvalidInternetGatewayID.NotFound".equalsIgnoreCase(e.getErrorCode())) {
+                // we're only going to swallow the expcetion if the gateway id was not found
+                throw e;
+            }
+        }
     }
 
     //----------------------------------------------------------------------------------------------
@@ -487,7 +507,10 @@ public class AWSHelper {
     }
 
     //----------------------------------------------------------------------------------------------
-
+    /**
+     * 
+     * @param ec2Client
+     */
     public void waitForPublicAddresses(AmazonEC2 ec2Client) {
         try {
             Thread.sleep(10000);
@@ -538,7 +561,15 @@ public class AWSHelper {
     }
 
     //----------------------------------------------------------------------------------------------
-    public List<com.amazonaws.services.elasticloadbalancing.model.Instance> deregisterInstancesLB(String loadBalancerName, List<com.amazonaws.services.elasticloadbalancing.model.Instance> instances, AmazonElasticLoadBalancing lbClient) {
+    /**
+     * 
+     * @param loadBalancerName
+     * @param instances
+     * @param lbClient
+     * @return
+     */
+     public List<com.amazonaws.services.elasticloadbalancing.model.Instance> deregisterInstancesLB(String loadBalancerName, List<com.amazonaws.services.elasticloadbalancing.model.Instance> instances, AmazonElasticLoadBalancing lbClient) {
+     
         DeregisterInstancesFromLoadBalancerRequest request = new DeregisterInstancesFromLoadBalancerRequest()
                                                                   .withInstances(instances)
                                                                   .withLoadBalancerName(loadBalancerName);
@@ -547,6 +578,13 @@ public class AWSHelper {
     }
 
     //----------------------------------------------------------------------------------------------
+     /**
+      * 
+      * @param loadBalancerName
+      * @param instances
+      * @param lbClient
+      * @return
+      */
     public List<com.amazonaws.services.elasticloadbalancing.model.Instance> registerInstancesLB(String loadBalancerName, List<com.amazonaws.services.elasticloadbalancing.model.Instance> instances, AmazonElasticLoadBalancing lbClient) {
         List<com.amazonaws.services.elasticloadbalancing.model.Instance> updatedInstances = null;
         if (instances != null) {
@@ -651,6 +689,11 @@ public class AWSHelper {
     }
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * 
+     * @param volumeId
+     * @param ec2Client
+     */
     public void deleteEbsVolume(String volumeId, AmazonEC2 ec2Client) {
         try {
             log.info("Deleting EBS Volume (" + volumeId + ")");
@@ -661,12 +704,19 @@ public class AWSHelper {
         catch (AmazonServiceException e) {
             log.error("Failed to delete Ebs Volume", e);
             if (!"InvalidVolume.NotFound".equalsIgnoreCase(e.getErrorCode())) {
-                
+                throw e;
             }
         }
     }
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * 
+     * @param volumeId
+     * @param instanceId
+     * @param device
+     * @param ec2Client
+     */
     public void attachEbsVolumeToInstance(String volumeId, String instanceId, String device, AmazonEC2 ec2Client) {
         AttachVolumeRequest request = new AttachVolumeRequest()
                                            .withInstanceId(instanceId)
@@ -676,6 +726,14 @@ public class AWSHelper {
     }
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * 
+     * @param volumeId
+     * @param instanceId
+     * @param device
+     * @param force
+     * @param ec2Client
+     */
     public void detachEbsVolumeFromInstance(String volumeId, String instanceId, String device,
                                                  boolean force, AmazonEC2 ec2Client) {
         DetachVolumeRequest request = new DetachVolumeRequest()
@@ -695,10 +753,20 @@ public class AWSHelper {
      * @param ec2Client
      */
     public void deleteRoute(String routeTableId, String destCidr, AmazonEC2 ec2Client) {
-        DeleteRouteRequest request = new DeleteRouteRequest()
-                                          .withDestinationCidrBlock(destCidr)
-                                          .withRouteTableId(routeTableId);
-        ec2Client.deleteRoute(request);
+        try {
+            DeleteRouteRequest request = new DeleteRouteRequest()
+                                               .withDestinationCidrBlock(destCidr)
+                                               .withRouteTableId(routeTableId);
+            ec2Client.deleteRoute(request);
+        }
+        catch (AmazonServiceException e) {
+            log.error("Failed to delete Route: " +
+                      "\n\tRouteTableId: " + routeTableId + 
+                      "\n\tDestination CIDR: " + destCidr, e);
+            if (!"InvalidRouteTableID.NotFound".equals(e.getErrorCode())) {
+                throw e;
+            }
+        }
     }
 
     //----------------------------------------------------------------------------------------------
@@ -713,18 +781,27 @@ public class AWSHelper {
      * @param ec2Client AmazonEC2 connection
      */
     public void createRoute(String routeTableId, String destCidr, String attachId, AmazonEC2 ec2Client) {
-        CreateRouteRequest request = new CreateRouteRequest()
-                                          .withDestinationCidrBlock(destCidr)
-                                          .withRouteTableId(routeTableId);
-        if (attachId.startsWith("i-")) {
-            request = request.withInstanceId(attachId);
-            // disable src/dest check to allow instance to run as NAT
-            setSrcDestCheck(false, attachId, ec2Client);
+        try {
+            CreateRouteRequest request = new CreateRouteRequest()
+                                              .withDestinationCidrBlock(destCidr)
+                                              .withRouteTableId(routeTableId);
+            if (attachId.startsWith("i-")) {
+                request = request.withInstanceId(attachId);
+                // disable src/dest check to allow instance to run as NAT
+                setSrcDestCheck(false, attachId, ec2Client);
+            }
+            else if (attachId.startsWith("igw-")) {
+                request = request.withGatewayId(attachId);
+            }
+            ec2Client.createRoute(request);
         }
-        else if (attachId.startsWith("igw-")) {
-            request = request.withGatewayId(attachId);
+        catch (AmazonServiceException e) {
+            log.error("Failed to create Route in Route Table " + routeTableId, e);
+            if (!"InvalidRouteTableID.NotFound".equalsIgnoreCase(e.getErrorCode())) {
+                // we're only going to swallow the expcetion if the gateway id was not found
+                throw e;
+            }
         }
-        ec2Client.createRoute(request);
     }
     
     //----------------------------------------------------------------------------------------------
@@ -778,9 +855,14 @@ public class AWSHelper {
      * @return InternetGatewayId
      */
     public String createInternetGateway(AmazonEC2 ec2Client) {
+        String gatewayId = null;
+        
         CreateInternetGatewayRequest request = new CreateInternetGatewayRequest();
         CreateInternetGatewayResult result = ec2Client.createInternetGateway(request);
-        String gatewayId = result.getInternetGateway().getInternetGatewayId();
+        
+        if (result != null && result.getInternetGateway() != null) {
+            gatewayId = result.getInternetGateway().getInternetGatewayId();
+        }
 
         return gatewayId;
     }
@@ -818,26 +900,27 @@ public class AWSHelper {
      * @param ec2Client
      */
     public void attachInternetGatewayToVpc(String gatewayId, String vpcId, AmazonEC2 ec2Client) {
-        AttachInternetGatewayRequest request = new AttachInternetGatewayRequest()
-                                                    .withInternetGatewayId(gatewayId)
-                                                    .withVpcId(vpcId);
-        ec2Client.attachInternetGateway(request);
-    }
-
-    //----------------------------------------------------------------------------------------------
-    /**
-     * Detaches the given internetGateway from the given Vpc. Does not check for any
-     *  public mapped addresses before detaching.
-     *
-     * @param gatewayId
-     * @param vpcId
-     * @param ec2Client
-     */
-    public void detachInternetGatewayFromVpc(String gatewayId, String vpcId, AmazonEC2 ec2Client) {
-        DetachInternetGatewayRequest request = new DetachInternetGatewayRequest()
-                                                    .withInternetGatewayId(gatewayId)
-                                                    .withVpcId(vpcId);
-        ec2Client.detachInternetGateway(request);
+        try {
+            AttachInternetGatewayRequest request = new AttachInternetGatewayRequest()
+                                                        .withInternetGatewayId(gatewayId)
+                                                        .withVpcId(vpcId);
+            ec2Client.attachInternetGateway(request);
+        }
+        catch (AmazonServiceException e) {
+            log.error("Failed to attach Internet Gateway to Vpc", e);
+            // TODO - is this the correct string?
+            if ("InvalidVpcID.NotFound".equalsIgnoreCase(e.getErrorCode())) {
+                // could not find vpc
+                log.error("Vpc " + vpcId + " not found.");
+            }
+            else if ("InvalidInternetGatewayID.NotFound".equalsIgnoreCase(e.getErrorCode())) {
+                // we're only going to swallow the expcetion if the gateway id was not found
+                log.error("Internet Gateway " + gatewayId + " not found.");
+            }
+            else {
+                throw e;
+            }
+        }
     }
 
     //----------------------------------------------------------------------------------------------
@@ -929,13 +1012,26 @@ public class AWSHelper {
      * @return
      */
     public String associateRouteTableWithSubnet(String routeTableId, String subnetId, AmazonEC2 ec2Client) {
-        AssociateRouteTableRequest request = new AssociateRouteTableRequest()
-                                                  .withRouteTableId(routeTableId)
-                                                  .withSubnetId(subnetId);
-        AssociateRouteTableResult result = ec2Client.associateRouteTable(request);
-        String associationId = result.getAssociationId();
+        String assId = null;
+        try {
+            AssociateRouteTableRequest request = new AssociateRouteTableRequest()
+                                                       .withRouteTableId(routeTableId)
+                                                       .withSubnetId(subnetId);
+            AssociateRouteTableResult result = ec2Client.associateRouteTable(request);
+            
+            if (result != null) {
+                assId = result.getAssociationId();
+            }
+        }
+        catch (AmazonServiceException e) {
+            log.error("Failed to associate Route Table with Subnet", e);
+            // TODO - is this the correct string?
+            if (!"InvalidRouteTableID.NotFound".equalsIgnoreCase(e.getErrorCode())) {
+                throw e;
+            }
+        }
 
-        return associationId;
+        return assId;
     }
 
     //----------------------------------------------------------------------------------------------
@@ -946,11 +1042,21 @@ public class AWSHelper {
      * @return
      */
     public String createRouteTable(String vpcId, AmazonEC2 ec2Client) {
-        CreateRouteTableRequest request = new CreateRouteTableRequest()
-                                               .withVpcId(vpcId);
-        CreateRouteTableResult result = ec2Client.createRouteTable(request);
-        String routeTableId = result.getRouteTable().getRouteTableId();
-
+        String routeTableId = null;
+        try {
+            CreateRouteTableRequest request = new CreateRouteTableRequest()
+                                                   .withVpcId(vpcId);
+            CreateRouteTableResult result = ec2Client.createRouteTable(request);
+            if (result != null && result.getRouteTable() != null) {
+                routeTableId = result.getRouteTable().getRouteTableId();
+            }
+        }
+        catch (AmazonServiceException e) {
+            log.error("Failed to create Route Table in Vpc " + vpcId, e);
+            if (!"InvalidVpcID.NotFound".equalsIgnoreCase(e.getErrorCode())) {
+                throw e;
+            }
+        }
         return routeTableId;
     }
 
@@ -968,7 +1074,8 @@ public class AWSHelper {
         } 
         catch (AmazonServiceException e) {
             log.error("Failed to delete subnet", e);
-            if (!"InvalidSubnetID.NotFound".equalsIgnoreCase(e.getErrorCode())) {
+            if (!"InvalidSubnetID.NotFound".equals(e.getErrorCode()) 
+                && !"InvalidRouteTableID.NotFound".equals(e.getErrorCode())) {
                 // we're only going to swallow the expcetion if the subnet id was not found
                 throw e;
             }
@@ -982,9 +1089,18 @@ public class AWSHelper {
      * @param ec2Client
      */
     public void disassociateRouteTableFromSubnet(String associationId, AmazonEC2 ec2Client) {
-        DisassociateRouteTableRequest request = new DisassociateRouteTableRequest()
-                                                     .withAssociationId(associationId);
-        ec2Client.disassociateRouteTable(request);
+        try {
+            DisassociateRouteTableRequest request = new DisassociateRouteTableRequest()
+                                                          .withAssociationId(associationId);
+            ec2Client.disassociateRouteTable(request);
+        }
+        catch (AmazonServiceException e) {
+            log.error("Failed to disassociate Route Table from Subnet", e);
+            // TODO - is this the correct string?
+            if (!"InvalidAssociationID.NotFound".equalsIgnoreCase(e.getErrorCode())) {
+                throw e;
+            }
+        }
     }
 
     //----------------------------------------------------------------------------------------------
@@ -1001,29 +1117,37 @@ public class AWSHelper {
     public void createRuleForSecurityGroup(String groupId, String protocol, int startPort,
                                                 int endPort, String cidr, boolean inbound,
                                                 AmazonEC2 ec2Client) {
-        // protocol should be lowercase
-        protocol = protocol.toLowerCase();
-
-        // create container for request
-        // we need to use IpPermission object here because the other (old) way
-        // is depreciated and no longer works (but it's still in the code?)
-        IpPermission perm = new IpPermission().withFromPort(startPort)
-                                               .withToPort(endPort)
-                                               .withIpProtocol(protocol)
-                                               .withIpRanges(cidr);
-        if (inbound) {
-            // inbound rule
-            AuthorizeSecurityGroupIngressRequest request = new AuthorizeSecurityGroupIngressRequest()
-                                                                .withGroupId(groupId)
-                                                                .withIpPermissions(perm);
-            ec2Client.authorizeSecurityGroupIngress(request);
+        try {
+            // protocol should be lowercase
+            protocol = protocol.toLowerCase();
+    
+            // create container for request
+            // we need to use IpPermission object here because the other (old) way
+            // is depreciated and no longer works (but it's still in the code?)
+            IpPermission perm = new IpPermission().withFromPort(startPort)
+                                                   .withToPort(endPort)
+                                                   .withIpProtocol(protocol)
+                                                   .withIpRanges(cidr);
+            if (inbound) {
+                // inbound rule
+                AuthorizeSecurityGroupIngressRequest request = new AuthorizeSecurityGroupIngressRequest()
+                                                                    .withGroupId(groupId)
+                                                                    .withIpPermissions(perm);
+                ec2Client.authorizeSecurityGroupIngress(request);
+            }
+            else {
+                // outbound rule
+                AuthorizeSecurityGroupEgressRequest request = new AuthorizeSecurityGroupEgressRequest()
+                                                                    .withGroupId(groupId)
+                                                                    .withIpPermissions(perm);
+                ec2Client.authorizeSecurityGroupEgress(request);
+            }
         }
-        else {
-            // outbound rule
-            AuthorizeSecurityGroupEgressRequest request = new AuthorizeSecurityGroupEgressRequest()
-                                                                .withGroupId(groupId)
-                                                                .withIpPermissions(perm);
-            ec2Client.authorizeSecurityGroupEgress(request);
+        catch (AmazonServiceException e) {
+            log.error("Failed to create Rule on Security Group " + groupId, e);
+            if (!"InvalidGroup.NotFound".equalsIgnoreCase(e.getErrorCode())) {
+                throw e;
+            }
         }
     }
 
@@ -1041,23 +1165,31 @@ public class AWSHelper {
     public void deleteRuleForSecurityGroup(String groupId, String protocol, int startPort,
                                                 int endPort, String cidr, boolean inbound,
                                                 AmazonEC2 ec2Client) {
-
+        
         IpPermission perm = new IpPermission().withFromPort(startPort)
                                                .withToPort(endPort)
                                                .withIpProtocol(protocol)
                                                .withIpRanges(cidr);
-
-        if (inbound) {
-            RevokeSecurityGroupIngressRequest request = new RevokeSecurityGroupIngressRequest()
-                                                             .withGroupId(groupId)
-                                                             .withIpPermissions(perm);
-            ec2Client.revokeSecurityGroupIngress(request);
+        try {
+            if (inbound) {
+                RevokeSecurityGroupIngressRequest request = new RevokeSecurityGroupIngressRequest()
+                                                                 .withGroupId(groupId)
+                                                                 .withIpPermissions(perm);
+                ec2Client.revokeSecurityGroupIngress(request);
+            }
+            else {
+                RevokeSecurityGroupEgressRequest request = new RevokeSecurityGroupEgressRequest()
+                                                                .withGroupId(groupId)
+                                                                .withIpPermissions(perm);
+                ec2Client.revokeSecurityGroupEgress(request);
+            }
         }
-        else {
-            RevokeSecurityGroupEgressRequest request = new RevokeSecurityGroupEgressRequest()
-                                                            .withGroupId(groupId)
-                                                            .withIpPermissions(perm);
-            ec2Client.revokeSecurityGroupEgress(request);
+        catch (AmazonServiceException e) {
+            log.error("Failed to delete Rule on Security Group " + groupId);
+            // TODO - is this the correct string?
+            if (!"InvalidGroup.NotFound".equals(e.getErrorCode())) {
+                throw e;
+            }
         }
     }
 
@@ -1071,12 +1203,23 @@ public class AWSHelper {
      * @return
      */
     public String createSubnet(String vpcId, String cidr, String zone, AmazonEC2 ec2Client) {
-        CreateSubnetRequest request = new CreateSubnetRequest()
-                                           .withVpcId(vpcId)
-                                           .withCidrBlock(cidr)
-                                           .withAvailabilityZone(zone);
-        CreateSubnetResult result = ec2Client.createSubnet(request);
-        String subnetId = result.getSubnet().getSubnetId();
+        String subnetId = null;
+        try {
+            CreateSubnetRequest request = new CreateSubnetRequest()
+                                               .withVpcId(vpcId)
+                                               .withCidrBlock(cidr)
+                                               .withAvailabilityZone(zone);
+            CreateSubnetResult result = ec2Client.createSubnet(request);
+            if (result != null && result.getSubnet() != null) {
+                subnetId = result.getSubnet().getSubnetId();
+            }
+        }
+        catch (AmazonServiceException e) {
+            log.error("Failed to create Subnet", e);
+            if (!"InvalidVpcID.NotFound".equalsIgnoreCase(e.getErrorCode())) {
+                throw e;
+            }
+        }
 
         return subnetId;
     }
@@ -1149,13 +1292,24 @@ public class AWSHelper {
      * @return
      */
     public String createSecurityGroup(String groupName, String vpcId, String descr, AmazonEC2 ec2Client) {
-        CreateSecurityGroupRequest request = new CreateSecurityGroupRequest()
-                                                  .withGroupName(groupName)
-                                                  .withVpcId(vpcId)
-                                                  .withDescription(descr);
-        CreateSecurityGroupResult result = ec2Client.createSecurityGroup(request);
+        String groupId = null;
+        try {
+            CreateSecurityGroupRequest request = new CreateSecurityGroupRequest()
+                                                      .withGroupName(groupName)
+                                                      .withVpcId(vpcId)
+                                                      .withDescription(descr);
+            CreateSecurityGroupResult result = ec2Client.createSecurityGroup(request);
+            groupId = result.getGroupId();
+        
+        }
+        catch (AmazonServiceException e) {
+            log.error("Failed to create Security Group", e);
+            if (!"InvalidVpcID.NotFound".equalsIgnoreCase(e.getErrorCode())) {
+                throw e;
+            }
+        }
 
-        return result.getGroupId();
+        return groupId;
     }
 
     //----------------------------------------------------------------------------------------------
@@ -1415,5 +1569,17 @@ public class AWSHelper {
         }
 
         return privateIp;
+    }
+
+    public void deleteLoadBalancer(String loadBalancerName, AmazonElasticLoadBalancing elbClient) {
+        try {
+            DeleteLoadBalancerRequest deleteRequest = new DeleteLoadBalancerRequest()
+                                                            .withLoadBalancerName(loadBalancerName);
+            elbClient.deleteLoadBalancer(deleteRequest);
+        }
+        catch (AmazonServiceException e) {
+            log.error("Could not delete Load Balancer " + loadBalancerName, e);
+            throw e;
+        }
     }
 }

@@ -138,6 +138,7 @@ public class InetGwyTask extends SubTask {
                 setId(null);
                 log.info("Creating InternetGateway with AWS connection : " + ec2Client);
                 setId(helper.createInternetGateway(ec2Client));
+                helper.tagInstance(gatewayId, "terraform.environment", context.getEnvironment().getName(), ec2Client);
                 log.info("InternetGateway created with gatewayId: " + getId());
                 helper.attachInternetGatewayToVpc(gatewayId, vpcId, ec2Client);
             }

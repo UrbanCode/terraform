@@ -165,8 +165,10 @@ public class EnvironmentTaskAWS extends EnvironmentTask {
             
             for (InstanceTask instance : instances) {
                 if (doCreate) {
-                    String subnetIn = getVpc().findSubnetForName(instance.getSubnetName()).getId();
-                    instance.setSubnetId(subnetIn);
+                    if (vpc != null) {
+                        String subnetIn = getVpc().findSubnetForName(instance.getSubnetName()).getId();
+                        instance.setSubnetId(subnetIn);
+                    }
                 }
                 
                 MultiThreadTask mThread = new MultiThreadTask(instance, doCreate, context);
@@ -211,58 +213,37 @@ public class EnvironmentTaskAWS extends EnvironmentTask {
     }
     
     //----------------------------------------------------------------------------------------------
-    @Override
-    public void create() 
-    throws EnvironmentCreationException {
-        log.debug("EnvironmentAWS: create()");
-        if (ec2Client == null) {
-            ec2Client = context.getEC2Client();
-        }
-        
-        log.info("Creating Environment...");
-        
-        setStartTime(System.currentTimeMillis());
-        
-        try {
-            log.debug("Starting Vpc Creation");
-            getVpc().create();
-            log.debug("Finished Vpc Creation");
-            
-            // launch load balancers before we launch instances
-            // we do this so we can just hold a ref to lb on the 
-            // instance and we need to register the it on the lb.
-            log.debug("Starting Loadbalancers");
-            launchLoadBalancers(loadBalancers);
-            log.debug("Finished Loadbalancers");
-            
-            log.debug("Launching instances");
-            if (instances != null) {
-                List<InstanceTask> newInstances = new ArrayList<InstanceTask>();
-                log.debug("Found " + instances.size() + " instances.");
-                for (InstanceTask instance : instances) {
-                    instance.setName(instance.getName() + "0");
-                    log.debug("Starting instance: " + instance.getName());
-                    InstanceTask newInstance = null;
-                    // make a list of all the new instances
-                    for (int i=1; i<instance.getCount(); i++) {
-                        newInstance = instance.clone();
-                        newInstance.setName(instance.getName() + i); 
-                        // TODO - update EBS names?
-                        newInstances.add(newInstance);
-                    }
-                    // add 0
-                    instance.setName(instance.getName() + "0");
-                    instance.setCount(1);
-                    
-                    if (instance != null) {
-                        log.debug("Finished setup for instance: " + instance.getName());
-                    }
+    private void copyInstances() {
+        if (instances != null) {
+            List<InstanceTask> newInstances = new ArrayList<InstanceTask>();
+            log.debug("Found " + instances.size() + " instances.");
+            for (InstanceTask instance : instances) {
+                log.debug("Starting instance: " + instance.getName());
+                InstanceTask newInstance = null;
+                // make a list of all the new instances
+                for (int i=1; i<instance.getCount(); i++) {
+                    newInstance = instance.clone();
+                    String instanceName = String.format(instance.getName() + "%02d", i);
+                    newInstance.setName(instanceName); 
+                    // TODO - update EBS names?
+                    newInstances.add(newInstance);
                 }
-                // add new instances to old instances
-                instances.addAll(newInstances);
+                instance.setCount(1);
+                
+                if (instance != null) {
+                    log.debug("Finished setup for instance: " + instance.getName());
+                }
             }
-            
-            // setup launch groups
+            // add new instances to old instances
+            instances.addAll(newInstances);
+        }
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    private void launchInstances() 
+    throws Exception {
+        // setup launch groups
+        if (instances != null) {
             log.debug("Preparing to launch instances");
             Comparator<InstanceTask> comparer = new InstancePriorityComparator();
             PriorityQueue<InstanceTask> queue = new PriorityQueue<InstanceTask>(3, comparer);
@@ -334,8 +315,77 @@ public class EnvironmentTaskAWS extends EnvironmentTask {
                 else {
                     log.debug("Differnet priority!");
                 }
-//                currentInst = nextInst;
             }
+        }
+        else {
+            log.warn("No instances to launch");
+        }
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    private void detachENIs() {
+        // detach any ENIs that we can
+        List<NetworkInterface> interfaces = helper.describeNetworkInterfaces(null, getVpc().getId(), ec2Client);
+        List<String> detachIds = new ArrayList<String>();
+        if (interfaces != null) {
+            for (NetworkInterface iface : interfaces) {
+                if (iface.getAttachment() != null && iface.getAttachment().getDeviceIndex() != 0) {
+                    detachIds.add(iface.getAttachment().getAttachmentId());
+                }
+            }
+            helper.detachNetworkInterfaces(detachIds, ec2Client);
+        }
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    private void destroyLoadBalancers() 
+    throws EnvironmentDestructionException {
+        // destroy load balancers
+        if (getLoadBalancers() != null && !getLoadBalancers().isEmpty()) {
+            for (LoadBalancerTask loadBalancer : getLoadBalancers()) {
+                loadBalancer.destroy();
+            }
+        }
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    @Override
+    public void create() 
+    throws EnvironmentCreationException {
+        log.debug("EnvironmentAWS: create()");
+        if (ec2Client == null) {
+            ec2Client = context.getEC2Client();
+        }
+        
+        log.info("Creating Environment");
+        
+        setStartTime(System.currentTimeMillis());
+        
+        try {
+            log.debug("Starting Vpc Creation");
+            if (getVpc() != null) {
+                getVpc().create();
+            }
+            else {
+                log.info("No Vpc to create");
+            }
+            log.debug("Finished Vpc Creation");
+            
+            // launch load balancers before we launch instances
+            // we do this so we can just hold a ref to lb on the 
+            // instance and we need to register the it on the lb.
+            log.debug("Starting Loadbalancers");
+            launchLoadBalancers(loadBalancers);
+            log.debug("Finished Loadbalancers");
+            
+            log.debug("Preparing instances");
+            copyInstances();
+            
+            log.debug("Launching instances");
+            launchInstances();
+            log.debug("Finished instances");
+            
+            log.info("Environment Created");
         }
         catch (Exception e) {
             throw new EnvironmentCreationException("Failed to create environment!", e);
@@ -359,26 +409,14 @@ public class EnvironmentTaskAWS extends EnvironmentTask {
         }
         
         try {
-            
-            // detach any ENIs that we can
-            List<NetworkInterface> interfaces = helper.describeNetworkInterfaces(null, getVpc().getId(), ec2Client);
-            List<String> detachIds = new ArrayList<String>();
-            for (NetworkInterface iface : interfaces) {
-                if (iface.getAttachment() != null && iface.getAttachment().getDeviceIndex() != 0) {
-                    detachIds.add(iface.getAttachment().getAttachmentId());
-                }
-            }
-            helper.detachNetworkInterfaces(detachIds, ec2Client);
+            // detach any ENIs that may cause issues
+            detachENIs();
             
             // destroy instances
             handleInstances(instances, false);
             
-            // destroy load balancers
-            if (getLoadBalancers() != null && !getLoadBalancers().isEmpty()) {
-                for (LoadBalancerTask loadBalancer : getLoadBalancers()) {
-                    loadBalancer.destroy();
-                }
-            }
+            // destroy all load balancers
+            destroyLoadBalancers();
             
             // kill vpc
             getVpc().destroy();

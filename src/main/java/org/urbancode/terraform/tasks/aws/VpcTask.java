@@ -158,7 +158,7 @@ public class VpcTask extends Task {
         if (vpcId == null) {
             log.info("Starting Vpc...");
             setId(helper.createVpc(cidr, ec2Client));
-            helper.tagInstance(vpcId, "tf.env", context.getEnvironment().getName(), ec2Client);
+            helper.tagInstance(vpcId, "terraform.environment", context.getEnvironment().getName(), ec2Client);
             log.info("Vpc created with id: " + vpcId);
         }
         else {
@@ -236,7 +236,8 @@ public class VpcTask extends Task {
     }
     
     //----------------------------------------------------------------------------------------------
-    private void startSecurityGroups() {
+    private void startSecurityGroups() 
+    throws Exception {
         if (securityGroups != null && !securityGroups.isEmpty()) {
             for (VpcSecurityGroupTask group : securityGroups) {
                     if (group.getId() == null) {

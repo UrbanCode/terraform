@@ -34,7 +34,7 @@ import org.urbancode.terraform.tasks.util.PropertyResolver;
 import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.JSchException;
 
-public class SshTask extends SubTask {
+public class SshTask extends PostCreateActionTask {
     
     //**********************************************************************************************
     // CLASS
@@ -45,44 +45,14 @@ public class SshTask extends SubTask {
     //**********************************************************************************************
     // INSTANCE
     //**********************************************************************************************
-
-    private String host;
-    private String idFilePath;
-    
-    private int port = 22;  // default ssh port
-    private String user;
-    private String pass;
     
     private String cmds;
+    private SshHelper sshHelper = new SshHelper();
+    private SshConnection ssh = null;
     
     //----------------------------------------------------------------------------------------------
     public SshTask(Context context) {
         super(context);
-    }
-    
-    //----------------------------------------------------------------------------------------------
-    public void setUser(String user) {
-        this.user = user;
-    }
-    
-    //----------------------------------------------------------------------------------------------
-    public void setPassword(String pass) {
-        this.pass = pass;
-    }
-    
-    //----------------------------------------------------------------------------------------------
-    public void setHost(String host) {
-        this.host = host;
-    }
-    
-    //----------------------------------------------------------------------------------------------
-    public void setPort(int port) {
-        this.port = port;
-    }
-    
-    //----------------------------------------------------------------------------------------------
-    public void setIdFilePath(String idFilePath) {
-        this.idFilePath = idFilePath;
     }
     
     //----------------------------------------------------------------------------------------------
@@ -91,35 +61,11 @@ public class SshTask extends SubTask {
     }
     
     //----------------------------------------------------------------------------------------------
-    public String getUser() {
-        return user;
-    }
-    
-    //----------------------------------------------------------------------------------------------
-    public String getPassword() {
-        return pass;
-    }
-    
-    //----------------------------------------------------------------------------------------------
-    public String getHost() {
-        return host;
-    }
-    
-    //----------------------------------------------------------------------------------------------
-    public int getPort() {
-        return port;
-    }
-    
-    //----------------------------------------------------------------------------------------------
-    public String getIdFilePath() {
-        return idFilePath;
-    }
-    
-    //----------------------------------------------------------------------------------------------
     public String getCmds() {
         return cmds;
     }
     
+    //----------------------------------------------------------------------------------------------
     private SshConnection startSshConnection() 
     throws PostCreateException, JSchException {
         SshConnection result = null;
@@ -159,15 +105,41 @@ public class SshTask extends SubTask {
         
         return result;
     }
+    
+    //----------------------------------------------------------------------------------------------
+    private void runCmds() 
+    throws JSchException, IOException, InterruptedException, ExecutionException {
+     // run the commands
+        ChannelExec channel = ssh.run(cmds);
+        channel.getOutputStream().close();
+        
+        Future<String> output = sshHelper.getOutputString(channel);
+        Future<String> error = sshHelper.getErrorString(channel);
+        
+        String outputText = output.get();
+        String errorText = error.get();
+        
+        // check the exit status of the commands
+        while (true) {
+            if (channel.isClosed()) {
+                int exitCode = channel.getExitStatus();
+                if (exitCode != 0) {
+                    throw new IOException("Command failed with code " + exitCode + " : " + errorText);
+                }
+                break;
+            }
+            Thread.sleep(1000);
+        }
+        
+        log.debug("Command out: " + outputText);
+        log.debug("Command err: " + errorText);
+    }
 
     //----------------------------------------------------------------------------------------------
     @Override
     public void create() 
     throws PostCreateException {
-        
-        SshConnection ssh = null;
         try {
-            SshHelper sshHelper = new SshHelper();
             ssh = startSshConnection();
             // see if we made a connection
             if (ssh == null) {
@@ -182,29 +154,7 @@ public class SshTask extends SubTask {
             // wait until we can make a connection - default port is 22
             SshHelper.waitForPort(host, port); 
             
-            // run the commands
-            ChannelExec channel = ssh.run(cmds);
-            channel.getOutputStream().close();
-            
-            Future<String> output = sshHelper.getOutputString(channel);
-            Future<String> error = sshHelper.getErrorString(channel);
-            
-            String outputText = output.get();
-            String errorText = error.get();
-            
-            // check the exit status of the commands
-            while (true) {
-                if (channel.isClosed()) {
-                    int exitCode = channel.getExitStatus();
-                    if (exitCode != 0) {
-                        throw new IOException("Command failed with code " + exitCode + " : " + errorText);
-                    }
-                    break;
-                }
-                Thread.sleep(1000);
-            }
-            log.debug("Command out: " + outputText);
-            log.debug("Command err: " + errorText);
+            runCmds();
         } 
         catch (RemoteException e) {
             log.error("Timeout while waiting for port: " + port + " on host: " + host, e);

@@ -23,7 +23,7 @@ import org.apache.log4j.Logger;
 import org.urbancode.terraform.tasks.common.Context;
 
 
-public class ScriptTask extends PostCreateSubTask {
+public class ScriptTask extends BootActionSubTask {
     
     //**********************************************************************************************
     // CLASS

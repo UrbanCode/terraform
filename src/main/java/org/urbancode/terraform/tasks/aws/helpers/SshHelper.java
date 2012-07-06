@@ -36,9 +36,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import com.jcraft.jsch.ChannelExec;
-//import com.urbancode.commons.util.IO;
-//import com.urbancode.commons.util.concurrent.NamedThreadFactory;
-//import com.urbancode.commons.util.concurrent.NamedThreadFactory.ThreadMode;
 
 
 public class SshHelper {
@@ -51,7 +48,7 @@ public class SshHelper {
     
     // TODO - change prop name
     final static private int BUFFER_SIZE =
-            Integer.getInteger("com.urbancode.commons.util.IO.bufferSize", 8192);
+            Integer.getInteger("org.urbancode.terraform.util.io.buffer.size", 8192);
     
     //----------------------------------------------------------------------------------------------
     static public void copy(Reader in, Appendable appendable)

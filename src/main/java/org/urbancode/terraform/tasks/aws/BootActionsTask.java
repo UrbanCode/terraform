@@ -38,12 +38,12 @@ public class BootActionsTask extends SubTask {
     
     private String shell;
     private String userData;
-    private List<PostCreateSubTask> actions;
+    private List<BootActionSubTask> actions;
 
     //----------------------------------------------------------------------------------------------
     public BootActionsTask(ContextAWS context) {
         this.context = context;
-        actions = new ArrayList<PostCreateSubTask>();
+        actions = new ArrayList<BootActionSubTask>();
     }
     
     //----------------------------------------------------------------------------------------------
@@ -57,12 +57,12 @@ public class BootActionsTask extends SubTask {
     }
     
     //----------------------------------------------------------------------------------------------
-    protected String getUserData() {
+    public String getUserData() {
         return userData;
     }
     
     //----------------------------------------------------------------------------------------------
-    public List<PostCreateSubTask> getScript() {
+    public List<BootActionSubTask> getScript() {
         return Collections.unmodifiableList(actions);
     }
     
@@ -73,7 +73,7 @@ public class BootActionsTask extends SubTask {
     
     //----------------------------------------------------------------------------------------------
     public ScriptTask createScript() {
-        PostCreateSubTask scriptTask = new ScriptTask(context);
+        BootActionSubTask scriptTask = new ScriptTask(context);
         actions.add(scriptTask);
         return (ScriptTask)scriptTask;
     }
@@ -82,8 +82,8 @@ public class BootActionsTask extends SubTask {
     //         You should be able to just complete teh puppet task 
     //         with the scriptTask.
     //----------------------------------------------------------------------------------------------
-    public PostCreateSubTask createPuppet() {
-        PostCreateSubTask puppet = new PuppetTask(context);
+    public BootActionSubTask createPuppet() {
+        BootActionSubTask puppet = new PuppetTask(context);
         actions.add(puppet);
         return puppet;
     }
@@ -96,7 +96,7 @@ public class BootActionsTask extends SubTask {
         
         setUserData(userData);
         if (getScript() != null) {
-            for (PostCreateSubTask task : getScript()) {
+            for (BootActionSubTask task : getScript()) {
                 task.create();
                 setUserData(getUserData() + task.getCmds());
             }

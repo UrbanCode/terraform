@@ -37,7 +37,7 @@ public class RouteTask extends SubTask {
     private AWSHelper helper;
     private ContextAWS context;
 
-    private String routeId;
+//    private String routeId;
     private String routeTableId;
     private String target;
     private String cidr;
@@ -49,10 +49,10 @@ public class RouteTask extends SubTask {
         helper = context.getAWSHelper();
     }
     
-    //----------------------------------------------------------------------------------------------
-    public String getId() {
-        return routeId;
-    }
+//    //----------------------------------------------------------------------------------------------
+//    public String getId() {
+//        return routeId;
+//    }
     
     //----------------------------------------------------------------------------------------------
     public String getTarget() {
@@ -69,10 +69,10 @@ public class RouteTask extends SubTask {
         return cidr;
     }
     
-    //----------------------------------------------------------------------------------------------
-    public void setId(String id) {
-        this.routeId = id;
-    }
+//    //----------------------------------------------------------------------------------------------
+//    public void setId(String id) {
+//        this.routeId = id;
+//    }
     
     //----------------------------------------------------------------------------------------------
     public void setRouteTableId(String id) {

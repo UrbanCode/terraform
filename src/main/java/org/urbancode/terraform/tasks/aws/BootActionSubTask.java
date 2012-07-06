@@ -13,38 +13,47 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.urbancode.terraform.tasks.common;
+package org.urbancode.terraform.tasks.aws;
+
+import org.apache.log4j.Logger;
+import org.urbancode.terraform.tasks.common.Context;
+import org.urbancode.terraform.tasks.common.SubTask;
 
 
-abstract public class SubTask extends Task {
+public abstract class BootActionSubTask extends SubTask {
 
     //**********************************************************************************************
     // CLASS
     //**********************************************************************************************
-
+    final static private Logger log = Logger.getLogger(BootActionSubTask.class);
+    
     //**********************************************************************************************
     // INSTANCE
     //**********************************************************************************************
-
+    
+    protected String script;
+    
     //----------------------------------------------------------------------------------------------
-    protected SubTask() {
-        super(null);
+    protected BootActionSubTask() {
+        
     }
-
+    
     //----------------------------------------------------------------------------------------------
-    protected SubTask(Context context) {
+    protected BootActionSubTask(Context context) {
         super(context);
     }
+    
+    //----------------------------------------------------------------------------------------------
+    public abstract void setCmds(String script);
+    
+    //----------------------------------------------------------------------------------------------
+    protected abstract String getCmds();
+    
+    //----------------------------------------------------------------------------------------------
+    @Override
+    abstract public void create();
 
     //----------------------------------------------------------------------------------------------
     @Override
-    abstract public void create() 
-    throws Exception;
-
-    //----------------------------------------------------------------------------------------------
-    @Override
-    abstract public void destroy() 
-    throws Exception;
-
-
+    abstract public void destroy();
 }

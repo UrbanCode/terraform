@@ -173,7 +173,7 @@ public class LoadBalancerTask extends SubTask {
                 elbClient = context.getELBClient();
             }
             
-            String stickyPolicyName = "StickyPolicy";
+            String stickyPolicyName = "StickyPolicy";   // scope of the policy name? Will this need to change?
             long defaultCookieExp = 60000;
             
             // get amazon ids 
@@ -189,13 +189,14 @@ public class LoadBalancerTask extends SubTask {
                         for (ListenerTask task : getListeners()) {
                             Listener tmp = new Listener(task.getProtocol(), task.getLoadBalancerPort(), task.getInstancePort());
                             if (task.isSecure()) {
-                                tmp.setSSLCertificateId(task.getCertId());
+                                tmp.setSSLCertificateId(task.getCertId());  // TODO - test
                             }
                             listeners.add(tmp);
                         }
                     }
                     else {
-                        log.error("No listeners specified for LoadBalancer: " + loadBalancerName);
+                        log.warn("No listeners specified for LoadBalancer: " + loadBalancerName 
+                               + "\nThis load balancer is not configured to balance any instances.");
                     }
                     
                     // launch the load balancer
@@ -205,17 +206,24 @@ public class LoadBalancerTask extends SubTask {
                     helper.createStickyPolicy(loadBalancerName, stickyPolicyName, getAppCookieName(), defaultCookieExp, elbClient);
                     
                     // configure the HealthChecks on the instances for them to be registered properly
-                    String hcTarget = getHealthCheck().getProtocol() + ":" + getHealthCheck().getPort() + getHealthCheck().getPath();
-                    int health = getHealthCheck().getHealthyCount();
-                    int unhealth = getHealthCheck().getUnhealthyCount();
-                    int interval = getHealthCheck().getInterval();
-                    int timeout = getHealthCheck().getTimeout();
-                    helper.setupHealthCheck(getName(), hcTarget, health, unhealth, interval, timeout, elbClient);
+                    if (getHealthCheck() != null) {
+                        String hcTarget = getHealthCheck().getProtocol() + ":" + getHealthCheck().getPort() + getHealthCheck().getPath();
+                        int health = getHealthCheck().getHealthyCount();
+                        int unhealth = getHealthCheck().getUnhealthyCount();
+                        int interval = getHealthCheck().getInterval();
+                        int timeout = getHealthCheck().getTimeout();
+                        helper.setupHealthCheck(getName(), hcTarget, health, unhealth, interval, timeout, elbClient);
+                    }
+                    else {
+                        log.warn("No HealthCheck specified for load balancer " + getName()
+                                + "\nYou may not be able to reach the instances behind this load balancer.");
+                    }
                  } 
                  else {
                      String msg = "Could not find subnet " + getSubnetName() + " for load balancer " + getName() + 
                                   "\nLoad Balancer " + getName() + " not created.";
                      log.error(msg);
+                     throw new EnvironmentCreationException(msg);
                  }
             }
             catch (Exception e) {
@@ -225,7 +233,6 @@ public class LoadBalancerTask extends SubTask {
             finally {
                 elbClient = null;
             }
-            
         }
     }
 
@@ -237,11 +244,8 @@ public class LoadBalancerTask extends SubTask {
             elbClient = context.getELBClient();
         }
         try {
-            
-            DeleteLoadBalancerRequest deleteRequest = new DeleteLoadBalancerRequest();
-            deleteRequest = deleteRequest.withLoadBalancerName(getName());
-            elbClient.deleteLoadBalancer(deleteRequest);
-            
+            helper = context.getAWSHelper();
+            helper.deleteLoadBalancer(getName(), elbClient);
             // will auto-delete policies and listeners associated with loadBalancer
         }
         catch (Exception e) {

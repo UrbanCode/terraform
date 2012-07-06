@@ -147,18 +147,22 @@ public class RouteTableTask extends SubTask {
         return result;
     }
     
+    /**
+     * 
+     * 
+     * @param defaultRoute
+     * @return
+     */
     private String setupMainTable(boolean defaultRoute) {
         String result = null;
         
+        
         // grab id of first (only) route table in vpc
         List<RouteTable> tables = helper.getRouteTables(null, ec2Client);
-        RouteTable foundTable;
-        //assume one route table per vpc 
         
         for (RouteTable table : tables) {
             if (table.getVpcId().equals(vpcId)) {
                 log.info("Found route table.");
-                foundTable = table;
                 routeTableId = table.getRouteTableId();
                 break;
             }
@@ -179,7 +183,7 @@ public class RouteTableTask extends SubTask {
     //----------------------------------------------------------------------------------------------
     @Override
     public void create() 
-    throws Exception { 
+    throws EnvironmentCreationException { 
         if (ec2Client == null) {
             ec2Client = context.getEC2Client();
         }
@@ -194,6 +198,7 @@ public class RouteTableTask extends SubTask {
                 setId(helper.createRouteTable(vpcId, ec2Client));
             }
             log.info("RouteTableId created with routeTableId: " + routeTableId);
+            helper.tagInstance(routeTableId, "terraform.environment", context.getEnvironment().getName(), ec2Client);
             
             // create any other routes
             for (RouteTask route : getRoutes()) {
@@ -216,7 +221,7 @@ public class RouteTableTask extends SubTask {
     //----------------------------------------------------------------------------------------------
     @Override
     public void destroy() 
-    throws Exception {
+    throws EnvironmentDestructionException {
         if (ec2Client == null) {
             ec2Client = context.getEC2Client();
         }

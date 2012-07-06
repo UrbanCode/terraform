@@ -65,6 +65,7 @@ public class InstanceTask extends Task {
     private String userData;
     private String loadBalancer;
     private String privateIp;
+    private String zone;
     
     // default values
     private int count = 1;
@@ -79,6 +80,11 @@ public class InstanceTask extends Task {
     public InstanceTask(ContextAWS context) {
         this.context = context;
         helper = context.getAWSHelper();
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    public void setZone(String zone) {
+        this.zone = zone;
     }
     
     //----------------------------------------------------------------------------------------------
@@ -161,6 +167,11 @@ public class InstanceTask extends Task {
     }
     
     //----------------------------------------------------------------------------------------------
+    public String getZone() {
+        return zone;
+    }
+    
+    //----------------------------------------------------------------------------------------------
     public String getRamdiskId() {
         return ariId;
     }
@@ -182,12 +193,12 @@ public class InstanceTask extends Task {
     
     //----------------------------------------------------------------------------------------------
     public int getPriority() {
-        return priority;                  
+        return priority;
     }
     
     //----------------------------------------------------------------------------------------------
     public int getCount() {
-        return count;                  
+        return count;
     }
     
     //----------------------------------------------------------------------------------------------
@@ -342,7 +353,8 @@ public class InstanceTask extends Task {
     }
     
     //----------------------------------------------------------------------------------------------
-    public boolean verify() throws Exception {
+    public boolean verify() 
+    throws Exception {
         // will return false if the id is null
         boolean result = false;
         if (instanceId != null) {
@@ -358,16 +370,14 @@ public class InstanceTask extends Task {
                 for (Instance instance : instances) {
                     if (instance.getImageId().equals(amiId)) {
                         String subId = ((EnvironmentTaskAWS)context.getEnvironment()).getVpc().findSubnetForName(subnetName).getId();
-                        if (instance.getSubnetId() != null && instance.getSubnetId().equals(subId)) {
-                            if (verifyElasticIp(instance)) {
-                                if (verifyKeyPair(instance)) {
-                                    if (verifySize(instance)) {
-                                        if (verifySecurityGroups(instance)) {
-                                            result = true;
-                                        }
-                                    }
-                                }
-                            }
+                        if (instance.getSubnetId() != null 
+                            && instance.getSubnetId().equals(subId)
+                            && verifyElasticIp(instance)
+                            && verifyKeyPair(instance)
+                            && verifySize(instance)
+                            && verifySecurityGroups(instance)) {
+                                
+                            result = true;
                         }
                     }
                 }
@@ -380,7 +390,7 @@ public class InstanceTask extends Task {
     //----------------------------------------------------------------------------------------------
     @Override
     public void create() 
-    throws Exception {
+    throws EnvironmentCreationException {
         log.debug("InstanceAWS: create()");
         boolean verified = false;
         context.setProperty("server.name", name);  // update server.name prop
@@ -393,9 +403,10 @@ public class InstanceTask extends Task {
         }
         
         try {
-            if (instanceId != null) {
-                verified = verify();
-            }
+            // temporarily remove verification - fix if there is no VPC 
+//            if (instanceId != null) {
+//                verified = verify();
+//            }
             
             log.debug("Setting up Boot Actions");
             if (getBootActions() != null) {
@@ -433,8 +444,10 @@ public class InstanceTask extends Task {
                 
                 // add security groups
                 List<String> groupIds = new ArrayList<String>();
-                for (SecurityGroupRefTask ref : getSecurityGroupRefs()) {
-                    groupIds.add(ref.fetchSecurityGroup().getId());
+                if (getSecurityGroupRefs() != null) {
+                    for (SecurityGroupRefTask ref : getSecurityGroupRefs()) {
+                        groupIds.add(ref.fetchSecurityGroup().getId());
+                    }
                 }
                 
                 // do Ebs
@@ -466,7 +479,21 @@ public class InstanceTask extends Task {
                 
                 // launch the instance and set the Id
                 instanceId = helper.launchAmi(amiId, subnetId, keyPair, size, userData, groupIds, blockMaps,
-                                              ariId, akiId, ec2Client);
+                                              ariId, akiId, zone, ec2Client);
+                
+                // update the akiId and ariId with what Amazon shows
+                Instance instance = helper.getInstanceById(instanceId, ec2Client);
+                if (instance != null) {
+                    log.info("Verifying Kernel Id...");
+                    log.info("Expected: " + akiId);
+                    akiId = instance.getKernelId();
+                    log.info("Found: " + akiId);
+                    
+                    log.info("Verifying Ramdisk Id...");
+                    log.info("Expected: " + ariId);
+                    ariId = instance.getRamdiskId();
+                    log.info("Found: " + ariId);
+                }
                 
                 // wait for instance to start and pass status checks
                 helper.waitForState(instanceId, "running", 8, ec2Client);
@@ -477,7 +504,7 @@ public class InstanceTask extends Task {
                 helper.tagInstance(instanceId, "Name", serverName, ec2Client);
                 
                 // tag the instance with the environment
-                helper.tagInstance(instanceId, "tf-env", context.getEnvironment().getName(), ec2Client);
+                helper.tagInstance(instanceId, "terraform.environment", context.getEnvironment().getName(), ec2Client);
                 
                 // give instance elastic ip
                 if (elasticIp) {
@@ -536,7 +563,7 @@ public class InstanceTask extends Task {
     //----------------------------------------------------------------------------------------------
     @Override
     public void destroy() 
-    throws Exception {
+    throws EnvironmentDestructionException {
         if (ec2Client == null) {
             ec2Client = context.getEC2Client();
         }
@@ -563,8 +590,10 @@ public class InstanceTask extends Task {
             helper.terminateInstances(instanceIds, ec2Client);
             helper.waitForState(getId(), "terminated", 8, ec2Client);
             
-            for (SecurityGroupRefTask group : secRefs) {
-                group.destroy();
+            if (secRefs != null) {
+                for (SecurityGroupRefTask group : secRefs) {
+                    group.destroy();
+                }
             }
             // clear all attributes
             setId(null);
@@ -608,7 +637,7 @@ public class InstanceTask extends Task {
             }
             
             if (getBootActions().getScript() != null) {
-                for (PostCreateSubTask script : getBootActions().getScript()) {
+                for (BootActionSubTask script : getBootActions().getScript()) {
                     ScriptTask scriptTask = (ScriptTask) script;
                     ScriptTask nScript = pcat.createScript();
                     nScript.setCmds(script.getCmds());
@@ -654,7 +683,7 @@ public class InstanceTask extends Task {
                 nEbs.setName(ebs.getName());
                 nEbs.setDeviceName(ebs.getDeviceName());
             }
-       }
+        }
         
         return result;
     }

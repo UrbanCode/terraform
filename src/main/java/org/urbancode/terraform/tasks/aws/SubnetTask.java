@@ -19,6 +19,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.log4j.Logger;
+import org.urbancode.terraform.tasks.EnvironmentCreationException;
+import org.urbancode.terraform.tasks.EnvironmentDestructionException;
 import org.urbancode.terraform.tasks.aws.helpers.AWSHelper;
 import org.urbancode.terraform.tasks.common.SubTask;
 
@@ -155,7 +157,7 @@ public class SubnetTask extends SubTask {
     //----------------------------------------------------------------------------------------------
     @Override
     public void create() 
-    throws Exception {
+    throws EnvironmentCreationException {
         boolean verified = false;
         
         if (ec2Client == null) {
@@ -172,10 +174,14 @@ public class SubnetTask extends SubTask {
                 log.info("Creating Subnet...");
                 setId(helper.createSubnet(vpcId, cidr, zone, ec2Client));
                 log.info("Subnet " + name + " created with id: " + subnetId);
+                helper.tagInstance(subnetId, "terraform.environment", context.getEnvironment().getName(), ec2Client);
             }
             else {
                 log.info("Subnet " + name + " : " + subnetId + " already exists in AWS.");
             }
+        }
+        catch (Exception e) {
+            throw new EnvironmentCreationException("Could not create Subnet completely", e);
         }
         finally {
             ec2Client = null;
@@ -185,7 +191,7 @@ public class SubnetTask extends SubTask {
     //----------------------------------------------------------------------------------------------
     @Override
     public void destroy() 
-    throws Exception {
+    throws EnvironmentDestructionException {
         if (ec2Client == null) {
             ec2Client = context.getEC2Client();
         }
@@ -195,6 +201,9 @@ public class SubnetTask extends SubTask {
             helper.deleteSubnet(subnetId, ec2Client);
             log.info("Subnet " + name + " : " + subnetId + " destroyed.");
             setId(null);
+        }
+        catch (Exception e) {
+            throw new EnvironmentDestructionException("Could not destroy Subnet completely", e);
         }
         finally {
             ec2Client = null;

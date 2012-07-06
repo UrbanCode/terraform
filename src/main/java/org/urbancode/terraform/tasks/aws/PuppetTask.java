@@ -23,7 +23,7 @@ import org.apache.log4j.Logger;
 import org.urbancode.terraform.tasks.common.Context;
 
 
-public class PuppetTask extends PostCreateSubTask {
+public class PuppetTask extends BootActionSubTask {
     
     //**********************************************************************************************
     // CLASS
