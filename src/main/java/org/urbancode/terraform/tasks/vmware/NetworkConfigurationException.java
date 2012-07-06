@@ -15,69 +15,33 @@
  ******************************************************************************/
 package org.urbancode.terraform.tasks.vmware;
 
-import org.urbancode.terraform.tasks.common.SubTask;
-
-public class PortRangeTask extends SubTask {
+public class NetworkConfigurationException extends Exception {
 
     //**********************************************************************************************
     // CLASS
     //**********************************************************************************************
+    final static private long serialVersionUID = 1L;
 
     //**********************************************************************************************
     // INSTANCE
     //**********************************************************************************************
 
-    private int firstPort;
-    private int lastPort;
-
     //----------------------------------------------------------------------------------------------
-    public PortRangeTask() {
-        super();
+    public NetworkConfigurationException() {
     }
 
     //----------------------------------------------------------------------------------------------
-    public PortRangeTask(int firstPort, int lastPort) {
-        super();
-        this.firstPort = firstPort;
-        this.lastPort = lastPort;
+    public NetworkConfigurationException(String message, Throwable cause) {
+        super(message, cause);
     }
 
     //----------------------------------------------------------------------------------------------
-    public int getFirstPort() {
-        return firstPort;
+    public NetworkConfigurationException(String message) {
+        super(message);
     }
 
     //----------------------------------------------------------------------------------------------
-    public int getLastPort() {
-        return lastPort;
+    public NetworkConfigurationException(Throwable cause) {
+        super(cause);
     }
-
-    //----------------------------------------------------------------------------------------------
-    public void setFirstPort(int firstPort) {
-        this.firstPort = firstPort;
-    }
-
-    //----------------------------------------------------------------------------------------------
-    public void setLastPort(int lastPort) {
-        if(lastPort > this.firstPort) {
-            this.lastPort = lastPort;
-        }
-        else {
-            this.lastPort = this.firstPort;
-        }
-
-    }
-
-    //----------------------------------------------------------------------------------------------
-    @Override
-    public void create() {
-        //port range rules are applied via vmrun commands in post create tasks
-    }
-
-    //----------------------------------------------------------------------------------------------
-    @Override
-    public void destroy() {
-        //port range rules are applied via vmrun commands in post create tasks
-    }
-
 }

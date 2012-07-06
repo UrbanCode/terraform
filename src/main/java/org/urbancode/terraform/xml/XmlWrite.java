@@ -50,7 +50,7 @@ public class XmlWrite {
     //**********************************************************************************************
     // INSTANCE
     //**********************************************************************************************
-    private PersistenceConfig persistConf = PersistenceConfig.getInstance();
+    private NamespaceConfiguration persistConf = NamespaceConfiguration.getInstance();
 
     //----------------------------------------------------------------------------------------------
     public XmlWrite() {

@@ -63,6 +63,7 @@ public class VirtualHost implements Serializable {
     //**********************************************************************************************
     /**
      * This class contains utility methods for handling VSphere objects.
+     * It also stores the vSphere ServiceInstance object for connecting to vCenter.
      */
     final static private Logger log = Logger.getLogger(VirtualHost.class);
     private static final long serialVersionUID = 1L;

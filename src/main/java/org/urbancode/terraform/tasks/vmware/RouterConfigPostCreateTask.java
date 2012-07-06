@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Urbancode, Inc
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -123,7 +123,8 @@ public class RouterConfigPostCreateTask extends PostCreateTask {
     }
 
     //----------------------------------------------------------------------------------------------
-    public void handleNetworkRefs() throws Exception {
+    public void handleNetworkRefs()
+    throws NetworkConfigurationException, InterruptedException, IOException {
         //create network cards (VM must be powered off)
         List<Integer> nicIndexes = new ArrayList<Integer>();
         boolean first = true;
@@ -175,17 +176,25 @@ public class RouterConfigPostCreateTask extends PostCreateTask {
     }
 
     //----------------------------------------------------------------------------------------------
-    public void addNewNetworkCard(VirtualMachine vm, String netName, String nicName) throws Exception {
-        VirtualMachineConfigSpec vmSpec = new VirtualMachineConfigSpec();
-        VirtualDeviceConfigSpec nicSpec = createNicSpec(netName, nicName);
-        vmSpec.setDeviceChange(new VirtualDeviceConfigSpec[] {nicSpec});
-        Task task = vm.reconfigVM_Task(vmSpec);
-        @SuppressWarnings("unused")
-        String result = task.waitForTask();
+    public void addNewNetworkCard(VirtualMachine vm, String netName, String nicName)
+    throws NetworkConfigurationException {
+        try {
+            VirtualMachineConfigSpec vmSpec = new VirtualMachineConfigSpec();
+            VirtualDeviceConfigSpec nicSpec = createNicSpec(netName, nicName);
+            vmSpec.setDeviceChange(new VirtualDeviceConfigSpec[] {nicSpec});
+            Task task = vm.reconfigVM_Task(vmSpec);
+            @SuppressWarnings("unused")
+            String result = task.waitForTask();
+        }
+        catch(Exception e) {
+            throw new NetworkConfigurationException("Exception while adding network card to VM: " +
+            e.getClass().getCanonicalName(), e);
+        }
+
     }
 
     //----------------------------------------------------------------------------------------------
-    public VirtualDeviceConfigSpec createNicSpec(String netName, String nicName) throws Exception {
+    public VirtualDeviceConfigSpec createNicSpec(String netName, String nicName) {
         //create the specs for the new virtual ethernet card
         VirtualDeviceConfigSpec nicSpec = new VirtualDeviceConfigSpec();
         nicSpec.setOperation(VirtualDeviceConfigSpecOperation.add);

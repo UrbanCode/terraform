@@ -137,6 +137,7 @@ public class UDAgentPostCreateTask extends PostCreateTask {
 
             Thread.sleep(5000);
             log.info("configuring agent");
+            //stop agent, rename agent, restart agent
             runCommand(vmUser, vmPassword, "runProgramInGuest", "/bin/sh", udDir + "udagent", "stop");
             runCommand(vmUser, vmPassword, "runProgramInGuest", "/bin/sleep", "5");
             runCommand(vmUser, vmPassword, "runProgramInGuest", "/bin/sh", udDir + "configure-agent", udHost, udPort, agentName);

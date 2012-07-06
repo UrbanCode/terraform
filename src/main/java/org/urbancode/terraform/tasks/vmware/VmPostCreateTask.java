@@ -62,7 +62,8 @@ public class VmPostCreateTask extends PostCreateTask {
 
             List<String> cmdElements = new ArrayList<String>();
             Collections.addAll(cmdElements, splitCmd);
-
+            //throws IOException if vmrun returns an error status code
+            //this would indicate either a malformed command or the guest program returned an error
             runCommand(vmUser, vmPassword, "runProgramInGuest", cmdElements);
         }
         else {

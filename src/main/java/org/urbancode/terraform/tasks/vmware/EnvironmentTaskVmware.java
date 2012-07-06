@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Urbancode, Inc
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -333,7 +333,7 @@ public class EnvironmentTaskVmware extends EnvironmentTask {
 
     //----------------------------------------------------------------------------------------------
     private void handleCloneCreation(List<CloneTask> cloneTaskList)
-    throws Exception {
+    throws RemoteException, InterruptedException, Exception {
         long pollInterval = 3000L;
         long timeoutInterval = 10L * 60L * 1000L;
         long start;
@@ -417,7 +417,6 @@ public class EnvironmentTaskVmware extends EnvironmentTask {
             cloneStatuses.add(status);
             allStatuses = allStatuses + status + " ";
         }
-        int numStatuses = cloneStatuses.size();
         if (cloneStatuses.contains("Shut Down")) {
             result = "Shut Down";
         }

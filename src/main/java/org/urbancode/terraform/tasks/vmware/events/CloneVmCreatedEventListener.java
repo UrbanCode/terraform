@@ -309,10 +309,10 @@ public class CloneVmCreatedEventListener extends ExtensionTask implements TaskEv
         ProcessBuilder builder = new ProcessBuilder(commandLine);
         builder.redirectErrorStream(true);
         Process process = builder.start();
-        
+
         InputStream procIn = process.getInputStream();
         IOUtil.getInstance().discardStream(procIn);
-        
+
         int exitCode = process.waitFor();
         if (exitCode != 0) {
             throw new IOException("Command failed with code " + exitCode);
@@ -349,14 +349,10 @@ public class CloneVmCreatedEventListener extends ExtensionTask implements TaskEv
     //----------------------------------------------------------------------------------------------
     @Override
     public void create() throws Exception {
-        // TODO Auto-generated method stub
-
     }
 
     //----------------------------------------------------------------------------------------------
     @Override
     public void destroy() throws Exception {
-        // TODO Auto-generated method stub
-
     }
 }

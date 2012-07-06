@@ -198,7 +198,8 @@ public class NetworkTask extends SubTask {
     }
 
     //----------------------------------------------------------------------------------------------
-    public void restoreNetwork(VirtualHost host) throws RemoteException {
+    public void restoreNetwork(VirtualHost host)
+    throws RemoteException {
         ComputeResource res = host.getComputeResource(hostPath);
         HostSystem hostSys = res.getHosts()[0];
 

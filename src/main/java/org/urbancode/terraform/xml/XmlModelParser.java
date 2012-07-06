@@ -37,11 +37,11 @@ public class XmlModelParser {
     // INSTANCE
     //**********************************************************************************************
     private Context context;
-    private PersistenceConfig persistConf;
+    private NamespaceConfiguration persistConf;
 
     //----------------------------------------------------------------------------------------------
     public XmlModelParser() {
-        persistConf = PersistenceConfig.getInstance();
+        persistConf = NamespaceConfiguration.getInstance();
     }
 
     //----------------------------------------------------------------------------------------------

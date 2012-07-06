@@ -533,7 +533,7 @@ public class CloneTask extends SubTask implements Cloneable, Comparable<CloneTas
 
     //----------------------------------------------------------------------------------------------
     public VirtualMachine fetchVmForPath(Path path)
-            throws RemoteException {
+    throws RemoteException {
         VirtualMachine result = null;
 
         Folder folder = fetchFolder(path.getParent());
