@@ -77,12 +77,6 @@
       <version>1.6</version>
       <scope>compile</scope>
     </dependency>
-<!--    <dependency>
-      <groupId>org.apache.httpcomponents</groupId>
-      <artifactId>httpclient</artifactId>
-      <version>4.2</version>
-      <scope>compile</scope>
-    </dependency> -->
   </dependencies>
 
   <repositories>
