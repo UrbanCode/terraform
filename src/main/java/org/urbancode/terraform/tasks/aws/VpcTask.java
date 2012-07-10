@@ -133,6 +133,10 @@ public class VpcTask extends Task {
     //----------------------------------------------------------------------------------------------
     public VpcSecurityGroupTask createVpcSecurityGroup() {
         VpcSecurityGroupTask group = new VpcSecurityGroupTask(context);
+        // set the vpcId on the sec group if possible
+        if (vpcId != null) {
+            group.setVpcId(vpcId);
+        }
         securityGroups.add(group);
         
         return group;

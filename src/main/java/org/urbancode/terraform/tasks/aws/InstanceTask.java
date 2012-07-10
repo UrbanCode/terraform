@@ -16,6 +16,7 @@
 package org.urbancode.terraform.tasks.aws;
 
 import java.io.File;
+import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -23,6 +24,7 @@ import java.util.List;
 import org.apache.log4j.Logger;
 import org.urbancode.terraform.tasks.EnvironmentCreationException;
 import org.urbancode.terraform.tasks.EnvironmentDestructionException;
+import org.urbancode.terraform.tasks.PostCreateException;
 import org.urbancode.terraform.tasks.aws.helpers.AWSHelper;
 import org.urbancode.terraform.tasks.common.Task;
 
@@ -143,7 +145,7 @@ public class InstanceTask extends Task {
     }
     
     //----------------------------------------------------------------------------------------------
-    public void setElasticIpAddress(String elasticIpAddress) {
+    public void setPublicIp(String elasticIpAddress) {
         this.elasticIpAddress = elasticIpAddress;
     }
     
@@ -262,7 +264,7 @@ public class InstanceTask extends Task {
     }
 
     //----------------------------------------------------------------------------------------------
-    public String getElasticIpAddress() {
+    public String getPublicIp() {
         return elasticIpAddress;
     }
     
@@ -288,9 +290,39 @@ public class InstanceTask extends Task {
     
     //----------------------------------------------------------------------------------------------
     public SecurityGroupRefTask createSecurityGroupRef() {
-        SecurityGroupRefTask sec = new SecurityGroupRefTask(context);
-        secRefs.add(sec);
-        return sec;
+        SecurityGroupRefTask group = null;
+        
+        // determine which type of security group we need to make.
+        // We will check if it's a VPC one first, that means the 
+        // instance must have a subnet name set.
+        if (subnetName != null && !subnetName.isEmpty()) {
+            log.debug("Creating VPC Security Group Ref");
+//            if (secRefs == null) {
+//                secRefs = new ArrayList<VpcSecurityGroupRefTask>();
+//            }
+            group = new VpcSecurityGroupRefTask(context);
+        }
+        // if the instance does not have a subnet name set, then we'll 
+        // check for a zone, which would be required for an EC2 instance
+        else if (zone != null && !zone.isEmpty()) {
+            log.debug("Creating EC2 Security Group Ref");
+//            if (secRefs == null) {
+//                secRefs = new ArrayList<Ec2SecurityGroupRefTask>();
+//            }
+            group = new Ec2SecurityGroupRefTask(context);
+        }
+        // if neither of those checks pass, something is wrong...
+        else {
+            String msg = "No subnet or zone set! Unable to create securityGroup";
+            log.error(msg);
+            // throw
+        }
+        
+        if (group != null) {
+            secRefs.add(group);
+        }
+        
+        return group;
     }
     
     //----------------------------------------------------------------------------------------------
@@ -388,13 +420,215 @@ public class InstanceTask extends Task {
     }
     
     //----------------------------------------------------------------------------------------------
+    private String setupBootActions() {
+        String actions = "";
+        log.debug("Setting up Boot Actions");
+        if (getBootActions() != null) {
+            getBootActions().create();
+            actions = getBootActions().getUserData();
+            actions = context.resolve(actions);
+        }
+        log.info("Instance is being launched with following user-data script:\n\n" + actions);
+        
+        return actions;
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    private String setupType() {
+        // TODO - resolve
+        String size = sizeType;
+        
+        // TODO - make this format check better
+        if (size.indexOf(".") == -1) {
+            size = null;
+        }
+        if (size == null || size.isEmpty()) {
+            log.warn("No instance size specified. Default to m1.small");
+            size = "m1.small";
+        }
+        else if (size.equalsIgnoreCase("t1.micro")) {
+            size = "m1.small";
+            log.warn("Amazon does not support t1.micro instances in Virtual Private Clouds!" +
+                     "\nChanging size to " + size);
+        }
+        
+        return size;
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    private String setupKeyPair() {
+        // TODO - resolve
+        String keyPair = keyRef;
+        
+        if (keyPair == null || keyPair.isEmpty()) {
+            log.warn("No key-pair specified. You may not be able to connect to instance " + name);
+        }
+        
+        return keyPair;
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    private List<BlockDeviceMapping> setupEbs() {
+        List<BlockDeviceMapping> blockMaps = new ArrayList<BlockDeviceMapping>();
+        if (ebsVolumes != null) {
+            for (EbsTask ebs : ebsVolumes) {
+                ebs.create();
+                blockMaps.add(ebs.getBlockDeviceMapping());
+            }
+        }
+        
+        return blockMaps;
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    private List<String> findSecurityGroups() 
+    throws Exception {
+        List<String> groupIds = new ArrayList<String>();
+        if (getSecurityGroupRefs() != null) {
+            for (SecurityGroupRefTask ref : getSecurityGroupRefs()) {
+                VpcSecurityGroupTask found = ref.fetchSecurityGroup();
+                if (found != null) {
+                    groupIds.add(found.getId());
+                }
+            }
+        }
+        
+        return groupIds;
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    private void updateMachineInfo() 
+    throws RemoteException {
+        if (ec2Client == null) {
+            throw new RemoteException("No connection to EC2");
+        }
+        // update the akiId and ariId with what Amazon shows
+        Instance instance = helper.getInstanceById(instanceId, ec2Client);
+        if (instance != null) {
+            log.info("Verifying Kernel Id...");
+            log.info("Expected: " + akiId);
+            akiId = instance.getKernelId();
+            log.info("Found: " + akiId);
+            
+            log.info("Verifying Ramdisk Id...");
+            log.info("Expected: " + ariId);
+            ariId = instance.getRamdiskId();
+            log.info("Found: " + ariId);
+        }
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    private void assignIp(String ipToAssign) 
+    throws RemoteException {
+        if (ec2Client == null) {
+            throw new RemoteException("No connection to EC2");
+        }
+        if (ipToAssign == null || ipToAssign.isEmpty()) {
+            if (subnetName != null && subnetId != null) {
+                String allocId = helper.requestElasticIp(ec2Client);
+                setElasticIpAllocId(allocId);
+                
+                // TODO - manually assign EIPs
+                String eip = helper.assignElasticIp(instanceId, allocId, ec2Client);
+                setPublicIp(eip);
+            }
+            else {
+                log.error("Cannot assign Elastic Ip to non-VPC instance");
+            }
+        }
+        else {
+            if (zone != null && !zone.isEmpty()) {
+                // TODO - manually set IP not yet supported
+                setPublicIp(helper.getInstanceById(instanceId, ec2Client).getPublicIpAddress());;
+            }
+        }
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    private void registerWithLoadBalancer() 
+    throws RemoteException {
+        if (ec2Client == null) {
+            throw new RemoteException("No connection to EC2");
+        }
+        if (loadBalancer != null && !loadBalancer.isEmpty()) {
+            List<String> tmp = new ArrayList<String>();
+            tmp.add(instanceId);
+            helper.updateInstancesOnLoadBalancer(loadBalancer, tmp, true, elbClient);
+        }
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    private void waitForInstance() 
+    throws RemoteException, InterruptedException {
+        if (instanceId != null && ec2Client != null) {
+            // wait for instance to start and pass status checks
+            helper.waitForState(instanceId, "running", 8, ec2Client);
+            helper.waitForStatus(instanceId, "ok", 8, ec2Client);
+        }
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    private void postStartup() 
+    throws RemoteException, InterruptedException {
+        if (ec2Client == null) {
+            throw new RemoteException("No connection to EC2");
+        }
+        updateMachineInfo();
+        waitForInstance();
+        
+        // name Instances
+        String serverName = context.getEnvironment().getName() + "-" + name;
+        helper.tagInstance(instanceId, "Name", serverName, ec2Client);
+        
+        // tag the instance with the environment name
+        helper.tagInstance(instanceId, "terraform.environment", context.getEnvironment().getName(), ec2Client);
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    // TODO - remove arg - 
+    private void startPostCreateActions(String keyPair) 
+    throws PostCreateException {
+        if (pca != null) {
+            // TODO - clean this shit up
+            if ((elasticIpAddress != null && !elasticIpAddress.isEmpty()) || 
+                    (context.getEnvironment() instanceof EnvironmentTaskAWS 
+                    && ((EnvironmentTaskAWS) (context.getEnvironment())).getVpc() == null)) {
+                pca.setHost(elasticIpAddress);
+            }
+            else {
+                log.warn("Trying to do PostCreateActions on instance with no public ip!" 
+                        + "\nName: " + name 
+                        + "\nId: " + instanceId);
+            }
+            
+            if (keyPair != null && !keyPair.isEmpty()) {
+                String basePath = System.getProperty("user.home") + File.separator + ".terraform";
+                String keyPairPath = basePath + File.separator + keyPair + ".pem";
+                pca.setIdFile(keyPairPath);
+            }
+            else {
+                log.warn("Trying to do PostCreateActions on instance with no ssh key!" 
+                        + "\nName: " + name 
+                        + "\nId: " + instanceId);
+            }
+            
+            pca.create();
+        }
+    }
+    
+    //----------------------------------------------------------------------------------------------
     @Override
     public void create() 
     throws EnvironmentCreationException {
-        log.debug("InstanceAWS: create()");
+        String size;
+        String keyPair;
         boolean verified = false;
-        context.setProperty("server.name", name);  // update server.name prop
+            
+        log.debug("Creating instance " + name);
         
+        context.setProperty("server.name", name);  // TODO - change this
+        
+        // check AWS connections
         if (ec2Client == null) {
             ec2Client = context.getEC2Client();
         }
@@ -408,59 +642,17 @@ public class InstanceTask extends Task {
 //                verified = verify();
 //            }
             
-            log.debug("Setting up Boot Actions");
-            if (getBootActions() != null) {
-                getBootActions().create();
-                userData = getBootActions().getUserData();
-                userData = context.resolve(userData);
-            }
-            log.info("Instance is being launched with following user-data script:\n\n" + userData);
-            
-            String size = sizeType;
-            
-            // TODO - make this format check better
-            if (size.indexOf(".") == -1) {
-                size = null;
-            }
-            if (size == null || size.isEmpty()) {
-                log.warn("No instance size specified. Default to m1.small");
-                size = "m1.small";
-            }
-            else if (size.equalsIgnoreCase("t1.micro")) {
-                size = "m1.small";
-                log.warn("Amazon does not support t1.micro instances in Virtual Private Clouds!" +
-                         "\nChanging size to " + size);
-            }
-            
-            String keyPair = keyRef;
-            if (keyPair == null || keyPair.isEmpty()) {
-                log.warn("No key-pair specified. You may not be able to connect to instance " + name);
-            }
-            
+            // setup 
+            userData = setupBootActions();
+            size = setupType();
+            keyPair = setupKeyPair();
             
             if (!verified) {
                 setId(null);
-                log.info("Creating Instance...");
+                log.info("Starting creation");
                 
-                // add security groups
-                List<String> groupIds = new ArrayList<String>();
-                if (getSecurityGroupRefs() != null) {
-                    for (SecurityGroupRefTask ref : getSecurityGroupRefs()) {
-                        VpcSecurityGroupTask found = ref.fetchSecurityGroup();
-                        if (found != null) {
-                            groupIds.add(found.getId());
-                        }
-                    }
-                }
-                
-                // do Ebs
-                List<BlockDeviceMapping> blockMaps = new ArrayList<BlockDeviceMapping>();
-                if (ebsVolumes != null) {
-                    for (EbsTask ebs : ebsVolumes) {
-                        ebs.create();
-                        blockMaps.add(ebs.getBlockDeviceMapping());
-                    }
-                }
+                List<String> groupIds = findSecurityGroups();
+                List<BlockDeviceMapping> blockMaps = setupEbs();
                 
                 if (amiId == null) {
                     String msg = "No AMI ID specified for instance " + name + ". There is no image to use.";
@@ -468,97 +660,28 @@ public class InstanceTask extends Task {
                     throw new EnvironmentCreationException(msg);
                 }
                 
-                // check to see what platform the ami is
-                //   if Windows
-                //     not sure yet..
-                //   else if ubuntu/ubuntu cloud guest/Debian
-                //   else if Amazon Linux/ CentOS
-                //   else if OpenSUSE
-                //   else if Red Hat/Fedora
-                //   else if Gentoo
-                //   else if OpenSolaris
-                //   else if Other Linux
-                //   else Don't know??
-                
                 // launch the instance and set the Id
                 instanceId = helper.launchAmi(amiId, subnetId, keyPair, size, userData, groupIds, blockMaps,
                                               ariId, akiId, zone, ec2Client);
                 
-                // update the akiId and ariId with what Amazon shows
-                Instance instance = helper.getInstanceById(instanceId, ec2Client);
-                if (instance != null) {
-                    log.info("Verifying Kernel Id...");
-                    log.info("Expected: " + akiId);
-                    akiId = instance.getKernelId();
-                    log.info("Found: " + akiId);
-                    
-                    log.info("Verifying Ramdisk Id...");
-                    log.info("Expected: " + ariId);
-                    ariId = instance.getRamdiskId();
-                    log.info("Found: " + ariId);
-                }
-                
-                // wait for instance to start and pass status checks
-                helper.waitForState(instanceId, "running", 8, ec2Client);
-                helper.waitForStatus(instanceId, "ok", 8, ec2Client);
-                
-                // name Instances
-                String serverName = context.getEnvironment().getName() + "-" + name;
-                helper.tagInstance(instanceId, "Name", serverName, ec2Client);
-                
-                // tag the instance with the environment
-                helper.tagInstance(instanceId, "terraform.environment", context.getEnvironment().getName(), ec2Client);
+                postStartup();
                 
                 // give instance elastic ip
                 if (elasticIp) {
-                    if (subnetName != null && subnetId != null) {
-                        setElasticIpAllocId(helper.requestElasticIp(ec2Client));
-                        setElasticIpAddress(helper.assignElasticIp(instanceId, elasticIpAllocId, ec2Client));
-                    }
-                    else {
-                        // TODO - manually set IP not yet supported
-                    }
-                    context.setProperty(getName() + ".public.ip", getElasticIpAddress());
+                    // if we send null, it will grab a new EIP and assign it
+                    assignIp(elasticIpAddress);
                 }
                 
-                // set private ip
+                // TODO - set public ip property
+                // TODO - set private ip property
                 privateIp = helper.getPrivateIp(instanceId, ec2Client);
                 context.setProperty(getName() + ".private.ip", getPrivateIp());
                 
                 // register with LB
-                List<String> tmp = new ArrayList<String>();
-                tmp.add(instanceId);
-                if (loadBalancer != null && !"".equals(loadBalancer)) {
-                    helper.updateInstancesOnLoadBalancer(loadBalancer, tmp, true, elbClient);
-                }
+                registerWithLoadBalancer();
                 
                 // do PostCreateActions
-                if (pca != null) {
-                    // TODO - clean this shit up
-                    if ((elasticIpAddress != null && !elasticIpAddress.isEmpty()) || 
-                            (context.getEnvironment() instanceof EnvironmentTaskAWS 
-                            && ((EnvironmentTaskAWS) (context.getEnvironment())).getVpc() == null)) {
-                        pca.setHost(elasticIpAddress);
-                    }
-                    else {
-                        log.warn("Trying to do PostCreateActions on instance with no public ip!" 
-                                + "\nName: " + name 
-                                + "\nId: " + instanceId);
-                    }
-                    
-                    if (keyPair != null && !keyPair.isEmpty()) {
-                        String basePath = System.getProperty("user.home") + File.separator + ".terraform";
-                        String keyPairPath = basePath + File.separator + keyPair + ".pem";
-                        pca.setIdFile(keyPairPath);
-                    }
-                    else {
-                        log.warn("Trying to do PostCreateActions on instance with no ssh key!" 
-                                + "\nName: " + name 
-                                + "\nId: " + instanceId);
-                    }
-                    
-                    pca.create();
-                }
+                startPostCreateActions(keyPair);
             }
         }
         catch (Exception e) {
@@ -598,7 +721,7 @@ public class InstanceTask extends Task {
                     helper.disassociateElasticIp(assocId, ec2Client);
                     setElasticIpAllocId(null);
                     helper.releaseElasticIp(getElasticIpAllocId(), ec2Client);
-                    setElasticIpAddress(null);
+                    setPublicIp(null);
                 }
                 else {
                     log.error("Could not find asssociation Id for instance " + getName() + 
@@ -649,6 +772,7 @@ public class InstanceTask extends Task {
         result.setName(name);
         result.setPrivateKeyRef(keyRef);
         result.setSubnetName(subnetName);
+        result.setZone(zone);
         
         // post create actions task
         BootActionsTask pcat = result.createBootActions();

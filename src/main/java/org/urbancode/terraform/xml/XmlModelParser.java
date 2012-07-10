@@ -196,6 +196,7 @@ public class XmlModelParser {
             log.debug("null attribute: " + aName);
             return;
         }
+        log.debug("[" + instance.toString() + "] Setting attribute: " + aName + " to value: " + aValue);
         String methodName = "set" + convertToCamelCase(aName);
         Method method = getMethodForName(methodName, instance.getClass());
         Class<?>[] paramTypes = method.getParameterTypes();

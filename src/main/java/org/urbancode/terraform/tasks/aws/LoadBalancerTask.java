@@ -51,7 +51,7 @@ public class LoadBalancerTask extends SubTask {
     
     private HealthCheckTask healthCheck;
     
-    private List<SecurityGroupRefTask> secGroupRefs = new ArrayList<SecurityGroupRefTask>();
+    private List<VpcSecurityGroupRefTask> secGroupRefs = new ArrayList<VpcSecurityGroupRefTask>();
     private List<ListenerTask> listeners = new ArrayList<ListenerTask>();
     
     //----------------------------------------------------------------------------------------------
@@ -96,7 +96,7 @@ public class LoadBalancerTask extends SubTask {
     }
     
     //----------------------------------------------------------------------------------------------
-    public List<SecurityGroupRefTask> getSecRefs() {
+    public List<VpcSecurityGroupRefTask> getSecRefs() {
         return Collections.unmodifiableList(secGroupRefs);
     }
     
@@ -116,8 +116,8 @@ public class LoadBalancerTask extends SubTask {
     }
     
     //----------------------------------------------------------------------------------------------
-    public SecurityGroupRefTask createSecurityGroupRef() {
-        SecurityGroupRefTask group = new SecurityGroupRefTask(context);
+    public VpcSecurityGroupRefTask createSecurityGroupRef() {
+        VpcSecurityGroupRefTask group = new VpcSecurityGroupRefTask(context);
         secGroupRefs.add(group);
         return group;
     }
@@ -148,12 +148,12 @@ public class LoadBalancerTask extends SubTask {
     }
     
     //----------------------------------------------------------------------------------------------
-    private List<String> resolveSecGroupIds(List<SecurityGroupRefTask> secGroupNames) throws Exception {
+    private List<String> resolveSecGroupIds(List<VpcSecurityGroupRefTask> secGroupNames) throws Exception {
         List<String> result = new ArrayList<String>();
         
         
         if (secGroupNames != null && !secGroupNames.isEmpty()) {
-            for (SecurityGroupRefTask ref : secGroupNames) {
+            for (VpcSecurityGroupRefTask ref : secGroupNames) {
                 String tmp = ((EnvironmentTaskAWS)context.getEnvironment()).getVpc()
                                 .findSecurityGroupForName(ref.getSecurityGroupName()).getId();
                 result.add(tmp);

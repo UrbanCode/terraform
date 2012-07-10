@@ -402,6 +402,21 @@ public class EnvironmentTaskAWS extends EnvironmentTask {
     }
     
     //----------------------------------------------------------------------------------------------
+    public VpcSecurityGroupTask findSecurityGroupByName(String groupName) {
+        VpcSecurityGroupTask result = null;
+        if (ec2SecGroups != null) {
+            for (VpcSecurityGroupTask group : ec2SecGroups) {
+                if (groupName != null && groupName.equals(group.getName())) {
+                    result = group;
+                    break;
+                }
+            }
+        }
+        
+        return result;
+    }
+    
+    //----------------------------------------------------------------------------------------------
     @Override
     public void create() 
     throws EnvironmentCreationException {

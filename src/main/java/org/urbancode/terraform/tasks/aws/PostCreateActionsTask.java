@@ -20,6 +20,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.log4j.Logger;
+import org.urbancode.terraform.tasks.PostCreateException;
 import org.urbancode.terraform.tasks.common.Context;
 import org.urbancode.terraform.tasks.common.SubTask;
 
@@ -69,7 +70,7 @@ public class PostCreateActionsTask extends SubTask {
     //----------------------------------------------------------------------------------------------
     @Override
     public void create() 
-    throws Exception {
+    throws PostCreateException {
         
         if (actions != null) {
             for (SshTask action : actions) {
@@ -93,7 +94,7 @@ public class PostCreateActionsTask extends SubTask {
     //----------------------------------------------------------------------------------------------
     @Override
     public void destroy() 
-    throws Exception {
+    throws PostCreateException {
         
     }
 }
