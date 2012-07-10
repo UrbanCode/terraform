@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Urbancode, Inc
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.urbancode.terraform.tasks.common.ExtensionTask;
 import org.urbancode.terraform.tasks.util.IOUtil;
@@ -36,8 +37,9 @@ public class PostCreateTask extends ExtensionTask {
     // CLASS
     //**********************************************************************************************
     static private final Logger log = Logger.getLogger(PostCreateTask.class);
-    static protected final String confDir = System.getenv("TERRAFORM_HOME") + File.separator + 
-                                                "conf" + File.separator;
+    static protected final String confDirNoSeparator = System.getenv("TERRAFORM_HOME") +
+            File.separator + "conf";
+    static protected final String confDir = confDirNoSeparator + File.separator;
 
     //**********************************************************************************************
     // INSTANCE
@@ -52,6 +54,7 @@ public class PostCreateTask extends ExtensionTask {
 
     //----------------------------------------------------------------------------------------------
     public PostCreateTask() {
+
     }
 
     //----------------------------------------------------------------------------------------------
@@ -74,20 +77,28 @@ public class PostCreateTask extends ExtensionTask {
     public void setPassword(String password) {
         vmPassword = password;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public void setUser(String user) {
         vmUser = user;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     @Override
     public void create() {
+        File configDir = new File(confDirNoSeparator);
+        configDir.mkdirs();
     }
 
     //----------------------------------------------------------------------------------------------
     @Override
     public void destroy() {
+        File configDir = new File(confDirNoSeparator);
+        try {
+            FileUtils.deleteDirectory(configDir);
+        } catch (IOException e) {
+            log.warn("Unable to delete conf directory", e);
+        }
     }
 
     //----------------------------------------------------------------------------------------------
@@ -99,6 +110,11 @@ public class PostCreateTask extends ExtensionTask {
     //----------------------------------------------------------------------------------------------
     public void runCommand(String vmUser, String vmPassword, String vmRunCommand, List<String> args)
     throws IOException, InterruptedException {
+        if(vmUser == null || vmPassword == null) {
+            log.error("Either VM user or password were null. " +
+                    "They need to be specified in the template under the clone element.");
+            throw new NullPointerException();
+        }
         VirtualHost host = environment.fetchVirtualHost();
         host.waitForVmtools(vmToConfig);
         String vmx = host.getVmxPath(vmToConfig);
@@ -126,10 +142,10 @@ public class PostCreateTask extends ExtensionTask {
         ProcessBuilder builder = new ProcessBuilder(commandLine);
         builder.redirectErrorStream(true);
         Process process = builder.start();
-        
+
         InputStream procIn = process.getInputStream();
         IOUtil.getInstance().discardStream(procIn);
-        
+
         int exitCode = process.waitFor();
         if (exitCode != 0) {
             throw new IOException("Command failed with code " + exitCode);
