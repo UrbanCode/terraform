@@ -16,8 +16,6 @@
 package org.urbancode.terraform.tasks.vmware.util;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
@@ -68,24 +66,14 @@ public class GlobalIpAddressPool {
     //----------------------------------------------------------------------------------------------
     private Properties parseIpPoolFile() {
         Properties result = new Properties();
-
-        String ipPoolFilePath = System.getenv("TERRAFORM_HOME") + File.separator +
-                "conf" + File.separator + "ippool.conf";
-
-        File poolFile = new File(ipPoolFilePath);
-
         InputStream in = null;
         try {
-            in = new FileInputStream(poolFile);
+
+            in = Thread.currentThread().getContextClassLoader().getResourceAsStream("org/urbancode/terraform/conf" + File.separator + "ippool.conf");
             result.load(in);
         }
-        catch (FileNotFoundException e) {
-            log.fatal("Could not find file " + ipPoolFilePath, e);
-//            throw e;
-        }
         catch (IOException e) {
-            log.fatal("Could not read properties from " + ipPoolFilePath, e);
-//            throw e;
+            log.fatal("Could not read properties from input stream", e);
         }
         finally {
             if (in != null) {

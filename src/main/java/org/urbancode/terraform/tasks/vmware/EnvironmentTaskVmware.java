@@ -141,8 +141,9 @@ public class EnvironmentTaskVmware extends EnvironmentTask {
 
     //----------------------------------------------------------------------------------------------
     public void addUUIDToFolderName() {
-        String suffix = UUID.randomUUID().toString().replaceAll("-", "");
-        folderName = folderName + "-" + suffix.substring(0, 4);
+        String suffix = UUID.randomUUID().toString().replaceAll("-", "").substring(0, 4);
+        folderName = folderName + "-" + suffix;
+        setName(getName() + "-" + suffix);
     }
 
     //----------------------------------------------------------------------------------------------
