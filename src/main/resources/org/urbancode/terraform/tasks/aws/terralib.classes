@@ -17,3 +17,4 @@ load-balancer=org.urbancode.terraform.tasks.aws.LoadBalancerTask
 listener=org.urbancode.terraform.tasks.aws.ListenerTask
 health-check=org.urbancode.terraform.tasks.aws.HealthCheckTask
 instance-ref=org.urbancode.terraform.tasks.aws.InstanceRefTask
+ec2-security-group=org.urbancode.terraform.tasks.aws.VpcSecurityGroupTask

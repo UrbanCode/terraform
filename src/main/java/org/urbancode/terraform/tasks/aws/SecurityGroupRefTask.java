@@ -50,14 +50,36 @@ public class SecurityGroupRefTask extends SubTask {
         return groupName;
     }
     
-    public VpcSecurityGroupTask fetchSecurityGroup() throws Exception {
+    /**
+     * 
+     * @return the group 
+     * @throws Exception
+     */
+    public VpcSecurityGroupTask fetchSecurityGroup() 
+    throws Exception {
         if (ref == null) {
-            ref = ((EnvironmentTaskAWS)context.getEnvironment()).getVpc().findSecurityGroupForName(groupName);
+            if (context.getEnvironment() instanceof EnvironmentTaskAWS) {
+                EnvironmentTaskAWS env = (EnvironmentTaskAWS) context.getEnvironment();
+                if (env.getVpc() != null) {
+                    log.debug("Looking for security group " + groupName + "in Vpc");
+                    ref = env.getVpc().findSecurityGroupForName(groupName);
+                }
+                
+                if (ref == null) {
+                    log.debug("Did not find Security Group: " + groupName + " - Looking for Security Group in environment");
+                    for (VpcSecurityGroupTask group : env.getSecurityGroups()) {
+                        if (groupName.equals(group.getName())) {
+                            ref = group;
+                            break;
+                        }
+                    }
+                }
+            }
         }
         return ref;
     }
     
-    //------------------------------------------------------------------((MainEC2)context)----------------------------
+    //----------------------------------------------------------------------------------------------
     @Override
     public void create() {
         

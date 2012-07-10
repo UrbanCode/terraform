@@ -1,0 +1,69 @@
+<!-- 
+
+This is an Environment Template used to create an environment with Amazon Web Services
+
+-->
+
+<!-- The context points to what Tasks to use for each element of the template-->
+<context xmlns="org.urbancode.terraform.tasks.aws" >
+  <!-- The name of your instances will be prefixed with your environment name-->
+  <environment name="durr" >
+    <!-- This is an instance to launch. It has a name, an Amazon Machine Image. 
+         the name of the subnet to launch in to, the number of these instances you 
+         want to launch, whether or not it should get an Elastic Ip, the SSH key
+         to use, and the size. See the README for more info or check out AWS docs.-->
+    <instance name="derp" ami-id="ami-707ca619" zone="us-east-1d" count="0"
+              private-key-ref="nick-portal" image-size="m1.small" >
+        <!-- This is just telling what Security Groups to apply to this instance.
+             You can have multiple of these. -->
+        <!-- <security-group-ref security-group-name="GuardDog" /> -->
+        <!-- These are actions that will be ran as 'root' on first boot of the 
+             instance. Known in AWS as user-data. The shell can be specified, but
+             it is recommended you use bash if possible. -->
+        <boot-actions shell="/bin/bash">
+            <!-- This particular boot-action will grab a script from a URL and run
+                 it with the specified shell. In this example it is a bash script 
+                 taken from Amazon S3 and used to configure a uDeploy Agent on the
+                 machine. -->
+            <script url="https://s3.amazonaws.com/ncc.misc/agentConf.sh" >
+                <!-- These are parameters for the script above. They're passed in 
+                     top to bottom order -->
+                <param value="${ud.host}" />
+                <param value="${ud.port}" />
+                <param value="${server.name}" />
+            </script>
+            <script url="https://s3.amazonaws.com/ncc.misc/setupTomcat.sh" />
+        </boot-actions>
+        <!-- These are actions that are run after the instance has fully started 
+             in Amazon (Once it hits the 'running' state and 'ok' status). -->
+        <post-create-actions>
+            <!-- This runs a collection of commands via ssh as the given user.
+                 This will attempt to look for the ssh key that the instance was
+                 launched with (Amazon gives you this). -->
+            <ssh user="ubuntu" cmds="echo TEST > /home/ubuntu/test.tt" />
+        </post-create-actions>
+    </instance>
+    
+    <!-- This instance has elastic-ip="false" so it can not be reached directly
+         from the outside. This instance also has a count="2" so this instance
+         will be launched twice, as in, you will have two seperate instances 
+         with these details. All instance names carry a number suffix. For this
+         example there will be herp00 and herp01 -->
+    <instance name="herp" ami-id="ami-707ca619" zone="us-east-1d" count="2" 
+              private-key-ref="nick-portal" image-size="m1.small" >
+        <security-group-ref security-group-name="GuardDog" />
+        <boot-actions shell="/bin/bash">
+            <script url="https://s3.amazonaws.com/ncc.misc/agentConf.sh" shell="/bin/bash">
+                <param value="${ud.host}" />
+                <param value="${ud.port}" />
+                <param value="${server.name}" />
+            </script>
+            <script url="https://s3.amazonaws.com/ncc.misc/setupTomcat.sh" />
+        </boot-actions>
+    </instance>
+    <ec2-security-group name="secgroup1" description="testing ec2 sec groups">
+        <rule source="0.0.0.0/0" protocol="tcp" start-port="22" end-port="22" inbound="true" />
+    </ec2-security-group>
+  </environment>
+</context>
+

@@ -93,6 +93,16 @@ public class Main {
             throw new IOException("improper args");
         }
 
+        // check to make sure we have legit args
+        if (inputXmlFile == null) {
+            String msg = "No input xml file specified!";
+            throw new IOException(msg);
+        }
+        if (creds == null) {
+            String msg = "No credentials file specified!";
+            throw new IOException(msg);
+        }
+        
         Main myMain = new Main(doCreate, inputXmlFile, creds, unparsedArgs);
         myMain.execute();
     }
@@ -180,7 +190,7 @@ public class Main {
                 context.getEnvironment().setName(envName);
                 
                 // create new file if creating a new environment
-                outputXmlFile = new File("env-" + envName, ".xml");
+                outputXmlFile = new File("env-" + envName + ".xml");
                 log.debug("Calling create() on context");
                 context.create();
             }

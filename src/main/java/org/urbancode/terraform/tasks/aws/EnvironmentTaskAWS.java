@@ -55,6 +55,7 @@ public class EnvironmentTaskAWS extends EnvironmentTask {
     private VpcTask vpc;
     private List<InstanceTask> instances = new ArrayList<InstanceTask>();
     private List<LoadBalancerTask> loadBalancers = new ArrayList<LoadBalancerTask>();
+    private List<VpcSecurityGroupTask> ec2SecGroups = new ArrayList<VpcSecurityGroupTask>();
     
     // for timeouts
     private long pollInterval = 3000L;
@@ -123,6 +124,17 @@ public class EnvironmentTaskAWS extends EnvironmentTask {
     }
     
     //----------------------------------------------------------------------------------------------
+    public List<VpcSecurityGroupTask> getSecurityGroups() {
+        return Collections.unmodifiableList(ec2SecGroups);
+    }
+    
+    public VpcSecurityGroupTask createEc2SecurityGroup() {
+        VpcSecurityGroupTask group = new VpcSecurityGroupTask(context);
+        ec2SecGroups.add(group);
+        return group;
+    }
+    
+    //----------------------------------------------------------------------------------------------
     public VpcTask createVpc() {
         this.vpc = new VpcTask(context);
         return this.vpc;
@@ -143,12 +155,26 @@ public class EnvironmentTaskAWS extends EnvironmentTask {
     }
     
     //----------------------------------------------------------------------------------------------
+    /**
+     * This is used for terminating a single instance by its Amazon Instance Id. This is ran in the 
+     * current thread. Use handleInstances for a multi-threaded solution. 
+     * 
+     * @param instanceId
+     * @throws Exception
+     */
     public void terminateInstance(String instanceId) 
     throws Exception {
         findInstanceById(instanceId).destroy();
     }
     
     //----------------------------------------------------------------------------------------------
+    /** 
+     * This is used for launching or terminating instances in separate threads for parallelization.
+     * 
+     * @param instances
+     * @param doCreate
+     * @throws Exception
+     */
     private void handleInstances(List<InstanceTask> instances, boolean doCreate) 
     throws Exception {
         if (instances != null && !instances.isEmpty()) {
@@ -203,11 +229,21 @@ public class EnvironmentTaskAWS extends EnvironmentTask {
     
     //----------------------------------------------------------------------------------------------
     private void launchLoadBalancers(List<LoadBalancerTask> loadBalancers) 
-    throws Exception {
+    throws EnvironmentCreationException {
         // create the loadBalancer(s)
         if (loadBalancers != null && !loadBalancers.isEmpty()) {
             for (LoadBalancerTask loadBalancer : loadBalancers) {
                 loadBalancer.create();
+            }
+        }
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    private void launchSecurityGroups(List<VpcSecurityGroupTask> groups) 
+    throws EnvironmentCreationException {
+        if (groups != null) {
+            for (VpcSecurityGroupTask group : groups) {
+                group.create();
             }
         }
     }
@@ -218,16 +254,19 @@ public class EnvironmentTaskAWS extends EnvironmentTask {
             List<InstanceTask> newInstances = new ArrayList<InstanceTask>();
             log.debug("Found " + instances.size() + " instances.");
             for (InstanceTask instance : instances) {
-                log.debug("Starting instance: " + instance.getName());
+                String instanceName = "";
                 InstanceTask newInstance = null;
                 // make a list of all the new instances
                 for (int i=1; i<instance.getCount(); i++) {
+                    log.debug("Cloning instance: " + instance.getName());
                     newInstance = instance.clone();
-                    String instanceName = String.format(instance.getName() + "%02d", i);
+                    instanceName = String.format(instance.getName() + "%02d", i);
                     newInstance.setName(instanceName); 
                     // TODO - update EBS names?
                     newInstances.add(newInstance);
                 }
+                instanceName = String.format(instance.getName() + "%02d", 0);
+                instance.setName(instanceName);
                 instance.setCount(1);
                 
                 if (instance != null) {
@@ -240,6 +279,7 @@ public class EnvironmentTaskAWS extends EnvironmentTask {
     }
     
     //----------------------------------------------------------------------------------------------
+    // TODO - clean this shit up
     private void launchInstances() 
     throws Exception {
         // setup launch groups
@@ -325,15 +365,18 @@ public class EnvironmentTaskAWS extends EnvironmentTask {
     //----------------------------------------------------------------------------------------------
     private void detachENIs() {
         // detach any ENIs that we can
-        List<NetworkInterface> interfaces = helper.describeNetworkInterfaces(null, getVpc().getId(), ec2Client);
-        List<String> detachIds = new ArrayList<String>();
-        if (interfaces != null) {
-            for (NetworkInterface iface : interfaces) {
-                if (iface.getAttachment() != null && iface.getAttachment().getDeviceIndex() != 0) {
-                    detachIds.add(iface.getAttachment().getAttachmentId());
+        if (getVpc() != null && getVpc().getId() != null) {
+            List<NetworkInterface> interfaces = helper.describeNetworkInterfaces(null, getVpc().getId(), ec2Client);
+            List<String> detachIds = new ArrayList<String>();
+            if (interfaces != null) {
+                // refactor this into helper?
+                for (NetworkInterface iface : interfaces) {
+                    if (iface.getAttachment() != null && iface.getAttachment().getDeviceIndex() != 0) {
+                        detachIds.add(iface.getAttachment().getAttachmentId());
+                    }
                 }
+                helper.detachNetworkInterfaces(detachIds, ec2Client);
             }
-            helper.detachNetworkInterfaces(detachIds, ec2Client);
         }
     }
     
@@ -349,10 +392,20 @@ public class EnvironmentTaskAWS extends EnvironmentTask {
     }
     
     //----------------------------------------------------------------------------------------------
+    private void destroySecurityGroups() 
+    throws EnvironmentDestructionException {
+        if (ec2SecGroups != null) {
+            for (VpcSecurityGroupTask group : ec2SecGroups) {
+                group.destroy();
+            }
+        }
+    }
+    
+    //----------------------------------------------------------------------------------------------
     @Override
     public void create() 
     throws EnvironmentCreationException {
-        log.debug("EnvironmentAWS: create()");
+        log.debug("Creating EnvironmentAWS");
         if (ec2Client == null) {
             ec2Client = context.getEC2Client();
         }
@@ -365,11 +418,16 @@ public class EnvironmentTaskAWS extends EnvironmentTask {
             log.debug("Starting Vpc Creation");
             if (getVpc() != null) {
                 getVpc().create();
+                log.debug("Finished Vpc Creation");
             }
             else {
                 log.info("No Vpc to create");
             }
-            log.debug("Finished Vpc Creation");
+            
+            // Launch EC2 security groups - they are different than VPC security groups
+            log.debug("Staring EC2 Security Groups");
+            launchSecurityGroups(ec2SecGroups);
+            log.debug("Finished Security Groups");
             
             // launch load balancers before we launch instances
             // we do this so we can just hold a ref to lb on the 
@@ -418,8 +476,14 @@ public class EnvironmentTaskAWS extends EnvironmentTask {
             // destroy all load balancers
             destroyLoadBalancers();
             
-            // kill vpc
-            getVpc().destroy();
+            // destroy all EC2 sec groups we made -
+            // vpc sec groups are destroyed when destroying the vpc
+            destroySecurityGroups();
+            
+            // destroy the vpc
+            if (getVpc() != null) {
+                getVpc().destroy();
+            }
         }
         catch (Exception e) {
             throw new EnvironmentDestructionException("Failed to destroy environment!", e);

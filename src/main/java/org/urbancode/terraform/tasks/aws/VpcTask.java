@@ -287,7 +287,7 @@ public class VpcTask extends Task {
             startSecurityGroups();
         }
         catch (Exception e) {
-            log.error("EXCEPTION CAUGHT WHEN CREATING VPC", e);
+            log.error("Did not create VPC completely.", e);
             throw new EnvironmentCreationException("Could not completely create Vpc", e);
         }
         finally {

@@ -651,6 +651,7 @@ public class AWSHelper {
      */
     public String getAssociationIdForAllocationId(String allocId, AmazonEC2 ec2Client) {
         String assocId = null;
+        try {
         DescribeAddressesRequest request = new DescribeAddressesRequest().withAllocationIds(allocId);
         DescribeAddressesResult result = ec2Client.describeAddresses(request);
         List<Address> addresses = result.getAddresses();
@@ -659,6 +660,13 @@ public class AWSHelper {
                 log.error("Found more than one Address for allocationId ( " + allocId + " ) !");
             }
             assocId = addresses.get(0).getAssociationId();
+        }
+        }
+        catch (AmazonServiceException e) {
+            log.error("AmazonSerivceException caught while trying to get Association Id", e);
+            if (!"InvalidAllocationID.NotFound".equals(e.getErrorCode())) {
+                throw e;
+            }
         }
         return assocId;
     }
@@ -1286,7 +1294,7 @@ public class AWSHelper {
     /**
      * 
      * @param groupName
-     * @param vpcId
+     * @param vpcId leave null if you do not want your security group to be associated with a VPC
      * @param descr
      * @param ec2Client
      * @return
@@ -1296,8 +1304,12 @@ public class AWSHelper {
         try {
             CreateSecurityGroupRequest request = new CreateSecurityGroupRequest()
                                                       .withGroupName(groupName)
-                                                      .withVpcId(vpcId)
                                                       .withDescription(descr);
+            
+            if (vpcId != null) {
+                request = request.withVpcId(vpcId);
+            }
+            
             CreateSecurityGroupResult result = ec2Client.createSecurityGroup(request);
             groupId = result.getGroupId();
         

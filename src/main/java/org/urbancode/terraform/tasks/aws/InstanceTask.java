@@ -446,7 +446,10 @@ public class InstanceTask extends Task {
                 List<String> groupIds = new ArrayList<String>();
                 if (getSecurityGroupRefs() != null) {
                     for (SecurityGroupRefTask ref : getSecurityGroupRefs()) {
-                        groupIds.add(ref.fetchSecurityGroup().getId());
+                        VpcSecurityGroupTask found = ref.fetchSecurityGroup();
+                        if (found != null) {
+                            groupIds.add(found.getId());
+                        }
                     }
                 }
                 
@@ -508,8 +511,13 @@ public class InstanceTask extends Task {
                 
                 // give instance elastic ip
                 if (elasticIp) {
-                    setElasticIpAllocId(helper.requestElasticIp(ec2Client));
-                    setElasticIpAddress(helper.assignElasticIp(instanceId, elasticIpAllocId, ec2Client));
+                    if (subnetName != null && subnetId != null) {
+                        setElasticIpAllocId(helper.requestElasticIp(ec2Client));
+                        setElasticIpAddress(helper.assignElasticIp(instanceId, elasticIpAllocId, ec2Client));
+                    }
+                    else {
+                        // TODO - manually set IP not yet supported
+                    }
                     context.setProperty(getName() + ".public.ip", getElasticIpAddress());
                 }
                 
@@ -526,7 +534,10 @@ public class InstanceTask extends Task {
                 
                 // do PostCreateActions
                 if (pca != null) {
-                    if (elasticIpAddress != null && !elasticIpAddress.isEmpty()) {
+                    // TODO - clean this shit up
+                    if ((elasticIpAddress != null && !elasticIpAddress.isEmpty()) || 
+                            (context.getEnvironment() instanceof EnvironmentTaskAWS 
+                            && ((EnvironmentTaskAWS) (context.getEnvironment())).getVpc() == null)) {
                         pca.setHost(elasticIpAddress);
                     }
                     else {
@@ -570,7 +581,6 @@ public class InstanceTask extends Task {
         if (elbClient == null) {
             elbClient = context.getELBClient();
         }
-         
         try {
             log.info("Shutting down instance " + getId());
             
@@ -579,30 +589,43 @@ public class InstanceTask extends Task {
             
             if (loadBalancer != null && !"".equals(loadBalancer)) {
                 helper.updateInstancesOnLoadBalancer(loadBalancer, instanceIds, false, elbClient);
+                loadBalancer = null;
             }
             
             if (elasticIpAllocId != null) {
                 String assocId = helper.getAssociationIdForAllocationId(elasticIpAllocId, ec2Client);
-                helper.disassociateElasticIp(assocId, ec2Client);
-                helper.releaseElasticIp(getElasticIpAllocId(), ec2Client);
+                if (assocId != null && !assocId.isEmpty()) {
+                    helper.disassociateElasticIp(assocId, ec2Client);
+                    setElasticIpAllocId(null);
+                    helper.releaseElasticIp(getElasticIpAllocId(), ec2Client);
+                    setElasticIpAddress(null);
+                }
+                else {
+                    log.error("Could not find asssociation Id for instance " + getName() + 
+                              "\nUnable to disassociate and release elastic ip with " +
+                              "allocation id: " + elasticIpAllocId) ;
+                }
             }
             
-            helper.terminateInstances(instanceIds, ec2Client);
-            helper.waitForState(getId(), "terminated", 8, ec2Client);
+            if (instanceIds != null && !instanceIds.isEmpty()) {
+                helper.terminateInstances(instanceIds, ec2Client);
+                helper.waitForState(getId(), "terminated", 8, ec2Client);
+                setId(null);
+                setSubnetId(null);
+            }
+            
+            if (bootActions != null) { 
+                bootActions.destroy();
+            }
             
             if (secRefs != null) {
                 for (SecurityGroupRefTask group : secRefs) {
                     group.destroy();
                 }
             }
-            // clear all attributes
-            setId(null);
-            setSubnetId(null);
-            setElasticIpAllocId(null);
-            setElasticIpAddress(null);
         }
         catch (Exception e) {
-            log.error("Did not destroy instance " + name + " completely");
+            log.error("Did not destroy instance " + name + " completely", e);
             throw new EnvironmentDestructionException("Failed to destroy instance " + name, e);
         }
         finally {
@@ -617,7 +640,7 @@ public class InstanceTask extends Task {
     public InstanceTask clone() {
         InstanceTask result = new InstanceTask(context);
         
-        // this takes up more memory than needed???
+        // attributes
         result.setAmiId(amiId);
         result.setKernelId(akiId);
         result.setRamdiskId(ariId);
@@ -628,7 +651,6 @@ public class InstanceTask extends Task {
         result.setSubnetName(subnetName);
         
         // post create actions task
-        
         BootActionsTask pcat = result.createBootActions();
         if (getBootActions() != null) {
             
