@@ -16,7 +16,10 @@
 package org.urbancode.terraform.tasks.vmware;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -46,6 +49,8 @@ public class RouterConfigPostCreateTask extends PostCreateTask {
     //**********************************************************************************************
     // INSTANCE
     //**********************************************************************************************
+    private String gateway;
+    private String dns;
 
     //----------------------------------------------------------------------------------------------
     public RouterConfigPostCreateTask() {
@@ -58,11 +63,34 @@ public class RouterConfigPostCreateTask extends PostCreateTask {
     }
 
     //----------------------------------------------------------------------------------------------
+    public String getGateway() {
+        return gateway;
+    }
+
+    //----------------------------------------------------------------------------------------------
+    public String getDns() {
+        return dns;
+    }
+
+    //----------------------------------------------------------------------------------------------
+    public void setGateway(String gateway) {
+        this.gateway = gateway;
+    }
+
+    //----------------------------------------------------------------------------------------------
+    public void setDns(String dns) {
+        this.dns = dns;
+    }
+
+    //----------------------------------------------------------------------------------------------
     @Override
     public void create() {
         //set VM now that the VM has been created
         this.vmToConfig = this.cloneTask.fetchVm();
         try {
+            File configDir = new File(confDirNoSeparator);
+            configDir.mkdirs();
+            copyTempFiles();
             addFirstInterface(confDir + "interfaces.temp", confDir + "interfaces");
             handleNetworkRefs();
 
@@ -103,6 +131,62 @@ public class RouterConfigPostCreateTask extends PostCreateTask {
     //----------------------------------------------------------------------------------------------
     @Override
     public void destroy() {
+        File configDir = new File(confDirNoSeparator);
+        try {
+            log.debug("deleting conf directory");
+            FileUtils.deleteDirectory(configDir);
+        } catch (IOException e) {
+            log.warn("Unable to delete conf directory", e);
+        }
+    }
+
+    //----------------------------------------------------------------------------------------------
+    private void copyTempFiles() throws IOException {
+        ClassLoader loader = Thread.currentThread().getContextClassLoader();
+        String cpDir = "org/urbancode/terraform/conf" + File.separator;
+        InputStream iptablesStream = loader.getResourceAsStream(cpDir + "iptables.conf.temp");
+        InputStream dhcpdStream = loader.getResourceAsStream(cpDir + "dhcpd.conf.temp");
+        InputStream interfacesStream = loader.getResourceAsStream(cpDir + "interfaces.temp");
+        InputStream iscStream = loader.getResourceAsStream(cpDir + "isc-dhcp-server.temp");
+
+        try {
+            writeInputStreamToFile(iptablesStream, confDir + "iptables.conf.temp");
+            writeInputStreamToFile(iptablesStream, confDir + "dhcpd.conf.temp");
+            writeInputStreamToFile(iptablesStream, confDir + "interfaces.temp");
+            writeInputStreamToFile(iptablesStream, confDir + "isc-dhcp-server.temp");
+        }
+        catch(IOException e) {
+            iptablesStream.close();
+            dhcpdStream.close();
+            interfacesStream.close();
+            iscStream.close();
+        }
+    }
+
+    //----------------------------------------------------------------------------------------------
+    private void deleteConfFile(String fname) {
+        File fileToDelete = new File(confDir + fname);
+        fileToDelete.delete();
+    }
+
+    //----------------------------------------------------------------------------------------------
+    private void writeInputStreamToFile(InputStream inStream, String filePath) throws IOException {
+        File outFile = new File(filePath);
+        OutputStream out=new FileOutputStream(outFile);
+        byte buf[]=new byte[1024];
+        int len;
+        try {
+            while ((len=inStream.read(buf))>0) {
+                out.write(buf,0,len);
+            }
+        }
+        catch(IOException e) {
+            log.warn("IOException while copying to file " + filePath, e);
+        }
+        finally {
+            out.close();
+            inStream.close();
+        }
     }
 
     //----------------------------------------------------------------------------------------------
@@ -116,7 +200,7 @@ public class RouterConfigPostCreateTask extends PostCreateTask {
                         + "allow-hotplug eth0\n"
                         + "iface eth0 inet static\n"
                         + "  address " + routerIp + "\n"
-                        + "  gateway 10.15.1.1\n"
+                        + "  gateway " + gateway + "\n"
                         + "  netmask 255.255.255.0\n"
                         + "#Insert New Interfaces\n";
         writeToFile(outFileName, ifaces, false);
@@ -304,7 +388,7 @@ public class RouterConfigPostCreateTask extends PostCreateTask {
         dhcpd = dhcpd + "\nsubnet 192.168." + subnetNum + ".0 netmask 255.255.255.0 {\n"
             + "use-host-decl-names on;\n"
             + "option routers 192.168." + subnetNum + ".1;\n"
-            + "option domain-name-servers 10.15.1.40;\n"
+            + "option domain-name-servers " + dns + ";\n"
             + "pool {\n"
             + "range 192.168." + subnetNum + ".2 192.168." + subnetNum + ".250;\n"
             + "}\n"

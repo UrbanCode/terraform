@@ -375,6 +375,9 @@ public class CloneTask extends SubTask implements Cloneable, Comparable<CloneTas
             }
             powerOffVm();
             removeVm();
+            for(PostCreateTask pct : postCreateTaskList) {
+                pct.destroy();
+            }
         }
         catch (RemoteException e) {
             log.warn("remote exception when deleting clone task", e);

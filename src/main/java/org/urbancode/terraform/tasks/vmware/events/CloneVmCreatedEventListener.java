@@ -58,6 +58,7 @@ public class CloneVmCreatedEventListener extends ExtensionTask implements TaskEv
 
     private String vmUser = "root";
     private String vmPassword = "password";
+    private String gateway = null;
 
     private CloneTask instanceTask;
     private VirtualMachine instance;
@@ -76,6 +77,16 @@ public class CloneVmCreatedEventListener extends ExtensionTask implements TaskEv
     public CloneVmCreatedEventListener(CloneTask routerTask) {
         this.environment = routerTask.fetchEnvironment();
         this.routerTask = routerTask;
+    }
+
+    //----------------------------------------------------------------------------------------------
+    public String getGateway() {
+        return gateway;
+    }
+
+    //----------------------------------------------------------------------------------------------
+    public void setGateway(String gateway) {
+        this.gateway = gateway;
     }
 
     //----------------------------------------------------------------------------------------------
@@ -204,7 +215,7 @@ public class CloneVmCreatedEventListener extends ExtensionTask implements TaskEv
         String result = null;
         String hostInterfacesPath = confDir + "interfaces";
         String guestInterfacesPath = "/etc/network/interfaces";
-
+        log.debug("host interfaces path: " + hostInterfacesPath);
         copyFileFromGuestToHost(guestInterfacesPath, hostInterfacesPath);
         String interfaces = FileUtils.readFileToString(new File(hostInterfacesPath));
         String commentString = "#Insert New Interfaces";
@@ -265,11 +276,14 @@ public class CloneVmCreatedEventListener extends ExtensionTask implements TaskEv
     //----------------------------------------------------------------------------------------------
     private String createInterfaceString(String ip, String ifaceName) {
         String result;
+        if(gateway == null | "".equals(gateway)) {
+            log.warn("Gateway is null or emptyand was not set properly.");
+        }
         result = "auto eth0:" + ifaceName + "\n";
         result = result + "iface eth0:" + ifaceName + " inet static" + "\n";
         result = result + "address " + ip + "\n";
-        result = result + "gateway 10.15.1.1" + "\n";
-        result = result + "netmask 255.255.0.0" + "\n";
+        result = result + "gateway " + gateway + "\n";
+        result = result + "netmask 255.255.0.0" + "\n\n";
 
         return result;
     }
@@ -283,6 +297,11 @@ public class CloneVmCreatedEventListener extends ExtensionTask implements TaskEv
     //----------------------------------------------------------------------------------------------
     public void runCommand(String vmUser, String vmPassword, String vmRunCommand, List<String> args)
     throws IOException, InterruptedException {
+        if(vmUser == null || vmPassword == null) {
+            log.error("Either VM user or password were null. " +
+                    "They need to be specified in the template under the clone element.");
+            throw new NullPointerException();
+        }
         VirtualHost host = environment.fetchVirtualHost();
         host.waitForVmtools(router);
         String vmx = host.getVmxPath(router);
