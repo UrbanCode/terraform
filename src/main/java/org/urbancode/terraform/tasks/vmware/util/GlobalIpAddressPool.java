@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 
 public class GlobalIpAddressPool {
@@ -67,13 +68,13 @@ public class GlobalIpAddressPool {
     private Properties parseIpPoolFile() {
         Properties result = new Properties();
         InputStream in = null;
+        String inputFname = System.getenv("TERRAFORM_HOME") + File.separator + "conf" + File.separator + "ippool.conf";
         try {
-
-            in = Thread.currentThread().getContextClassLoader().getResourceAsStream("org/urbancode/terraform/conf" + File.separator + "ippool.conf");
+            in = FileUtils.openInputStream(new File(inputFname));
             result.load(in);
         }
         catch (IOException e) {
-            log.fatal("Could not read properties from input stream", e);
+            log.error("Could not read properties from input stream", e);
         }
         finally {
             if (in != null) {

@@ -127,17 +127,26 @@ VMware
             order="1"
             image-path="/mydatacenter/myimagefolder/linux-clone-image"
             snapshot-name="my-snapshot"
-            server-count="1">
+            count="1">
   </clone>
   
   Required attributes on a clone element: instance-name(string), order(positive int), image-path(string), 
-  snapshot-name(string), user(string), password(string)
-  If no server count attribute is specified it will default to "1". User and password should be a valid 
-  login on the VM. 
-  The order attribute distinguishes the order VMs will be created - lowest to highest. If clones have the 
-  same number they are created in parallel. The order in which they complete can be unpredictable.
+  snapshot-name(string)
+  Recommended attributes on a clone element:  user(string), password(string). These specify the VM
+  user name and password (which may need to be root, depending on what configurations you are doing).
+  The user and password attributes are required on any router clone, any clone with a command element,
+  and any clone with a uDeploy post-create-task element.
   
-  Terraform also supports multiple different clone elements - useful if you want them to have different 
+   
+   User and password should be a valid login on the VM.
+   
+  "count" is an optional attribute that specifies the number of clones to be created. If no count 
+  attribute is specified it will default to "1". 
+  
+  The order attribute distinguishes the order VMs will be created - lowest to highest. If clones have the 
+  same number they are created in parallel. The order in which parallel clones complete can be unpredictable.
+  
+  Terraform supports multiple different clone elements - useful if you want them to have different 
   name prefixes or orders in which they are created.
   
   An important note about vSphere images: they should be virtual machines, not templates, with at least 
@@ -147,12 +156,13 @@ VMware
   The command element has one attribute called "cmd" which takes a shell command.
   You can also put a series of commands to be executed separated by semicolons.
   Note that you should not use any "shortcuts" in your commands; use fully qualified paths to programs.
-  Example - use /home/myusername instead of ~, use /bin/sh instead of ./ or bash
+  Example - use /home/username instead of ~, use /bin/sh instead of ./ or bash
   
   Examples:
   <command cmd="/bin/sleep 3" />
   <command cmd="/bin/sh /home/me/scripts/my-shell-script" />
-  <command cmd="/bin/sh /home/me/scripts/my-shell-script;/bin/sh /home/me/scripts/second-script" />
+  Mount a network drive to /mnt/test
+  <command cmd="/bin/mkdir /mnt/test;/bin/mount -t nfs nas.myhost.net:/volumes/public /mnt/test"/>
   
   For creating a private network, include a network element in the environment for each subnet.
   
@@ -161,8 +171,8 @@ VMware
   A network element must have a network-name(string) and a port-count(int). This creates a virtual 
   switch and port group.
   
-  There is an optional parameter vlan-id for a network to specify the VLAN ID. By default it is 0, which
-  represents no VLAN.
+  There is an optional parameter vlan-id for a network to specify the port group VLAN ID. 
+  By default it is 0, which represents no VLAN.
   
   Example: <network network-name="my-net-web" port-count="32" vlan-id="2096" />
   
@@ -237,7 +247,7 @@ VMware
                     image-path="/mydatacenter/myimagefolder/linux-clone-image"
                     snapshot-name="my-snapshot"
                     assign-host-ip="true"
-                    server-count="1">
+                    count="1">
               <security-group-ref name="default-group"/>
               <network-ref network-name="my-net-web" nic-index="0"/>
           </clone>
@@ -247,7 +257,7 @@ VMware
                     image-path="/mydatacenter/myimagefolder/linux-clone-image"
                     snapshot-name="my-snapshot"
                     assign-host-ip="true"
-                    server-count="1">
+                    count="1">
               <security-group-ref name="default-group"/>
               <network-ref network-name="my-net-web" nic-index="0"/>
           </clone>
@@ -524,6 +534,7 @@ Conf File Information
 
 
  * log4j.properties
+  Located in the $TERRAFORM_HOME/conf folder.
   This file contains the properties used to configure logging. 
  
  
@@ -532,14 +543,17 @@ Conf File Information
  
  [  VMware  ]
  
- * .temp files - these are the beginning forms of the conf files listed below. Content is added to them and placed in the appropriate conf file.
- 
- * ippool.conf
+  * ippool.conf
+  Located in the $TERRAFORM_HOME/conf folder.
   Contains the start and end points for the IP pool used by vCenter.
- The start is the begining IP address to start allocating for VMs.
- It should be in the following format:
+  The start is the begining IP address to start allocating for VMs.
+  It should be in the following format:
    start=192.168.2.1
    end=192.168.2.250
+   
+  The files below are created in the $TERRAFORM_HOME/temp folder and deleted when the environment is deleted.
+ 
+ * .temp files - these are the beginning forms of the conf files listed below. Content is added to them and placed in the appropriate conf file.
  
  
  * dhcpd.conf

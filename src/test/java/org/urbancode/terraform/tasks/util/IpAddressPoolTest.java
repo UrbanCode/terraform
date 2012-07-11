@@ -23,6 +23,7 @@ public class IpAddressPoolTest {
     //----------------------------------------------------------------------------------------------
     @Test
     public void testIpNext() throws IpInUseException {
+        //test that IP addresses get properly allocated and de-allocated
         IpAddressPool pool = new IpAddressPool("10.15.50.1", "10.15.50.250");
         //allocate first 5 IPs
         System.out.println("allocated " + pool.allocateIp().toString());
