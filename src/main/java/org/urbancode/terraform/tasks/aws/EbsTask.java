@@ -52,7 +52,7 @@ public class EbsTask extends SubTask {
     //----------------------------------------------------------------------------------------------
     EbsTask(ContextAWS context) {
         this.context = context;
-        helper = context.getAWSHelper();
+        helper = new AWSHelper();
     }
     
     //----------------------------------------------------------------------------------------------

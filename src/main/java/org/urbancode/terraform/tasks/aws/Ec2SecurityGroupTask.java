@@ -18,6 +18,8 @@ package org.urbancode.terraform.tasks.aws;
 
 import org.apache.log4j.Logger;
 
+import com.amazonaws.services.ec2.model.SecurityGroup;
+
 
 public class Ec2SecurityGroupTask extends SecurityGroupTask {
     
@@ -33,6 +35,22 @@ public class Ec2SecurityGroupTask extends SecurityGroupTask {
     //----------------------------------------------------------------------------------------------
     Ec2SecurityGroupTask(ContextAWS context) {
         super(context);
+    }
+    
+    @Override
+    protected boolean exists() {
+        boolean result = false;
+        
+        if (ec2Client == null) {
+            log.error("Connection to AWS EC2 required");
+        }
+        
+        SecurityGroup found = helper.getSecurityGroupForName(name, ec2Client);
+        if (found != null) {
+            result = true;
+        }
+        
+        return result;
     }
 
 }

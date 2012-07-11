@@ -37,4 +37,11 @@ public class VpcSecurityGroupTask extends SecurityGroupTask {
     public void setVpcId(String vpcId) {
         this.vpcId = vpcId;
     }
+
+    @Override
+    protected boolean exists() {
+        boolean result = false;
+        // TODO - 
+        return result;
+    }
 }

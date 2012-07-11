@@ -47,7 +47,7 @@ public class RuleTask extends SubTask {
     //----------------------------------------------------------------------------------------------
     RuleTask(ContextAWS context) {
         this.context = context;
-        helper = context.getAWSHelper();
+        helper = new AWSHelper();
     }
     
     //----------------------------------------------------------------------------------------------

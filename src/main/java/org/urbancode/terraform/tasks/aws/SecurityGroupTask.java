@@ -53,14 +53,13 @@ public abstract class SecurityGroupTask extends SubTask {
     protected String name;
     protected String descr;
     protected String groupId;
-    protected List<RuleTask> rules;
+    protected List<RuleTask> rules = new ArrayList<RuleTask>();
     
     //----------------------------------------------------------------------------------------------
     SecurityGroupTask(Context context) {
         super(context);
         this.context = (ContextAWS) context;
         helper = new AWSHelper();
-        rules = new ArrayList<RuleTask>();
     }
     
     //----------------------------------------------------------------------------------------------
@@ -122,6 +121,8 @@ public abstract class SecurityGroupTask extends SubTask {
         
         return result;
     }
+    
+    abstract protected boolean exists();
      
     //----------------------------------------------------------------------------------------------
     @Override
@@ -132,15 +133,23 @@ public abstract class SecurityGroupTask extends SubTask {
         }
         
         try {
-            log.info("Creating SecurityGroup");
-            setId(helper.createSecurityGroup(name, vpcId, descr, ec2Client));
-            log.info("SecurityGroup " + name + " created with id: " + groupId);
-            helper.tagInstance(groupId, "terraform.environment", context.getEnvironment().getName(), ec2Client);
-            
-            for (RuleTask rule : getRules()) {
-                rule.setGroupId(groupId);
-                rule.create();
+            if (exists()) {
+                log.warn("Security Group exists " + name);
             }
+            else {
+                log.info("Creating SecurityGroup");
+                setId(helper.createSecurityGroup(name, vpcId, descr, ec2Client));
+                log.info("SecurityGroup " + name + " created with id: " + groupId);
+                helper.tagInstance(groupId, "terraform.environment", context.getEnvironment().getName(), ec2Client);
+
+                if (getRules() != null) {
+                    for (RuleTask rule : getRules()) {
+                        rule.setGroupId(groupId);
+                        rule.create();
+                    }
+                }
+            }
+            
         }
         catch (Exception e) {
             throw new EnvironmentCreationException("Could not create Security Group completely.", e);

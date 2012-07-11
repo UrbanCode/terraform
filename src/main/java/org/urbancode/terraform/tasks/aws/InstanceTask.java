@@ -81,7 +81,7 @@ public class InstanceTask extends Task {
     //----------------------------------------------------------------------------------------------
     public InstanceTask(ContextAWS context) {
         this.context = context;
-        helper = context.getAWSHelper();
+        helper = new AWSHelper();
     }
     
     //----------------------------------------------------------------------------------------------
@@ -556,6 +556,10 @@ public class InstanceTask extends Task {
         if (ec2Client == null) {
             throw new RemoteException("No connection to EC2");
         }
+        
+        // TODO - need a check here to make sure that all conditions are good
+        // vpc/subnet/zone
+        
         if (loadBalancer != null && !loadBalancer.isEmpty()) {
             List<String> tmp = new ArrayList<String>();
             tmp.add(instanceId);

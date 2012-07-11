@@ -52,7 +52,7 @@ public class SubnetTask extends SubTask {
     //----------------------------------------------------------------------------------------------
     SubnetTask(ContextAWS context) {
         this.context = context;
-        helper = context.getAWSHelper();
+        helper = new AWSHelper();
     }
     
     //----------------------------------------------------------------------------------------------

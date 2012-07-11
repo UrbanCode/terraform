@@ -114,8 +114,11 @@ import com.amazonaws.services.elasticloadbalancing.model.CreateLoadBalancerResul
 import com.amazonaws.services.elasticloadbalancing.model.DeleteLoadBalancerRequest;
 import com.amazonaws.services.elasticloadbalancing.model.DeregisterInstancesFromLoadBalancerRequest;
 import com.amazonaws.services.elasticloadbalancing.model.DeregisterInstancesFromLoadBalancerResult;
+import com.amazonaws.services.elasticloadbalancing.model.DescribeLoadBalancersRequest;
+import com.amazonaws.services.elasticloadbalancing.model.DescribeLoadBalancersResult;
 import com.amazonaws.services.elasticloadbalancing.model.HealthCheck;
 import com.amazonaws.services.elasticloadbalancing.model.Listener;
+import com.amazonaws.services.elasticloadbalancing.model.LoadBalancerDescription;
 import com.amazonaws.services.elasticloadbalancing.model.RegisterInstancesWithLoadBalancerRequest;
 import com.amazonaws.services.elasticloadbalancing.model.RegisterInstancesWithLoadBalancerResult;
 
@@ -1588,6 +1591,11 @@ public class AWSHelper {
         return privateIp;
     }
 
+    /**
+     * 
+     * @param loadBalancerName
+     * @param elbClient
+     */
     public void deleteLoadBalancer(String loadBalancerName, AmazonElasticLoadBalancing elbClient) {
         try {
             DeleteLoadBalancerRequest deleteRequest = new DeleteLoadBalancerRequest()
@@ -1596,7 +1604,67 @@ public class AWSHelper {
         }
         catch (AmazonServiceException e) {
             log.error("Could not delete Load Balancer " + loadBalancerName, e);
-            throw e;
+            if (e.getErrorCode().equals("LoadBalancerNotFound")) {
+                log.warn("Could not find load balancer " + loadBalancerName);
+            }
+            else {
+                throw e;
+            }
         }
+    }
+    
+    /**
+     * 
+     * @param name
+     * @param elbClient
+     * @return
+     */
+    public LoadBalancerDescription getLoadBalancerForName(String name, AmazonElasticLoadBalancing elbClient) {
+        LoadBalancerDescription loadBalancer = null;
+        try {
+            DescribeLoadBalancersRequest request = new DescribeLoadBalancersRequest()
+                                                         .withLoadBalancerNames(name);
+            DescribeLoadBalancersResult result = elbClient.describeLoadBalancers(request);
+            
+            if (result != null && result.getLoadBalancerDescriptions() != null) {
+                // grab first entry since we only requested 1 LB
+                // Though, maybe this will grab all vpc ELBs with names too? 
+                loadBalancer = result.getLoadBalancerDescriptions().get(0);
+            }
+        }
+        catch (AmazonServiceException e) {
+            if (e.getErrorCode().equals("LoadBalancerNotFound")) {
+                // if we can't find the ELB to delete, it's already gone, that's probably good
+                log.warn("Could not find Load Balancer " + name, e);
+            }
+        }
+        return loadBalancer;
+    }
+    
+    /**
+     * 
+     * @param name
+     * @param ec2Client
+     * @return
+     */
+    public SecurityGroup getSecurityGroupForName(String name, AmazonEC2 ec2Client) {
+        SecurityGroup group = null;
+        try {
+        DescribeSecurityGroupsRequest request = new DescribeSecurityGroupsRequest()
+                                                      .withGroupNames(name);
+        DescribeSecurityGroupsResult result = ec2Client.describeSecurityGroups(request);
+        
+        if (result != null && result.getSecurityGroups() != null) {
+            group = result.getSecurityGroups().get(0);
+        }
+        }
+        catch (AmazonServiceException e) {
+            log.warn("Could not find Security Group with name " + name, e);
+            if (!e.getErrorCode().equals("InvalidGroup.NotFound")) {
+                throw e;
+            }
+        }
+        
+        return group;
     }
 }

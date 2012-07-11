@@ -55,7 +55,7 @@ public class VpcTask extends Task {
     //----------------------------------------------------------------------------------------------
     public VpcTask(ContextAWS context) {
         this.context = context;
-        helper = context.getAWSHelper();
+        helper = new AWSHelper();
     }
     
     //----------------------------------------------------------------------------------------------
