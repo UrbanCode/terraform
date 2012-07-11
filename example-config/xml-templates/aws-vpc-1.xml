@@ -16,7 +16,7 @@ This is an Environment Template used to create an environment with Amazon Web Se
              instances without a subnet. Instances are launched into subnets.
              Note: make sure that your subnet CIDRs work with together and in the VPC--> 
         <subnet name="myHouse" zone="us-east-1d" cidr="192.168.2.0/24" />
-        <subnet name="yourHouse" zone="us-east-1d" cidr="192.168.3.0/24" />
+        <subnet name="yourHouse" zone="us-east-1c" cidr="192.168.3.0/24" />
 
         <!-- An InternetGateway grants your instances the ability to reach the internet. -->
         <inet-gwy name="myGateway" />
@@ -102,7 +102,7 @@ This is an Environment Template used to create an environment with Amazon Web Se
          a subnet that it is associated with (only instances in that subnet can be on this LB)
          and an Application Cookie Name (leave it empty if you want the LB to handle to cookies)
      -->
-    <load-balancer name="balanceLoader" subnet-name="yourHouse" app-cookie-name="" >
+    <load-balancer name="balanceLoader" subnet-name="yourHouse myHouse" app-cookie-name="" >
         <!-- Listeners are basically what you want the Load Balancer to 'load-balance'.
              You have the port the LB listens on, the port you want to go to on the instance, 
              the protocol to use, and the SSL certification-id. The cert-id is only needed
@@ -114,6 +114,7 @@ This is an Environment Template used to create an environment with Amazon Web Se
               or the README for more details. --> 
         <health-check interval="30" timeout="20" unhealthy-count="2" healthy-count="10" protocol="http" port="8080" path="/" />
         <!--  <availability-zone zone="" /> -->
+	<vpc-security-group-ref security-group-name="lbDog" />
     </load-balancer>
   </environment>
 </context>

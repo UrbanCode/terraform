@@ -51,7 +51,7 @@ This is an Environment Template used to create an environment with Amazon Web Se
          example there will be herp00 and herp01 -->
     <instance name="herp" ami-id="ami-707ca619" zone="us-east-1d" count="2" 
               private-key-ref="nick-portal" image-size="m1.small" >
-        <ec2-security-group-ref security-group-name="GuardDog" />
+        <ec2-security-group-ref security-group-name="secgroup1" />
         <boot-actions shell="/bin/bash">
             <script url="https://s3.amazonaws.com/ncc.misc/agentConf.sh" shell="/bin/bash">
                 <param value="${ud.host}" />
@@ -62,7 +62,7 @@ This is an Environment Template used to create an environment with Amazon Web Se
         </boot-actions>
     </instance>
 
-    <load-balancer name="balanceLoader" app-cookie-name="" zones="us-east-1d" >
+    <load-balancer name="balanceLoader" app-cookie-name="" zones="us-east-1d us-east-1c" >
         <!-- Listeners are basically what you want the Load Balancer to 'load-balance'.
              You have the port the LB listens on, the port you want to go to on the instance, 
              the protocol to use, and the SSL certification-id. The cert-id is only needed

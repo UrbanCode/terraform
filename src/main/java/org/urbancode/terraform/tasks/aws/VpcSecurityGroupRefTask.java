@@ -40,7 +40,7 @@ public class VpcSecurityGroupRefTask extends SecurityGroupRefTask {
      * @return the group 
      * @throws Exception
      */
-    public VpcSecurityGroupTask fetchSecurityGroup() {
+    public SecurityGroupTask fetchSecurityGroup() {
         if (ref == null) {
             if (context.getEnvironment() instanceof EnvironmentTaskAWS) {
                 EnvironmentTaskAWS env = (EnvironmentTaskAWS) context.getEnvironment();

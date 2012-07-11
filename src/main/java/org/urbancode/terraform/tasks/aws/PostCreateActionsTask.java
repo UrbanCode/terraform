@@ -71,7 +71,7 @@ public class PostCreateActionsTask extends SubTask {
     @Override
     public void create() 
     throws PostCreateException {
-        
+        log.debug("Attempting to run Post Create Actions");
         if (actions != null) {
             for (SshTask action : actions) {
                 if (idFilePath != null) {

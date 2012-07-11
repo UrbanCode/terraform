@@ -376,7 +376,8 @@ public class InstanceTask extends Task {
     }
     
     //----------------------------------------------------------------------------------------------
-    private boolean verifySecurityGroups(Instance instance) throws Exception {
+    private boolean verifySecurityGroups(Instance instance) 
+    throws Exception {
         boolean result = false;
         List<String> expectedIds = new ArrayList<String>();
         for (SecurityGroupRefTask group : getSecurityGroupRefs()) {
@@ -410,7 +411,9 @@ public class InstanceTask extends Task {
             if (instances != null && !instances.isEmpty()) {
                 for (Instance instance : instances) {
                     if (instance.getImageId().equals(amiId)) {
-                        String subId = ((EnvironmentTaskAWS)context.getEnvironment()).getVpc().findSubnetForName(subnetName).getId();
+                        // TODO - clean this shit up
+                        String subId = ((EnvironmentTaskAWS)context.getEnvironment()).getVpc()
+                                        .findSubnetForName(subnetName).getId();
                         if (instance.getSubnetId() != null 
                             && instance.getSubnetId().equals(subId)
                             && verifyElasticIp(instance)
@@ -527,7 +530,7 @@ public class InstanceTask extends Task {
     }
     
     //----------------------------------------------------------------------------------------------
-    private void assignIp(String ipToAssign) 
+    private void assignElasticIp(String ipToAssign) 
     throws RemoteException {
         if (ec2Client == null) {
             throw new RemoteException("No connection to EC2");
@@ -543,12 +546,6 @@ public class InstanceTask extends Task {
             }
             else {
                 log.error("Cannot assign Elastic Ip to non-VPC instance");
-            }
-        }
-        else {
-            if (zone != null && !zone.isEmpty()) {
-                // TODO - manually set IP not yet supported
-                setPublicIp(helper.getInstanceById(instanceId, ec2Client).getPublicIpAddress());;
             }
         }
     }
@@ -590,7 +587,8 @@ public class InstanceTask extends Task {
         helper.tagInstance(instanceId, "Name", serverName, ec2Client);
         
         // tag the instance with the environment name
-        helper.tagInstance(instanceId, "terraform.environment", context.getEnvironment().getName(), ec2Client);
+        helper.tagInstance(instanceId, "terraform.environment", context.getEnvironment().getName(),
+                           ec2Client);
     }
     
     //----------------------------------------------------------------------------------------------
@@ -598,10 +596,7 @@ public class InstanceTask extends Task {
     private void startPostCreateActions(String keyPair) 
     throws PostCreateException {
         if (pca != null) {
-            // TODO - clean this shit up
-            if ((elasticIpAddress != null && !elasticIpAddress.isEmpty()) || 
-                    (context.getEnvironment() instanceof EnvironmentTaskAWS 
-                    && ((EnvironmentTaskAWS) (context.getEnvironment())).getVpc() == null)) {
+            if (elasticIpAddress != null && !elasticIpAddress.isEmpty()) {
                 pca.setHost(elasticIpAddress);
             }
             else {
@@ -616,9 +611,8 @@ public class InstanceTask extends Task {
                 pca.setIdFile(keyPairPath);
             }
             else {
-                log.warn("Trying to do PostCreateActions on instance with no ssh key!" 
-                        + "\nName: " + name 
-                        + "\nId: " + instanceId);
+                log.warn("Trying to do PostCreateActions on instance  " + name + " ( " + instanceId
+                        + " ) with no ssh key!");
             }
             
             pca.create();
@@ -664,21 +658,27 @@ public class InstanceTask extends Task {
                 List<BlockDeviceMapping> blockMaps = setupEbs();
                 
                 if (amiId == null) {
-                    String msg = "No AMI ID specified for instance " + name + ". There is no image to use.";
+                    String msg = "No AMI ID specified for instance " + name + ". There is no image"
+                                 + " to use.";
                     log.fatal(msg);
                     throw new EnvironmentCreationException(msg);
                 }
                 
                 // launch the instance and set the Id
-                instanceId = helper.launchAmi(amiId, subnetId, keyPair, size, userData, groupIds, blockMaps,
-                                              ariId, akiId, zone, ec2Client);
+                instanceId = helper.launchAmi(amiId, subnetId, keyPair, size, userData, groupIds,
+                        blockMaps, ariId, akiId, zone, ec2Client);
                 
                 postStartup();
                 
                 // give instance elastic ip
                 if (elasticIp) {
                     // if we send null, it will grab a new EIP and assign it
-                    assignIp(elasticIpAddress);
+                    assignElasticIp(elasticIpAddress);
+                }
+                
+                if (zone != null && !zone.isEmpty()) {
+                    // TODO - manually set IP not yet supported
+                    setPublicIp(helper.getInstanceById(instanceId, ec2Client).getPublicIpAddress());
                 }
                 
                 // TODO - set public ip property
@@ -725,7 +725,8 @@ public class InstanceTask extends Task {
             }
             
             if (elasticIpAllocId != null) {
-                String assocId = helper.getAssociationIdForAllocationId(elasticIpAllocId, ec2Client);
+                String assocId = helper.getAssociationIdForAllocationId(elasticIpAllocId, 
+                                                                        ec2Client);
                 if (assocId != null && !assocId.isEmpty()) {
                     helper.disassociateElasticIp(assocId, ec2Client);
                     helper.releaseElasticIp(getElasticIpAllocId(), ec2Client);
