@@ -268,7 +268,6 @@ public class InstanceTask extends Task {
         return elasticIpAddress;
     }
     
-    
     //----------------------------------------------------------------------------------------------
     public EbsTask createEbs() {
         EbsTask ebs = new EbsTask(context);
@@ -288,8 +287,30 @@ public class InstanceTask extends Task {
         return pca;
     }
     
+    public SecurityGroupRefTask createEc2SecurityGroupRef() {
+        SecurityGroupRefTask group = null;
+        
+        // if the instance does not have a subnet name set, then we'll 
+        // check for a zone, which would be required for an EC2 instance
+        if (zone != null && !zone.isEmpty()) {
+            log.debug("Creating EC2 Security Group Ref");
+            group = new Ec2SecurityGroupRefTask(context);
+        }
+        else {
+            String msg = "No zone set! Unable to create securityGroup";
+            log.error(msg);
+            // throw
+        }
+
+        if (group != null) {
+            secRefs.add(group);
+        }
+        
+        return group;
+    }
+    
     //----------------------------------------------------------------------------------------------
-    public SecurityGroupRefTask createSecurityGroupRef() {
+    public SecurityGroupRefTask createVpcSecurityGroupRef() {
         SecurityGroupRefTask group = null;
         
         // determine which type of security group we need to make.
@@ -297,23 +318,11 @@ public class InstanceTask extends Task {
         // instance must have a subnet name set.
         if (subnetName != null && !subnetName.isEmpty()) {
             log.debug("Creating VPC Security Group Ref");
-//            if (secRefs == null) {
-//                secRefs = new ArrayList<VpcSecurityGroupRefTask>();
-//            }
             group = new VpcSecurityGroupRefTask(context);
-        }
-        // if the instance does not have a subnet name set, then we'll 
-        // check for a zone, which would be required for an EC2 instance
-        else if (zone != null && !zone.isEmpty()) {
-            log.debug("Creating EC2 Security Group Ref");
-//            if (secRefs == null) {
-//                secRefs = new ArrayList<Ec2SecurityGroupRefTask>();
-//            }
-            group = new Ec2SecurityGroupRefTask(context);
         }
         // if neither of those checks pass, something is wrong...
         else {
-            String msg = "No subnet or zone set! Unable to create securityGroup";
+            String msg = "No subnet set! Unable to create securityGroup";
             log.error(msg);
             // throw
         }
@@ -486,7 +495,7 @@ public class InstanceTask extends Task {
         List<String> groupIds = new ArrayList<String>();
         if (getSecurityGroupRefs() != null) {
             for (SecurityGroupRefTask ref : getSecurityGroupRefs()) {
-                VpcSecurityGroupTask found = ref.fetchSecurityGroup();
+                SecurityGroupTask found = ref.fetchSecurityGroup();
                 if (found != null) {
                     groupIds.add(found.getId());
                 }
@@ -719,8 +728,8 @@ public class InstanceTask extends Task {
                 String assocId = helper.getAssociationIdForAllocationId(elasticIpAllocId, ec2Client);
                 if (assocId != null && !assocId.isEmpty()) {
                     helper.disassociateElasticIp(assocId, ec2Client);
-                    setElasticIpAllocId(null);
                     helper.releaseElasticIp(getElasticIpAllocId(), ec2Client);
+                    setElasticIpAllocId(null);
                     setPublicIp(null);
                 }
                 else {
@@ -813,7 +822,18 @@ public class InstanceTask extends Task {
         // sec group refs
         if (getSecurityGroupRefs() != null) {
             for (SecurityGroupRefTask secGroup : getSecurityGroupRefs()) {
-                SecurityGroupRefTask nSecGroup = result.createSecurityGroupRef();
+                SecurityGroupRefTask nSecGroup = null;
+                if (secGroup instanceof Ec2SecurityGroupRefTask) {
+                    nSecGroup = result.createEc2SecurityGroupRef();
+                }
+                else if (secGroup instanceof VpcSecurityGroupRefTask) {
+                    nSecGroup = result.createVpcSecurityGroupRef();
+                    
+                }
+                else {
+                    log.error("Unable to clone SecurityGroupRefTasks");
+                    // throw
+                }
                 nSecGroup.setSecurityGroupName(secGroup.getSecurityGroupName());
             }
         }

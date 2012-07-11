@@ -17,7 +17,7 @@ public abstract class SecurityGroupRefTask extends SubTask {
 
     protected Context context;
     protected String groupName;
-    protected VpcSecurityGroupTask ref; 
+    protected SecurityGroupTask ref; 
     
     //----------------------------------------------------------------------------------------------
     public SecurityGroupRefTask(Context context) {
@@ -36,6 +36,6 @@ public abstract class SecurityGroupRefTask extends SubTask {
     
     //----------------------------------------------------------------------------------------------
     // TODO return generic type
-    abstract public VpcSecurityGroupTask fetchSecurityGroup();
+    abstract public SecurityGroupTask fetchSecurityGroup();
 
 }

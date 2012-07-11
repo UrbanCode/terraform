@@ -55,7 +55,7 @@ public class EnvironmentTaskAWS extends EnvironmentTask {
     private VpcTask vpc;
     private List<InstanceTask> instances = new ArrayList<InstanceTask>();
     private List<LoadBalancerTask> loadBalancers = new ArrayList<LoadBalancerTask>();
-    private List<VpcSecurityGroupTask> ec2SecGroups = new ArrayList<VpcSecurityGroupTask>();
+    private List<Ec2SecurityGroupTask> ec2SecGroups;
     
     // for timeouts
     private long pollInterval = 3000L;
@@ -124,12 +124,15 @@ public class EnvironmentTaskAWS extends EnvironmentTask {
     }
     
     //----------------------------------------------------------------------------------------------
-    public List<VpcSecurityGroupTask> getSecurityGroups() {
+    public List<Ec2SecurityGroupTask> getSecurityGroups() {
         return Collections.unmodifiableList(ec2SecGroups);
     }
     
-    public VpcSecurityGroupTask createEc2SecurityGroup() {
-        VpcSecurityGroupTask group = new VpcSecurityGroupTask(context);
+    public Ec2SecurityGroupTask createEc2SecurityGroup() {
+        if (ec2SecGroups == null) {
+            ec2SecGroups = new ArrayList<Ec2SecurityGroupTask>();
+        }
+        Ec2SecurityGroupTask group = new Ec2SecurityGroupTask(context);
         ec2SecGroups.add(group);
         return group;
     }
@@ -239,10 +242,10 @@ public class EnvironmentTaskAWS extends EnvironmentTask {
     }
     
     //----------------------------------------------------------------------------------------------
-    private void launchSecurityGroups(List<VpcSecurityGroupTask> groups) 
+    private void launchSecurityGroups(List<Ec2SecurityGroupTask> groups) 
     throws EnvironmentCreationException {
         if (groups != null) {
-            for (VpcSecurityGroupTask group : groups) {
+            for (SecurityGroupTask group : groups) {
                 group.create();
             }
         }
@@ -395,17 +398,17 @@ public class EnvironmentTaskAWS extends EnvironmentTask {
     private void destroySecurityGroups() 
     throws EnvironmentDestructionException {
         if (ec2SecGroups != null) {
-            for (VpcSecurityGroupTask group : ec2SecGroups) {
+            for (SecurityGroupTask group : ec2SecGroups) {
                 group.destroy();
             }
         }
     }
     
     //----------------------------------------------------------------------------------------------
-    public VpcSecurityGroupTask findSecurityGroupByName(String groupName) {
-        VpcSecurityGroupTask result = null;
+    public SecurityGroupTask findSecurityGroupByName(String groupName) {
+        SecurityGroupTask result = null;
         if (ec2SecGroups != null) {
-            for (VpcSecurityGroupTask group : ec2SecGroups) {
+            for (SecurityGroupTask group : ec2SecGroups) {
                 if (groupName != null && groupName.equals(group.getName())) {
                     result = group;
                     break;

@@ -13,28 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
+
 package org.urbancode.terraform.tasks.aws;
 
 import org.apache.log4j.Logger;
 
-public class VpcSecurityGroupTask extends SecurityGroupTask {
 
+public class Ec2SecurityGroupTask extends SecurityGroupTask {
+    
     //**********************************************************************************************
     // CLASS
     //**********************************************************************************************
-    final static private Logger log = Logger.getLogger(VpcSecurityGroupTask.class);
+    final static private Logger log = Logger.getLogger(Ec2SecurityGroupTask.class);
     
     //**********************************************************************************************
     // INSTANCE
     //**********************************************************************************************
-    
+
     //----------------------------------------------------------------------------------------------
-    VpcSecurityGroupTask(ContextAWS context) {
+    Ec2SecurityGroupTask(ContextAWS context) {
         super(context);
     }
-    
-    //----------------------------------------------------------------------------------------------
-    public void setVpcId(String vpcId) {
-        this.vpcId = vpcId;
-    }
+
 }

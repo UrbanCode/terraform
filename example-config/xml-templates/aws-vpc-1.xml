@@ -51,7 +51,7 @@ This is an Environment Template used to create an environment with Amazon Web Se
             elastic-ip="true" private-key-ref="nick-portal" image-size="M1Small" >
         <!-- This is just telling what Security Groups to apply to this instance.
              You can have multiple of these. -->
-        <security-group-ref security-group-name="GuardDog" />
+        <vpc-security-group-ref security-group-name="GuardDog" />
         <!-- These are actions that will be ran as 'root' on first boot of the 
              instance. Known in AWS as user-data. The shell can be specified, but
              it is recommended you use bash if possible. -->
@@ -87,7 +87,7 @@ This is an Environment Template used to create an environment with Amazon Web Se
     <instance name="herp" ami-id="ami-707ca619" subnet-name="yourHouse" count="2"
             elastic-ip="false" private-key-ref="nick-portal" image-size="M1Small"
             load-balancer="balanceLoader" >
-        <security-group-ref security-group-name="GuardDog" />
+        <vpc-security-group-ref security-group-name="GuardDog" />
         <boot-actions shell="/bin/bash">
             <script url="https://s3.amazonaws.com/ncc.misc/agentConf.sh" shell="/bin/bash">
                 <param value="${ud.host}" />

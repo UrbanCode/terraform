@@ -13,7 +13,7 @@ This is an Environment Template used to create an environment with Amazon Web Se
          want to launch, whether or not it should get an Elastic Ip, the SSH key
          to use, and the size. See the README for more info or check out AWS docs.-->
     <instance name="derp" ami-id="ami-707ca619" zone="us-east-1d" count="0"
-              private-key-ref="nick-portal" image-size="m1.small" >
+              private-key-ref="nick-portal" image-size="m1.small" load-balancer="balanceLoader" >
         <!-- This is just telling what Security Groups to apply to this instance.
              You can have multiple of these. -->
         <!-- <security-group-ref security-group-name="GuardDog" /> -->
@@ -51,7 +51,7 @@ This is an Environment Template used to create an environment with Amazon Web Se
          example there will be herp00 and herp01 -->
     <instance name="herp" ami-id="ami-707ca619" zone="us-east-1d" count="2" 
               private-key-ref="nick-portal" image-size="m1.small" >
-        <security-group-ref security-group-name="GuardDog" />
+        <ec2-security-group-ref security-group-name="GuardDog" />
         <boot-actions shell="/bin/bash">
             <script url="https://s3.amazonaws.com/ncc.misc/agentConf.sh" shell="/bin/bash">
                 <param value="${ud.host}" />
@@ -61,6 +61,22 @@ This is an Environment Template used to create an environment with Amazon Web Se
             <script url="https://s3.amazonaws.com/ncc.misc/setupTomcat.sh" />
         </boot-actions>
     </instance>
+
+    <load-balancer name="balanceLoader" app-cookie-name="" zones="us-east-1d" >
+        <!-- Listeners are basically what you want the Load Balancer to 'load-balance'.
+             You have the port the LB listens on, the port you want to go to on the instance, 
+             the protocol to use, and the SSL certification-id. The cert-id is only needed
+             for secure protocols and should be on your AWS account.  -->
+        <listener protocol="http" instance-port="80" load-balancer-port="80" cert-id="" />
+        <listener protocol="http" instance-port="8080" load-balancer-port="8080" cert-id="" />
+        <!-- The health check is used to determine if an instance is health or not. It checks for
+             a status 200 OK to determine if the instance is healthy or not. See the AWS docs
+              or the README for more details. --> 
+        <health-check interval="30" timeout="20" unhealthy-count="2" healthy-count="10" protocol="http" 			port="8080" path="/" />
+        <!--  <availability-zone zone="" /> -->
+    </load-balancer>
+
+
     <ec2-security-group name="secgroup1" description="testing ec2 sec groups">
         <rule source="0.0.0.0/0" protocol="tcp" start-port="22" end-port="22" inbound="true" />
     </ec2-security-group>

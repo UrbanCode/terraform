@@ -73,6 +73,9 @@ public class NamespaceConfiguration {
         if (tmp != null) {
             result = (String) tmp.get(element);
         }
+        else {
+            log.debug("Elem:Class map not found");
+        }
 
         log.debug("Classname found: " + result);
         return result;

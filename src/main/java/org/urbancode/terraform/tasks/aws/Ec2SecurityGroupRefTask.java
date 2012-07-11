@@ -20,7 +20,7 @@ public class Ec2SecurityGroupRefTask extends SecurityGroupRefTask {
     }
     
     //----------------------------------------------------------------------------------------------
-    public VpcSecurityGroupTask fetchSecurityGroup() {
+    public SecurityGroupTask fetchSecurityGroup() {
         if (ref == null) {
             if (context.getEnvironment() instanceof EnvironmentTaskAWS) {
                 EnvironmentTaskAWS env = (EnvironmentTaskAWS)context.getEnvironment();

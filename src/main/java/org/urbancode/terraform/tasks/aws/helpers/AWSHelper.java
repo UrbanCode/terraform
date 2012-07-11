@@ -591,7 +591,8 @@ public class AWSHelper {
             RegisterInstancesWithLoadBalancerRequest request = new RegisterInstancesWithLoadBalancerRequest()
             .withInstances(instances)
             .withLoadBalancerName(loadBalancerName);
-            RegisterInstancesWithLoadBalancerResult result = lbClient.registerInstancesWithLoadBalancer(request);
+            RegisterInstancesWithLoadBalancerResult result = 
+                    lbClient.registerInstancesWithLoadBalancer(request);
             updatedInstances = result.getInstances();
         }
 
@@ -613,16 +614,20 @@ public class AWSHelper {
      * @throws NullPointerException
      */
     public String launchLoadBalancer(String loadBalancerName, List<String> subnets,
-                                        List<String> secGroups, List<Listener> listeners,
-                                        AmazonElasticLoadBalancing lbClient)
+                                        List<String> secGroups, List<Listener> listeners, 
+                                        List<String> zones, AmazonElasticLoadBalancing lbClient)
     throws NullPointerException {
         CreateLoadBalancerRequest request = new CreateLoadBalancerRequest()
                                                 .withLoadBalancerName(loadBalancerName);
         if (subnets != null && !subnets.isEmpty()) {
             request = request.withSubnets(subnets);
         }
+        else if (zones != null && !zones.isEmpty()) {
+            request = request.withAvailabilityZones(zones);
+        }
         else {
-            throw new NullPointerException("List of subnets must not be null!");
+            throw new NullPointerException("Must specify either zones or subnets for load balancer " 
+                                            + loadBalancerName);
         }
 
         if (listeners != null && !listeners.isEmpty()) {
