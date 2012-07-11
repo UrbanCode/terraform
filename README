@@ -105,7 +105,7 @@ VMware
             │   ├── network-ref(n)
             │   ├── security-group-ref(n)
             │   ├── post-create-task(n)
-                ├── event-listener(n)
+            │   ├── event-listener(n)
             │   └── command(n)
             ├── network(n)
             └── security-group(n)
@@ -137,9 +137,8 @@ VMware
   The user and password attributes are required on any router clone, any clone with a command element,
   and any clone with a uDeploy post-create-task element.
   
-   
-   User and password should be a valid login on the VM.
-   
+  User and password should be a valid login on the VM.
+  
   "count" is an optional attribute that specifies the number of clones to be created. If no count 
   attribute is specified it will default to "1". 
   
@@ -183,6 +182,13 @@ VMware
   
   The name should be the same as the network name they are on. The nic-index corresponds to the network 
   card which will be attached to the network.
+  
+  A general note about networking - there must be some way for your VMs to have access to a physical NIC
+  in order for them to get an IP. There are two ways to do this. One is for your image to have a NIC
+  attached that is on an internet-connected virtual switch (that is, a vSwitch with a physical NIC attached).
+  The second way is for the VM to be connected to a private network serviced by a router.
+  The router must have one NIC attached to a vSwitch with a physical NIC and a NIC attached to the
+  vSwitch that your VMs are on.
   
   If you are creating a router to use for the private network, you must use a Linux image that can act 
   as a router. We recommend Debian or Ubuntu.
