@@ -46,7 +46,7 @@ done
 TFJAR=`find $MTARGET -name "terraform*.jar"`
 
 # tack on the terraform jar since we have a : at the end already
-CP="$CLASSPATH"$TFJAR":$TERRAFORM_HOME/properties"
+CP="$CLASSPATH"$TFJAR":$TERRAFORM_HOME/conf"
 PROPS=""
 
 for ARG in $@; do

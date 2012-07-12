@@ -46,8 +46,8 @@ public class CloneVmCreatedEventListener extends ExtensionTask implements TaskEv
     // CLASS
     //**********************************************************************************************
     static private final Logger log = Logger.getLogger(CloneVmCreatedEventListener.class);
-    static protected final String confDir = System.getenv("TERRAFORM_HOME") +
-                                               File.separator + "conf" + File.separator;
+    static protected final String tempConfDir = System.getenv("TERRAFORM_HOME") +
+                                               File.separator + "temp" + File.separator;
 
     //**********************************************************************************************
     // INSTANCE
@@ -56,8 +56,8 @@ public class CloneVmCreatedEventListener extends ExtensionTask implements TaskEv
     private CloneTask routerTask;
     private VirtualMachine router;
 
-    private String vmUser = "root";
-    private String vmPassword = "password";
+    private String routerUser = null;
+    private String routerPassword = null;
     private String gateway = null;
 
     private CloneTask instanceTask;
@@ -94,6 +94,8 @@ public class CloneVmCreatedEventListener extends ExtensionTask implements TaskEv
     public void setValues(CloneTask cloneTask) {
         this.environment = cloneTask.fetchEnvironment();
         this.routerTask = cloneTask;
+        this.routerUser = routerTask.getUser();
+        this.routerPassword = routerTask.getPassword();
     }
 
     //----------------------------------------------------------------------------------------------
@@ -106,11 +108,8 @@ public class CloneVmCreatedEventListener extends ExtensionTask implements TaskEv
         if (subTask instanceof CloneTask) {
             cloneTask = (CloneTask) subTask;
             if (!subTask.equals(routerTask)) {
-
-                // set user/pass
-                vmUser = ((CloneTask) subTask).getUser();
-                vmPassword = ((CloneTask) subTask).getPassword();
-
+                routerUser = routerTask.getUser();
+                routerPassword = routerTask.getPassword();
                 try {
                     cloneTask.powerOnVm();
                 }
@@ -171,7 +170,7 @@ public class CloneVmCreatedEventListener extends ExtensionTask implements TaskEv
     private void addInstanceToIpTables(String networkIp, String privateIp)
     throws IOException, InterruptedException {
         String result = null;
-        String hostIpTablesPath = confDir + "iptables.conf";
+        String hostIpTablesPath = tempConfDir + "iptables.conf";
         String guestIpTablesPath = "/etc/iptables.conf";
 
         copyFileFromGuestToHost(guestIpTablesPath, hostIpTablesPath);
@@ -205,7 +204,7 @@ public class CloneVmCreatedEventListener extends ExtensionTask implements TaskEv
 
         copyFileFromHostToGuest(hostIpTablesPath, guestIpTablesPath);
 
-        runCommand(vmUser, vmPassword, "runProgramInGuest", "/bin/sh", "-c",
+        runCommand(routerUser, routerPassword, "runProgramInGuest", "/bin/sh", "-c",
                 "\"/sbin/iptables-restore </etc/iptables.conf\"");
     }
 
@@ -213,7 +212,7 @@ public class CloneVmCreatedEventListener extends ExtensionTask implements TaskEv
     private void addNewEntryToInterfaces(String ifaceName)
     throws IOException, InterruptedException {
         String result = null;
-        String hostInterfacesPath = confDir + "interfaces";
+        String hostInterfacesPath = tempConfDir + "interfaces";
         String guestInterfacesPath = "/etc/network/interfaces";
         log.debug("host interfaces path: " + hostInterfacesPath);
         copyFileFromGuestToHost(guestInterfacesPath, hostInterfacesPath);
@@ -233,8 +232,8 @@ public class CloneVmCreatedEventListener extends ExtensionTask implements TaskEv
         copyFileFromHostToGuest(hostInterfacesPath, guestInterfacesPath);
 
         //restart the network
-        runCommand(vmUser, vmPassword, "runProgramInGuest", "/usr/sbin/service", "networking", "stop");
-        runCommand(vmUser, vmPassword, "runProgramInGuest", "/usr/sbin/service", "networking", "start");
+        runCommand(routerUser, routerPassword, "runProgramInGuest", "/usr/sbin/service", "networking", "stop");
+        runCommand(routerUser, routerPassword, "runProgramInGuest", "/usr/sbin/service", "networking", "start");
     }
 
     //----------------------------------------------------------------------------------------------
@@ -349,7 +348,7 @@ public class CloneVmCreatedEventListener extends ExtensionTask implements TaskEv
         String absDestination = temp.getAbsolutePath();
         args.add(origin);
         args.add(absDestination);
-        runCommand(vmUser, vmPassword, "copyFileFromGuestToHost", args);
+        runCommand(routerUser, routerPassword, "copyFileFromGuestToHost", args);
     }
 
     //----------------------------------------------------------------------------------------------
@@ -362,7 +361,7 @@ public class CloneVmCreatedEventListener extends ExtensionTask implements TaskEv
         String absOrigin = temp.getAbsolutePath();
         args.add(absOrigin);
         args.add(destination);
-        runCommand(vmUser, vmPassword, "copyFileFromHostToGuest", args);
+        runCommand(routerUser, routerPassword, "copyFileFromHostToGuest", args);
     }
 
     //----------------------------------------------------------------------------------------------

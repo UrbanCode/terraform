@@ -88,10 +88,10 @@ public class RouterConfigPostCreateTask extends PostCreateTask {
         //set VM now that the VM has been created
         this.vmToConfig = this.cloneTask.fetchVm();
         try {
-            File configDir = new File(confDirNoSeparator);
+            File configDir = new File(tempConfDirNoSeparator);
             configDir.mkdirs();
             copyTempFiles();
-            addFirstInterface(confDir + "interfaces.temp", confDir + "interfaces");
+            addFirstInterface(tempConfDir + "interfaces.temp", tempConfDir + "interfaces");
             handleNetworkRefs();
 
             //power on vm
@@ -102,10 +102,10 @@ public class RouterConfigPostCreateTask extends PostCreateTask {
             "stop");
 
             //copy networking files to router
-            copyFileFromHostToGuest(confDir + "isc-dhcp-server", "/etc/default/isc-dhcp-server");
-            copyFileFromHostToGuest(confDir + "iptables.conf", "/etc/iptables.conf");
-            copyFileFromHostToGuest(confDir + "dhcpd.conf", "/etc/dhcp/dhcpd.conf");
-            copyFileFromHostToGuest(confDir + "interfaces", "/etc/network/interfaces");
+            copyFileFromHostToGuest(tempConfDir + "isc-dhcp-server", "/etc/default/isc-dhcp-server");
+            copyFileFromHostToGuest(tempConfDir + "iptables.conf", "/etc/iptables.conf");
+            copyFileFromHostToGuest(tempConfDir + "dhcpd.conf", "/etc/dhcp/dhcpd.conf");
+            copyFileFromHostToGuest(tempConfDir + "interfaces", "/etc/network/interfaces");
 
             //start networking and dhcp service
             runCommand(vmUser, vmPassword, "runProgramInGuest", "/usr/sbin/service", "networking",
@@ -131,7 +131,7 @@ public class RouterConfigPostCreateTask extends PostCreateTask {
     //----------------------------------------------------------------------------------------------
     @Override
     public void destroy() {
-        File configDir = new File(confDirNoSeparator);
+        File configDir = new File(tempConfDirNoSeparator);
         try {
             log.debug("deleting conf directory");
             FileUtils.deleteDirectory(configDir);
@@ -150,10 +150,10 @@ public class RouterConfigPostCreateTask extends PostCreateTask {
         InputStream iscStream = loader.getResourceAsStream(cpDir + "isc-dhcp-server.temp");
 
         try {
-            writeInputStreamToFile(iptablesStream, confDir + "iptables.conf.temp");
-            writeInputStreamToFile(iptablesStream, confDir + "dhcpd.conf.temp");
-            writeInputStreamToFile(iptablesStream, confDir + "interfaces.temp");
-            writeInputStreamToFile(iptablesStream, confDir + "isc-dhcp-server.temp");
+            writeInputStreamToFile(iptablesStream, tempConfDir + "iptables.conf.temp");
+            writeInputStreamToFile(iptablesStream, tempConfDir + "dhcpd.conf.temp");
+            writeInputStreamToFile(iptablesStream, tempConfDir + "interfaces.temp");
+            writeInputStreamToFile(iptablesStream, tempConfDir + "isc-dhcp-server.temp");
         }
         catch(IOException e) {
             iptablesStream.close();
@@ -161,12 +161,6 @@ public class RouterConfigPostCreateTask extends PostCreateTask {
             interfacesStream.close();
             iscStream.close();
         }
-    }
-
-    //----------------------------------------------------------------------------------------------
-    private void deleteConfFile(String fname) {
-        File fileToDelete = new File(confDir + fname);
-        fileToDelete.delete();
     }
 
     //----------------------------------------------------------------------------------------------
@@ -229,19 +223,19 @@ public class RouterConfigPostCreateTask extends PostCreateTask {
             String interfacesIn;
             String dhcpdIn;
             if (first) {
-                iptablesIn = confDir + "iptables.conf.temp";
-                interfacesIn = confDir + "interfaces";
-                dhcpdIn = confDir + "dhcpd.conf.temp";
+                iptablesIn = tempConfDir + "iptables.conf.temp";
+                interfacesIn = tempConfDir + "interfaces";
+                dhcpdIn = tempConfDir + "dhcpd.conf.temp";
                 first = false;
             }
             else {
-                iptablesIn = confDir + "iptables.conf";
-                interfacesIn = confDir + "interfaces";
-                dhcpdIn = confDir + "dhcpd.conf";
+                iptablesIn = tempConfDir + "iptables.conf";
+                interfacesIn = tempConfDir + "interfaces";
+                dhcpdIn = tempConfDir + "dhcpd.conf";
             }
-            String iptablesOut = confDir + "iptables.conf";
-            String interfacesOut = confDir + "interfaces";
-            String dhcpdOut = confDir + "dhcpd.conf";
+            String iptablesOut = tempConfDir + "iptables.conf";
+            String interfacesOut = tempConfDir + "interfaces";
+            String dhcpdOut = tempConfDir + "dhcpd.conf";
 
             nicIndexes.remove(new Integer(nicIndex));
 
@@ -254,8 +248,8 @@ public class RouterConfigPostCreateTask extends PostCreateTask {
 
         //edit default dhcp interfaces file
         String ifacesString = createDhcpInterfacesString(nicIndexes);
-        String inFileName = confDir + "isc-dhcp-server.temp";
-        String outFileName = confDir + "isc-dhcp-server";
+        String inFileName = tempConfDir + "isc-dhcp-server.temp";
+        String outFileName = tempConfDir + "isc-dhcp-server";
         createDhcpInterfacesFile(ifacesString, inFileName, outFileName);
     }
 
@@ -343,6 +337,7 @@ public class RouterConfigPostCreateTask extends PostCreateTask {
 
     //----------------------------------------------------------------------------------------------
     public String createDhcpInterfacesString(List<Integer> nicIndexes) {
+        //constructs content for isc-dhcp-server file
         //example: INTERFACES="eth1 eth2" (with quotes)
         String result = "INTERFACES=\"";
         boolean first = true;
@@ -362,6 +357,7 @@ public class RouterConfigPostCreateTask extends PostCreateTask {
     //----------------------------------------------------------------------------------------------
     public void createDhcpInterfacesFile(String ifacesString, String oldFileName, String newFileName)
     throws IOException {
+        //create isc-dhcp-server file string
         String ifacesFileAsString = FileUtils.readFileToString(new File(oldFileName));
         String result = ifacesFileAsString.replace("INTERFACES=\"\"", ifacesString);
 
@@ -371,6 +367,7 @@ public class RouterConfigPostCreateTask extends PostCreateTask {
     //----------------------------------------------------------------------------------------------
     public void addInterface(int nicIndex, int subnetNum, String inFileName, String outFileName)
     throws IOException {
+        //add new interface to /etc/network/interfaces file
         String eth = "eth" + nicIndex;
         String ifaces = FileUtils.readFileToString(new File(inFileName));
         ifaces = ifaces + "\nauto " + eth + "\n"
@@ -384,6 +381,7 @@ public class RouterConfigPostCreateTask extends PostCreateTask {
     //----------------------------------------------------------------------------------------------
     public void addSubnetToDhcpd(int subnetNum, String inFileName, String outFileName)
     throws IOException {
+        //add new subnet to dhcpd.conf file
         String dhcpd = FileUtils.readFileToString(new File(inFileName));
         dhcpd = dhcpd + "\nsubnet 192.168." + subnetNum + ".0 netmask 255.255.255.0 {\n"
             + "use-host-decl-names on;\n"
