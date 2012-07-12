@@ -132,7 +132,7 @@ public class UDAgentPostCreateTask extends PostCreateTask {
                 udPort = context.resolve("{ud.port}");
             }
             if (agentName == null) {
-                agentName = context.resolve("{ud.agent.name}");
+                agentName = environment.getName() + "-" + cloneTask.getInstanceName();
             }
 
             Thread.sleep(5000);
