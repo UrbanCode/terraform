@@ -550,6 +550,7 @@ public class InstanceTask extends Task {
         }
     }
     
+    // TODO
     //----------------------------------------------------------------------------------------------
     private void registerWithLoadBalancer() 
     throws RemoteException {
@@ -561,9 +562,44 @@ public class InstanceTask extends Task {
         // vpc/subnet/zone
         
         if (loadBalancer != null && !loadBalancer.isEmpty()) {
-            List<String> tmp = new ArrayList<String>();
-            tmp.add(instanceId);
-            helper.updateInstancesOnLoadBalancer(loadBalancer, tmp, true, elbClient);
+            // we need to find the fullName of the load-balancer with name loadBalancer
+            if (context != null && context.getEnvironment() != null 
+                    && context.getEnvironment() instanceof EnvironmentTaskAWS) {
+                EnvironmentTaskAWS env = (EnvironmentTaskAWS) context.getEnvironment();
+                if (env.getLoadBalancers() != null) {
+                    for (LoadBalancerTask load : env.getLoadBalancers()) {
+                        if (load.getName().equals(loadBalancer)) {
+                            // found it
+                            List<String> tmp = new ArrayList<String>();
+                            tmp.add(instanceId);
+                            helper.updateInstancesOnLoadBalancer(load.getFullName(), tmp, true, 
+                                    elbClient);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    // TODO 
+    //----------------------------------------------------------------------------------------------
+    private void deregisterWithLoadBalancer() {
+        if (context != null && context.getEnvironment() != null 
+                && context.getEnvironment() instanceof EnvironmentTaskAWS) {
+            EnvironmentTaskAWS env = (EnvironmentTaskAWS) context.getEnvironment();
+            if (env.getLoadBalancers() != null) {
+                for (LoadBalancerTask load : env.getLoadBalancers()) {
+                    if (load.getName().equals(loadBalancer)) {
+                        // found it
+                        List<String> tmp = new ArrayList<String>();
+                        tmp.add(instanceId);
+                        helper.updateInstancesOnLoadBalancer(load.getFullName(), tmp, false, 
+                                elbClient);
+                        break;
+                    }
+                }
+            }
         }
     }
     
@@ -719,14 +755,10 @@ public class InstanceTask extends Task {
         }
         try {
             log.info("Shutting down instance " + getId());
-            
             List<String> instanceIds = new ArrayList<String>();
             instanceIds.add(instanceId);
             
-            if (loadBalancer != null && !"".equals(loadBalancer)) {
-                helper.updateInstancesOnLoadBalancer(loadBalancer, instanceIds, false, elbClient);
-                loadBalancer = null;
-            }
+            deregisterWithLoadBalancer();
             
             if (elasticIpAllocId != null) {
                 String assocId = helper.getAssociationIdForAllocationId(elasticIpAllocId, 

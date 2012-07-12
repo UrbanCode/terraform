@@ -19,6 +19,7 @@ package org.urbancode.terraform.tasks.aws;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 import org.apache.log4j.Logger;
 import org.urbancode.terraform.tasks.EnvironmentCreationException;
@@ -48,7 +49,11 @@ public abstract class SecurityGroupTask extends SubTask {
     protected AWSHelper helper;
     protected ContextAWS context;
     
-    protected String vpcId = null;   // not used in EC2, but it makes things a lot easier to keep this here
+    protected String vpcId = null;   // not used in EC2, but it makes things a lot easier 
+                                       // to keep this here
+    
+    protected String fullName;        // contains the name with a -UUID appended to it. This is 
+                                       // because we need unique security groups per environment
     
     protected String name;
     protected String descr;
@@ -75,6 +80,16 @@ public abstract class SecurityGroupTask extends SubTask {
     //----------------------------------------------------------------------------------------------
     public void setDescription(String descr) {
         this.descr = descr;
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    public String getFullName() {
+        return fullName;
     }
 
     //----------------------------------------------------------------------------------------------
@@ -132,15 +147,21 @@ public abstract class SecurityGroupTask extends SubTask {
             ec2Client = context.getEC2Client();
         }
         
+        // give unique name
+        String uuid = UUID.randomUUID().toString().substring(0, 5);
+        fullName = name + ("-" + uuid);
+        log.debug("Security Group " + name + " has fullname " + fullName);
+        
         try {
             if (exists()) {
-                log.warn("Security Group exists " + name);
+                log.warn("Security Group exists " + fullName);
             }
             else {
                 log.info("Creating SecurityGroup");
-                setId(helper.createSecurityGroup(name, vpcId, descr, ec2Client));
+                setId(helper.createSecurityGroup(fullName, vpcId, descr, ec2Client));
                 log.info("SecurityGroup " + name + " created with id: " + groupId);
-                helper.tagInstance(groupId, "terraform.environment", context.getEnvironment().getName(), ec2Client);
+                helper.tagInstance(groupId, "terraform.environment", 
+                        context.getEnvironment().getName(), ec2Client);
 
                 if (getRules() != null) {
                     for (RuleTask rule : getRules()) {
@@ -152,7 +173,8 @@ public abstract class SecurityGroupTask extends SubTask {
             
         }
         catch (Exception e) {
-            throw new EnvironmentCreationException("Could not create Security Group completely.", e);
+            throw new EnvironmentCreationException("Could not create Security Group completely.",
+                    e);
         }
         finally {
             ec2Client = null;
@@ -170,11 +192,12 @@ public abstract class SecurityGroupTask extends SubTask {
         try {
             log.info("Destroying SecurityGroup...");
             helper.deleteSecurityGroup(groupId, ec2Client);
-            log.info("SecurityGroup " + name + " : " + groupId + " destroyed");
+            log.info("SecurityGroup " + fullName + " : " + groupId + " destroyed");
             setId(null);
         }
         catch (Exception e) {
-            throw new EnvironmentDestructionException("Could not destroy Security Group completely.", e);
+            throw new EnvironmentDestructionException("Could not destroy Security Group " + 
+                    fullName + "completely.", e);
         }
         finally {
             ec2Client = null;

@@ -40,15 +40,15 @@ public class Ec2SecurityGroupTask extends SecurityGroupTask {
     @Override
     protected boolean exists() {
         boolean result = false;
-        
-        if (ec2Client == null) {
-            log.error("Connection to AWS EC2 required");
-        }
-        
-        SecurityGroup found = helper.getSecurityGroupForName(name, ec2Client);
-        if (found != null) {
-            result = true;
-        }
+        // TODO
+//        if (ec2Client == null) {
+//            log.error("Connection to AWS EC2 required");
+//        }
+//        
+//        SecurityGroup found = helper.getSecurityGroupForName(fullName, ec2Client);
+//        if (found != null) {
+//            result = true;
+//        }
         
         return result;
     }
