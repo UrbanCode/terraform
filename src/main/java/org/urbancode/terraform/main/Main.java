@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Urbancode, Inc
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -97,7 +97,7 @@ public class Main {
         myMain.execute();
     }
 
-    static private File createFile(String filePath) 
+    static private File createFile(String filePath)
     throws FileNotFoundException {
         File result = null;
 
@@ -168,17 +168,18 @@ public class Main {
         try {
             // parse xml and set context
             context = parseContext(inputXmlFile);
-            
+
             Credentials credentials = parseCredentials(credsFile);
-            
+
             context.setCredentials(credentials);
 
             log.debug("Create = " + isCreate);
             if (isCreate) {
                 // create new file if creating a new environment
-                outputXmlFile = new File("env-" + context.getEnvironment().getName() + "-" +
-                        UUID.randomUUID().toString().substring(0,4) + ".xml");
-                
+                String uuid = UUID.randomUUID().toString().substring(0,4);
+                context.getEnvironment().addUUIDToEnvName(uuid);
+                outputXmlFile = new File("env-" + context.getEnvironment().getName() + ".xml");
+
                 log.debug("Calling create() on context");
                 context.create();
             }
@@ -208,7 +209,7 @@ public class Main {
     private PropertyResolver createResolver() {
         return new PropertyResolver(props);
     }
-    
+
     //----------------------------------------------------------------------------------------------
     private Credentials parseCredentials(File credsFile) {
         Credentials result = null;
@@ -226,13 +227,13 @@ public class Main {
 
         return result;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     private Properties loadPropertiesFromFile(File propFile) {
         Properties result = new Properties();
-        
+
         String path = propFile.getAbsolutePath();
-        
+
         InputStream in = null;
         try {
             in = new FileInputStream(propFile);
@@ -256,10 +257,10 @@ public class Main {
                 // swallow
             }
         }
-    
+
         return result;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     private Credentials parseCredsFromProps(Properties props) {
         Credentials result = null;

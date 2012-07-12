@@ -317,11 +317,6 @@ public class CloneTask extends SubTask implements Cloneable, Comparable<CloneTas
     @Override
     public void create() {
         log.debug("Calling create method on clone");
-
-        // update server name property
-        //String serverProp = environment.getName() + "-" + instanceName;
-        //context.setProperty("ud.agent.name", serverProp);
-
         TaskEventService eventService = environment.fetchEventService();
         for (TaskEventListener listener : listeners) {
             eventService.addEventListener(listener);
