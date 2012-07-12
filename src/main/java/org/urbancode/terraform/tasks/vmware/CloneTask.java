@@ -67,7 +67,7 @@ public class CloneTask extends SubTask implements Cloneable, Comparable<CloneTas
     private String instanceName;
     private String snapshotName = "";
 
-    private int serverCount = 1;
+    private int count = 1;
     private int order = 1;  // default to front of queue. max int is just ugly
 
     private VirtualMachine vm;
@@ -269,8 +269,8 @@ public class CloneTask extends SubTask implements Cloneable, Comparable<CloneTas
     }
 
     //----------------------------------------------------------------------------------------------
-    public void setServerCount(int serverCount) {
-        this.serverCount = serverCount;
+    public void setCount(int count) {
+        this.count = count;
     }
 
     //----------------------------------------------------------------------------------------------
@@ -470,8 +470,8 @@ public class CloneTask extends SubTask implements Cloneable, Comparable<CloneTas
     }
 
     //----------------------------------------------------------------------------------------------
-    public int fetchServerCount() {
-        return this.serverCount;
+    public int fetchCount() {
+        return this.count;
     }
 
     //----------------------------------------------------------------------------------------------

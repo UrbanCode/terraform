@@ -1,1 +1,0 @@
-event-listener=org.urbancode.terraform.tasks.vmware.events.CloneVmCreatedEventListener

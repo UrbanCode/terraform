@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <context
 xmlns="org.urbancode.terraform.tasks.vmware">
+    <!-- This creates an environment with a router, app server, and db server on a private network-->
     <environment 
     name="my-environment" 
     folder-name="terraform">
         
-        <network network-name="my-net-web" port-count="32"/>
+        <network network-name="my-net" port-count="32"/>
+        <!-- open ports ssh port, http port, db port, and webapp container ports -->
         <security-group name="default-group">
             <port-range first-port="22" last-port="22"/>
             <port-range first-port="80" last-port="80"/>
@@ -18,24 +20,41 @@ xmlns="org.urbancode.terraform.tasks.vmware">
     <!-- Creates a clone of a router (from a Debian router image)
          Required elements for routers: post-create-task, event-listener (from default namespace)
          Recommended attributes: order="1"
-         point network-ref to index of the NIC that will belong on the private network switch -->
+         point network-ref to index of the NIC that will belong on the private network switch 
+         Note that this example expects the card on the first NIC index to be
+         on a virtual switch that connects to a physical NIC. -->
         <clone instance-name="router-1"
                   order="1"
                   image-path="/MyDatacenter/myFolder/my-router-image"
-                  snapshot-name="my-snapshot">
-            <network-ref network-name="my-net-web" nic-index="1"/>
+                  snapshot-name="my-snapshot"
+                  user="root"
+                  password="vmrootpassword">
+            <network-ref network-name="my-net" nic-index="1"/>
+            <!-- these two elements are required for router images
+                 the post-create-task configures the router
+                 the event listener listens for created clones and adds them to the network -->
             <post-create-task/>
             <event-listener/>
         </clone>
-        <!-- Creates a server instance on the private network
+        <!-- Creates a app server instance and db server instance on the private network
              assign-host-ip=true is required for router to assign server a private IP
              order attribute must be higher than that of the router -->
-        <clone instance-name="instance-1"
+        <clone instance-name="app-server"
                   order="2"
                   image-path="/MyDatacenter/myFolder/my-server-image"
                   snapshot-name="my-snapshot"
                   assign-host-ip="true"
-                  server-count="1">
+                  count="1">
+            <security-group-ref name="default-group"/>
+            <network-ref network-name="my-net-web" nic-index="0"/>
+        </clone>
+        
+        <clone instance-name="db-server"
+                  order="3"
+                  image-path="/MyDatacenter/myFolder/my-server-image"
+                  snapshot-name="my-snapshot"
+                  assign-host-ip="true"
+                  count="1">
             <security-group-ref name="default-group"/>
             <network-ref network-name="my-net-web" nic-index="0"/>
         </clone>

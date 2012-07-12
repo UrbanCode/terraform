@@ -37,9 +37,9 @@ public class PostCreateTask extends ExtensionTask {
     // CLASS
     //**********************************************************************************************
     static private final Logger log = Logger.getLogger(PostCreateTask.class);
-    static protected final String confDirNoSeparator = System.getenv("TERRAFORM_HOME") +
-            File.separator + "conf";
-    static protected final String confDir = confDirNoSeparator + File.separator;
+    static protected final String tempConfDirNoSeparator = System.getenv("TERRAFORM_HOME") +
+            File.separator + "temp";
+    static protected final String tempConfDir = tempConfDirNoSeparator + File.separator;
 
     //**********************************************************************************************
     // INSTANCE
@@ -86,14 +86,14 @@ public class PostCreateTask extends ExtensionTask {
     //----------------------------------------------------------------------------------------------
     @Override
     public void create() {
-        File configDir = new File(confDirNoSeparator);
+        File configDir = new File(tempConfDirNoSeparator);
         configDir.mkdirs();
     }
 
     //----------------------------------------------------------------------------------------------
     @Override
     public void destroy() {
-        File configDir = new File(confDirNoSeparator);
+        File configDir = new File(tempConfDirNoSeparator);
         try {
             FileUtils.deleteDirectory(configDir);
         } catch (IOException e) {

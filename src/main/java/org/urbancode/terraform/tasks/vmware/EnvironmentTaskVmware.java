@@ -314,12 +314,12 @@ public class EnvironmentTaskVmware extends EnvironmentTask {
         List<CloneTask> newCloneList = new ArrayList<CloneTask>();
         for (CloneTask cloneTask : cloneTasks) {
             newCloneList.add(cloneTask);
-            int count = cloneTask.fetchServerCount();
+            int count = cloneTask.fetchCount();
             if (count > 1) {
                 for (int i=2; i<=count; i++) {
                     try {
                         CloneTask newCloneTask = (CloneTask) cloneTask.clone();
-                        newCloneTask.setServerCount(1);
+                        newCloneTask.setCount(1);
                         newCloneTask.setInstanceName(newCloneTask.getInstanceName() + "-" + i);
                         newCloneList.add(newCloneTask);
                     }

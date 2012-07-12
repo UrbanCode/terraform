@@ -1,1 +1,0 @@
-post-create-task=org.urbancode.terraform.tasks.vmware.udeploy.UDAgentPostCreateTask
