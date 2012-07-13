@@ -32,6 +32,7 @@ import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.model.BlockDeviceMapping;
 import com.amazonaws.services.ec2.model.GroupIdentifier;
+import com.amazonaws.services.ec2.model.Image;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancing;
 
@@ -85,6 +86,11 @@ public class InstanceTask extends Task {
     public InstanceTask(ContextAWS context) {
         this.context = context;
         helper = new AWSHelper();
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    public void setPlatform(String platform) {
+        this.platform = platform;
     }
     
     //----------------------------------------------------------------------------------------------
@@ -169,6 +175,11 @@ public class InstanceTask extends Task {
     //----------------------------------------------------------------------------------------------
     public void setKernelId(String akiId) {
         this.akiId = akiId;
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    public String getPlatform() {
+        return platform;
     }
     
     //----------------------------------------------------------------------------------------------
@@ -290,6 +301,7 @@ public class InstanceTask extends Task {
         return pca;
     }
     
+    //----------------------------------------------------------------------------------------------
     public SecurityGroupRefTask createEc2SecurityGroupRef() {
         SecurityGroupRefTask group = null;
         
@@ -439,6 +451,7 @@ public class InstanceTask extends Task {
         String actions = "";
         log.debug("Setting up Boot Actions");
         if (getBootActions() != null) {
+            getBootActions().setPlatform(platform);
             getBootActions().create();
             actions = getBootActions().getUserData();
             actions = context.resolve(actions);
@@ -698,7 +711,17 @@ public class InstanceTask extends Task {
     
     //----------------------------------------------------------------------------------------------
     private void updatePlatform() {
-        
+        // update the platform
+        List<String> imageId = new ArrayList<String>();
+        imageId.add(amiId);
+        List<Image> images = helper.getImages(null, imageId, ec2Client);
+        if (images != null) {
+            Image image = images.get(0);
+            platform = image.getPlatform();
+        }
+        if (platform == null || "".equals(platform)) {
+            platform = "linux";
+        }
     }
     
     //----------------------------------------------------------------------------------------------
@@ -760,14 +783,17 @@ public class InstanceTask extends Task {
                     assignElasticIp(elasticIpAddress);
                 }
                 
+                Instance instance = helper.getInstanceById(instanceId, ec2Client);
+                
+                // set public Ip
                 if (zone != null && !zone.isEmpty()) {
                     // TODO - manually set IP not yet supported
-                    setPublicIp(helper.getInstanceById(instanceId, ec2Client).getPublicIpAddress());
+                    setPublicIp(instance.getPublicIpAddress());
+                    context.setProperty(getName() + ".public.ip", getPublicIp());
                 }
                 
-                // TODO - set public ip property
-                // TODO - set private ip property
-                privateIp = helper.getPrivateIp(instanceId, ec2Client);
+                // set private Ip
+                privateIp = instance.getPrivateIpAddress();
                 context.setProperty(getName() + ".private.ip", getPrivateIp());
                 
                 // register with LB

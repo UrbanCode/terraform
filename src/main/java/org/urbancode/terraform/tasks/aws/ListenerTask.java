@@ -40,7 +40,7 @@ public class ListenerTask extends SubTask {
     
     //----------------------------------------------------------------------------------------------
     ListenerTask(ContextAWS context) {
-//        this.context = context;
+        super(context);
     }
     
     //----------------------------------------------------------------------------------------------

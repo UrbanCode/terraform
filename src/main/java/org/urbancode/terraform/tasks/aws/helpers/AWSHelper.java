@@ -1549,6 +1549,38 @@ public class AWSHelper {
 
         return ownerId;
     }
+    
+    //----------------------------------------------------------------------------------------------
+    /**
+     * 
+     * @param ownerId
+     * @param imageIds
+     * @param ec2Client
+     * @return
+     */
+    public List<Image> getImages(String ownerId, List<String> imageIds, AmazonEC2 ec2Client) {
+        List<Image> images = null;
+        DescribeImagesRequest request = new DescribeImagesRequest();
+        
+        if (ownerId != null && !ownerId.isEmpty()) {
+            request = request.withOwners(ownerId);
+        }
+        
+        if (imageIds != null && !imageIds.isEmpty()) {
+            request = request.withImageIds(imageIds);
+        }
+        
+        DescribeImagesResult result = ec2Client.describeImages(request);
+        
+        if (result != null) {
+            images = result.getImages();
+        }
+        else {
+            log.warn("No images found");
+        }
+        
+        return images;
+    }
 
     //----------------------------------------------------------------------------------------------
     /**
@@ -1559,18 +1591,11 @@ public class AWSHelper {
      * @return images - returns a List<Image> of all images for that owner
      */
     public List<Image> getImages(String ownerId, AmazonEC2 ec2Client) {
-        List<Image> images = new ArrayList<Image>();
         if (ownerId == null || "".equals(ownerId)) {
             ownerId = getCurrentOwnerId(ec2Client);
         }
 
-        DescribeImagesRequest request = new DescribeImagesRequest()
-                                             .withOwners(ownerId);
-        DescribeImagesResult result = ec2Client.describeImages(request);
-
-        images = result.getImages();
-
-        return images;
+        return getImages(ownerId, null, ec2Client);
     }
 
     //----------------------------------------------------------------------------------------------

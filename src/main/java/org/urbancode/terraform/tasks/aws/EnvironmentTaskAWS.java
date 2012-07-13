@@ -64,6 +64,7 @@ public class EnvironmentTaskAWS extends EnvironmentTask {
     
     //----------------------------------------------------------------------------------------------
     public EnvironmentTaskAWS(ContextAWS context) {
+        super(context);
         this.context = context;
         helper = new AWSHelper();
     }    

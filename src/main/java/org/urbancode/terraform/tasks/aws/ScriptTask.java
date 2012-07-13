@@ -47,6 +47,7 @@ public class ScriptTask extends BootActionSubTask {
     
     //----------------------------------------------------------------------------------------------
     public ScriptTask(ContextAWS context) {
+        super(context);
         this.context = context;
     }
     

@@ -63,7 +63,9 @@ public abstract class SecurityGroupTask extends SubTask {
     //----------------------------------------------------------------------------------------------
     SecurityGroupTask(Context context) {
         super(context);
-        this.context = (ContextAWS) context;
+        if (context instanceof ContextAWS) {
+            this.context = (ContextAWS) context;
+        }
         helper = new AWSHelper();
     }
     

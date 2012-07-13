@@ -36,14 +36,22 @@ public class BootActionsTask extends SubTask {
     
     private ContextAWS context;
     
+    private String platform;
+    
     private String shell;
     private String userData;
     private List<BootActionSubTask> actions;
 
     //----------------------------------------------------------------------------------------------
     public BootActionsTask(ContextAWS context) {
+        super(context);
         this.context = context;
         actions = new ArrayList<BootActionSubTask>();
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    public void setPlatform(String platform) {
+        this.platform = platform;
     }
     
     //----------------------------------------------------------------------------------------------
@@ -92,8 +100,13 @@ public class BootActionsTask extends SubTask {
     @Override
     public void create() {
         String userData = "";
-        userData += "#!" + shell + " \n\n";  // #! is REQUIRED to be first characters)
         
+        if (platform.equalsIgnoreCase("windows")) {
+            // stuff
+        }
+        else {
+            userData += "#!" + shell + " \n\n";  // #! is REQUIRED to be first characters)
+        }
         setUserData(userData);
         if (getScript() != null) {
             for (BootActionSubTask task : getScript()) {
