@@ -161,6 +161,24 @@ public class LoadBalancerTask extends SubTask {
     }
     
     //----------------------------------------------------------------------------------------------
+    public boolean containsZone(String zone) {
+        boolean result = false;
+        if (zonesList != null && zonesList.contains(zone)) {
+            result = true;
+        }
+        return result;
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    public boolean containsSubnet(String subnetName) {
+        boolean result = false;
+        if (subnetNamesList != null && subnetNamesList.contains(subnetName)) {
+            result = true;
+        }
+        return result;
+    }
+    
+    //----------------------------------------------------------------------------------------------
     public VpcSecurityGroupRefTask createVpcSecurityGroupRef() {
         VpcSecurityGroupRefTask group = new VpcSecurityGroupRefTask(context);
         secGroupRefs.add(group);

@@ -28,6 +28,7 @@ import org.urbancode.terraform.tasks.PostCreateException;
 import org.urbancode.terraform.tasks.aws.helpers.AWSHelper;
 import org.urbancode.terraform.tasks.common.Task;
 
+import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.model.BlockDeviceMapping;
 import com.amazonaws.services.ec2.model.GroupIdentifier;
@@ -68,6 +69,8 @@ public class InstanceTask extends Task {
     private String loadBalancer;
     private String privateIp;
     private String zone;
+    
+    private String platform;
     
     // default values
     private int count = 1;
@@ -553,7 +556,7 @@ public class InstanceTask extends Task {
     // TODO
     //----------------------------------------------------------------------------------------------
     private void registerWithLoadBalancer() 
-    throws RemoteException {
+    throws RemoteException, EnvironmentCreationException {
         if (ec2Client == null) {
             throw new RemoteException("No connection to EC2");
         }
@@ -570,10 +573,43 @@ public class InstanceTask extends Task {
                     for (LoadBalancerTask load : env.getLoadBalancers()) {
                         if (load.getName().equals(loadBalancer)) {
                             // found it
-                            List<String> tmp = new ArrayList<String>();
-                            tmp.add(instanceId);
-                            helper.updateInstancesOnLoadBalancer(load.getFullName(), tmp, true, 
-                                    elbClient);
+                            boolean allowed = false;
+                            // check 
+                            if (zone != null && !zone.isEmpty()) {
+                                if (load.containsZone(zone)) {
+                                    allowed = true;
+                                }
+                                else {
+                                    log.error("Load balancer " + load.getName() + " does not " +
+                                            "contain " + "zone " + zone + " - could not add " +
+                                            "instance " + name + " to load balancer");
+                                }
+                            }
+                            else if (subnetName != null && !subnetName.isEmpty()) {
+                                if (load.containsSubnet(subnetName)) {
+                                    allowed = true;
+                                }
+                                else {
+                                    log.error("Load balancer " + load.getName() + " does not " + 
+                                            "contain " + "subnet " + subnetName + " - could not " +
+                                            "add instance " + name + " to load balancer");
+                                }
+                            } 
+                            
+                            if (allowed) {
+                                List<String> tmp = new ArrayList<String>();
+                                tmp.add(instanceId);
+                                helper.updateInstancesOnLoadBalancer(load.getFullName(), tmp, true,
+                                        elbClient);
+                            }
+                            else {
+                                log.error("Instance " + name + " cannot be registered on load " +
+                                        "balancer " + load.getName());
+                                throw new EnvironmentCreationException("Subnet " + subnetName + 
+                                        " or zone " + zone + " is not associated with load " +
+                                        "balancer " + load.getFullName());
+                            }
+                            
                             break;
                         }
                     }
@@ -592,6 +628,7 @@ public class InstanceTask extends Task {
                 for (LoadBalancerTask load : env.getLoadBalancers()) {
                     if (load.getName().equals(loadBalancer)) {
                         // found it
+                        
                         List<String> tmp = new ArrayList<String>();
                         tmp.add(instanceId);
                         helper.updateInstancesOnLoadBalancer(load.getFullName(), tmp, false, 
@@ -660,6 +697,11 @@ public class InstanceTask extends Task {
     }
     
     //----------------------------------------------------------------------------------------------
+    private void updatePlatform() {
+        
+    }
+    
+    //----------------------------------------------------------------------------------------------
     @Override
     public void create() 
     throws EnvironmentCreationException {
@@ -678,6 +720,8 @@ public class InstanceTask extends Task {
         if (elbClient == null) {
             elbClient = context.getELBClient();
         }
+        
+        updatePlatform();
         
         try {
             // temporarily remove verification - fix if there is no VPC 
@@ -758,7 +802,21 @@ public class InstanceTask extends Task {
             List<String> instanceIds = new ArrayList<String>();
             instanceIds.add(instanceId);
             
-            deregisterWithLoadBalancer();
+            try {
+                deregisterWithLoadBalancer();
+            }
+            catch (AmazonServiceException e) {
+                // swallow exception if we get invalidInstance
+                // I'm not sure if we want to always do this since
+                // we may actually send an invalid instance or something
+                // but this will ignore the exception if you try to 
+                // deregister and instance that is not registered with
+                // the load balancer - allowing the instance to terminate
+                // completely.
+                if (!e.getErrorCode().equals("InvalidInstance")) {
+                    throw e;
+                }
+            }
             
             if (elasticIpAllocId != null) {
                 String assocId = helper.getAssociationIdForAllocationId(elasticIpAllocId, 
