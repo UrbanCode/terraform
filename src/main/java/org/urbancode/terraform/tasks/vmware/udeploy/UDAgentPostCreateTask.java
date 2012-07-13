@@ -126,17 +126,20 @@ public class UDAgentPostCreateTask extends PostCreateTask {
 
             //if not set in xml, check properties
             if (udHost == null) {
-                udHost = context.resolve("{ud.host}");
+                udHost = context.resolve("${ud.host}");
             }
             if (udPort == null) {
-                udPort = context.resolve("{ud.port}");
+                udPort = context.resolve("${ud.port}");
             }
             if (agentName == null) {
-                agentName = environment.getName() + "-" + cloneTask.getInstanceName();
+                agentName = context.resolve("${ud.agent.name}");
+                if (agentName == null || "null".equals(agentName)) {
+                    agentName = environment.getName() + "-" + cloneTask.getInstanceName();
+                }
             }
 
             Thread.sleep(5000);
-            log.info("configuring agent");
+            log.info("configuring agent with name " + agentName);
             //stop agent, rename agent, restart agent
             runCommand(vmUser, vmPassword, "runProgramInGuest", "/bin/sh", udDir + "udagent", "stop");
             runCommand(vmUser, vmPassword, "runProgramInGuest", "/bin/sleep", "5");

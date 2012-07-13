@@ -21,7 +21,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -141,9 +140,7 @@ public class EnvironmentTaskVmware extends EnvironmentTask {
 
     //----------------------------------------------------------------------------------------------
     public void addUUIDToFolderName() {
-        String suffix = UUID.randomUUID().toString().replaceAll("-", "").substring(0, 4);
-        folderName = folderName + "-" + suffix;
-        setName(getName() + "-" + suffix);
+        folderName = folderName + "-" + fetchUUID();
     }
 
     //----------------------------------------------------------------------------------------------

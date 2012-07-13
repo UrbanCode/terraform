@@ -175,12 +175,11 @@ public class Main {
 
             log.debug("Create = " + isCreate);
             if (isCreate) {
-                // update envionment name to include the UUID
-                String envName = context.getEnvironment().getName() + "-" + UUID.randomUUID().toString().substring(0,4);
-                context.getEnvironment().setName(envName);
-                
                 // create new file if creating a new environment
-                outputXmlFile = new File("env-" + envName, ".xml");
+                String uuid = UUID.randomUUID().toString().substring(0,4);
+                context.getEnvironment().addUUIDToEnvName(uuid);
+                outputXmlFile = new File("env-" + context.getEnvironment().getName() + ".xml");
+
                 log.debug("Calling create() on context");
                 context.create();
             }
