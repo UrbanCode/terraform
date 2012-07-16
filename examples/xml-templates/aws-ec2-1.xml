@@ -8,50 +8,15 @@ This is an Environment Template used to create an environment with Amazon Web Se
 <context xmlns="org.urbancode.terraform.tasks.aws" >
   <!-- The name of your instances will be prefixed with your environment name-->
   <environment name="durr" >
-    <!-- The Virtual Private Cloud is the network in Amazon that the instances
-         will be launch in. More specifically, you launch instances into the 
-         subnets of the VPC. The VPC has a CIDR which defines the network. --> 
-    <vpc cidr="192.168.1.0/16">
-        <!-- Define any subnets here, with their zones and cidr. You cannot launch
-             instances without a subnet. Instances are launched into subnets.
-             Note: make sure that your subnet CIDRs work with together and in the VPC--> 
-        <subnet name="myHouse" zone="us-east-1d" cidr="192.168.2.0/24" />
-        <subnet name="yourHouse" zone="us-east-1c" cidr="192.168.3.0/24" />
-
-        <!-- An InternetGateway grants your instances the ability to reach the internet. -->
-        <inet-gwy name="myGateway" />
-
-        <!-- Define some Route Tables. These can be associated with a subnet. You can 
-             have one and only one Main Route Table. -->
-        <route-table subnet-name="myHouse" default="true">
-                <!-- The 'target' for a Route can be an InternetGateway, a NAT, or an
-                     Elastic Network Interface. See the AWS docs for more info -->
-                <!-- <route id="" target-name="myGateway" dest="0.0.0.0/0" route-table-id="" /> -->
-        </route-table>
-        <route-table subnet-name="yourHouse" default="false">
-                <!-- <route id="" target-name="myGateway" dest="0.0.0.0/0" route-table-id="" /> -->
-        </route-table>
-
-        <!-- Security Groups are VPC specific. Which means that they are unique per VPC
-             and are different from EC2 Security Groups, which work similar  -->
-        <vpc-security-group name="GuardDog" description="Allow traffic for ssh and uDeploy Agent">
-            <!-- By default, Amazon allows outbound traffic -->
-            <rule source="0.0.0.0/0" protocol="tcp" start-port="7918" end-port="7918" inbound="true" />
-            <rule source="0.0.0.0/0" protocol="tcp" start-port="22" end-port="22" inbound="true" />
-        </vpc-security-group>
-	<!-- descriptions can only contain alphanumeric, dash(-), underscore(_), and empty spaces -->
-        <vpc-security-group name="lbDog" description="You can apply these Security to an Elastic Load Balancer" />
-    </vpc>
-    
     <!-- This is an instance to launch. It has a name, an Amazon Machine Image. 
          the name of the subnet to launch in to, the number of these instances you 
          want to launch, whether or not it should get an Elastic Ip, the SSH key
          to use, and the size. See the README for more info or check out AWS docs.-->
-    <instance name="derp" ami-id="ami-707ca619" subnet-name="myHouse" count="1"
-            elastic-ip="true" private-key-ref="nick-portal" image-size="M1Small" >
+    <instance name="derp" ami-id="ami-707ca619" zone="us-east-1d" count="0"
+              private-key-ref="nick-portal" image-size="m1.small" load-balancer="balanceLoader" >
         <!-- This is just telling what Security Groups to apply to this instance.
              You can have multiple of these. -->
-        <vpc-security-group-ref security-group-name="GuardDog" />
+        <!-- <security-group-ref security-group-name="GuardDog" /> -->
         <!-- These are actions that will be ran as 'root' on first boot of the 
              instance. Known in AWS as user-data. The shell can be specified, but
              it is recommended you use bash if possible. -->
@@ -84,10 +49,9 @@ This is an Environment Template used to create an environment with Amazon Web Se
          will be launched twice, as in, you will have two seperate instances 
          with these details. All instance names carry a number suffix. For this
          example there will be herp00 and herp01 -->
-    <instance name="herp" ami-id="ami-707ca619" subnet-name="yourHouse" count="2"
-            elastic-ip="false" private-key-ref="nick-portal" image-size="M1Small"
-            load-balancer="balanceLoader" >
-        <vpc-security-group-ref security-group-name="GuardDog" />
+    <instance name="herp" ami-id="ami-707ca619" zone="us-east-1d" count="2" 
+              private-key-ref="nick-portal" image-size="m1.small" >
+        <ec2-security-group-ref security-group-name="secgroup1" />
         <boot-actions shell="/bin/bash">
             <script url="https://s3.amazonaws.com/ncc.misc/agentConf.sh" shell="/bin/bash">
                 <param value="${ud.host}" />
@@ -97,12 +61,10 @@ This is an Environment Template used to create an environment with Amazon Web Se
             <script url="https://s3.amazonaws.com/ncc.misc/setupTomcat.sh" />
         </boot-actions>
     </instance>
-    
-    <!-- This is a load balancer provided by Amazon Elastic Load Balancing. It has a name,
-         a subnet that it is associated with (only instances in that subnet can be on this LB)
-         and an Application Cookie Name (leave it empty if you want the LB to handle to cookies)
-     -->
-    <load-balancer name="privatebalanceLoader" subnet-name="yourHouse myHouse" app-cookie-name="" >
+
+    <!-- *Note* You cannot only put Security Groups on a load balancer if the load balancer
+         is in a VPC. So this load balancer cannot have any Security Groups -->
+    <load-balancer name="balanceLoader" app-cookie-name="" zones="us-east-1d us-east-1c" >
         <!-- Listeners are basically what you want the Load Balancer to 'load-balance'.
              You have the port the LB listens on, the port you want to go to on the instance, 
              the protocol to use, and the SSL certification-id. The cert-id is only needed
@@ -114,8 +76,12 @@ This is an Environment Template used to create an environment with Amazon Web Se
               or the README for more details. --> 
         <health-check interval="30" timeout="20" unhealthy-count="2" healthy-count="10" protocol="http" port="8080" path="/" />
         <!--  <availability-zone zone="" /> -->
-	<vpc-security-group-ref security-group-name="lbDog" />
     </load-balancer>
+
+
+    <ec2-security-group name="secgroup1" description="testing ec2 sec groups">
+        <rule source="0.0.0.0/0" protocol="tcp" start-port="22" end-port="22" inbound="true" />
+    </ec2-security-group>
   </environment>
 </context>
 

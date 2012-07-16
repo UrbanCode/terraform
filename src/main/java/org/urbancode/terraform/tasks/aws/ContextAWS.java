@@ -15,9 +15,6 @@
  ******************************************************************************/
 package org.urbancode.terraform.tasks.aws;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.apache.log4j.Logger;
 import org.urbancode.terraform.credentials.Credentials;
 import org.urbancode.terraform.credentials.CredentialsException;
@@ -54,29 +51,15 @@ public class ContextAWS implements Context {
     private EnvironmentTaskAWS environment;
    
     private PropertyResolver resolver;
-   
-    private Map<String,String> keyPairs = new HashMap<String,String>();
-    private Map<String,String> instanceSizes = new HashMap<String,String>();
     
     //----------------------------------------------------------------------------------------------
-    public ContextAWS() 
-    throws Exception {
+    /**
+     * 
+     * @throws Exception
+     */
+    public ContextAWS() {
         environment = null;
-        initSizeMap();
         helper = new AWSHelper();
-    }
-    
-    private void initSizeMap() {
-        instanceSizes.put("micro", "t1.micro");
-        instanceSizes.put("small", "m1.small");
-        instanceSizes.put("medium", "m1.medium");
-        instanceSizes.put("large", "m1.large");
-        instanceSizes.put("xlarge", "m1.xlarge");
-        instanceSizes.put("medium-cpu", "c1.medium");
-        instanceSizes.put("xlarge-cpu", "c1.xlarge");
-        instanceSizes.put("xlarge-mem", "m2.xlarge");
-        instanceSizes.put("2xlarge-mem", "m2.2xlarge");
-        instanceSizes.put("4xlarge-mem", "m2.4xlarge");
     }
     
     //----------------------------------------------------------------------------------------------
@@ -85,16 +68,10 @@ public class ContextAWS implements Context {
     }
     
     //----------------------------------------------------------------------------------------------
-    protected String getKeyByName(String reference) { 
-        return keyPairs.get(reference);
-    }
-
-    //----------------------------------------------------------------------------------------------
-    protected String getSizeByName(String reference) {
-        return instanceSizes.get(reference);
-    }
-    
-    //----------------------------------------------------------------------------------------------
+    /**
+     * 
+     * @return Basic AWS Credentials used to make connection to Amazon Web Services (e.g. EC2)
+     */
     protected AWSCredentials getBasicAwsCreds() {
         AWSCredentials result = null;
         
@@ -106,6 +83,10 @@ public class ContextAWS implements Context {
     }
     
     //----------------------------------------------------------------------------------------------
+    /**
+     * 
+     * @return an AmazonEC2 which is an active connection to Amazon EC2
+     */
     protected AmazonEC2 getEC2Client() {
         if (ec2Client == null) {
             ec2Client = new AmazonEC2Client(getBasicAwsCreds());
@@ -114,6 +95,11 @@ public class ContextAWS implements Context {
     }
     
     //----------------------------------------------------------------------------------------------
+    /**
+     * 
+     * @return an AmazonElasticLoadBalancing which is an active connection to Amazon Elastic Load
+     * Balancing
+     */
     protected AmazonElasticLoadBalancing getELBClient() {
         if (elbClient == null) {
             elbClient = new AmazonElasticLoadBalancingClient(getBasicAwsCreds());
@@ -122,42 +108,101 @@ public class ContextAWS implements Context {
     }
     
     //----------------------------------------------------------------------------------------------
+    /**
+     * 
+     * @return AWS helper class used for making calls to Amazon
+     */
     protected AWSHelper getAWSHelper() {
         return helper;
     }
     
     //----------------------------------------------------------------------------------------------
+    /**
+     * 
+     * @return the environment
+     */
     @Override
     public EnvironmentTask getEnvironment() {
         return environment;
     }
     
     //----------------------------------------------------------------------------------------------
+    /**
+     * Creates and return a new EnvironmentTaskAWS
+     * @return a new EnvironmentTask with this as its Context
+     */
     public EnvironmentTaskAWS createEnvironment() {
         environment = new EnvironmentTaskAWS(this);
         return environment;
     }
     
     //----------------------------------------------------------------------------------------------
+    /**
+     * A property is declared with ${}  (e.g.  ${server.name} )
+     * 
+     * @param toResolve - The string to be ran through the resolver
+     * 
+     * @return the same string as the input, but with all properties resolved
+     */
     public String resolve(String toResolve) {
         return resolver.resolve(toResolve);
     }
     
     //----------------------------------------------------------------------------------------------
-    public void keyFileMap(String newKeyName, String realKeyName) {
-        keyPairs.put(newKeyName, realKeyName);
+    /**
+     * @param resolver - The property resolver to use for this Context
+     */
+    @Override
+    public void setResolver(PropertyResolver resolver) {
+        this.resolver = resolver;
+    }
+
+    //----------------------------------------------------------------------------------------------
+    /**
+     *  @return the Credentials file that this context holds - used to make connections to the 
+     *  service provider
+     */
+    @Override
+    public Credentials fetchCredentials() {
+        return credentials;
+    }
+
+    //----------------------------------------------------------------------------------------------
+    /**
+     * @param credentials - The credentials to use for creating the environment. Should be of type
+     * CredentialsAWS because we need the Amazon connection info.
+     */
+    @Override
+    public void setCredentials(Credentials credentials) 
+    throws CredentialsException {
+        if (credentials instanceof CredentialsAWS) {
+            this.credentials = (CredentialsAWS) credentials;
+        }
+        else {
+            log.error("Credentials is not of type " + CredentialsAWS.class.getName());
+            throw new CredentialsException("Bad credential type");
+        }
     }
     
     //----------------------------------------------------------------------------------------------
+    /**
+     * Creates the whole environment and shutsdown connection afterwards
+     */
     @Override
-    public void create() {
+    public void create() 
+    throws EnvironmentCreationException {
         log.debug("ContextAWS: create()");
         try {
-            environment.create();
+            if (environment != null) {
+                environment.create();
+            }
+            else {
+                throw new NullPointerException("No environment");
+            }
         }
         catch (EnvironmentCreationException e) {
             log.fatal("Did not finish starting environment!", e);
-            throw new RuntimeException(e);
+            throw e;
         }
         finally {
             if (ec2Client != null) {
@@ -175,38 +220,34 @@ public class ContextAWS implements Context {
     }
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * Destroys the whole environment and shutsdown connections afterwards
+     */
     @Override
-    public void destroy() {
+    public void destroy() 
+    throws EnvironmentDestructionException {
         try {
-            environment.destroy();
+            if (environment != null) {
+                environment.destroy();
+            }
+            else {
+                throw new NullPointerException("No environment");
+            }
         } catch (EnvironmentDestructionException e) {
             log.fatal("Could not completely destroy environment!", e);
-            throw new RuntimeException(e);
+            throw e;
         }
-    }
-
-    //----------------------------------------------------------------------------------------------
-    @Override
-    public void setResolver(PropertyResolver resolver) {
-        this.resolver = resolver;
-    }
-
-    //----------------------------------------------------------------------------------------------
-    @Override
-    public Credentials fetchCredentials() {
-        return credentials;
-    }
-
-    //----------------------------------------------------------------------------------------------
-    @Override
-    public void setCredentials(Credentials credentials) 
-    throws CredentialsException {
-        if (credentials instanceof CredentialsAWS) {
-            this.credentials = (CredentialsAWS) credentials;
-        }
-        else {
-            log.error("Credentials is not of type " + CredentialsAWS.class.getName());
-            throw new CredentialsException("Bad credential type");
+        finally {
+            if (ec2Client != null) {
+                ec2Client.shutdown();
+                ec2Client = null;
+                log.info("Closed connection to AWS:EC2");
+            }
+            if (elbClient != null) {
+                elbClient.shutdown();
+                elbClient = null;
+                log.info("Closed conenction to AWS:ELB");
+            }
         }
     }
 }

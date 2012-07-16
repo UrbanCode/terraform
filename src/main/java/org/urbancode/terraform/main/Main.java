@@ -29,6 +29,7 @@ import java.util.UUID;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+
 import org.apache.log4j.Logger;
 import org.urbancode.terraform.credentials.Credentials;
 import org.urbancode.terraform.credentials.CredentialsException;
@@ -38,6 +39,8 @@ import org.urbancode.terraform.credentials.aws.CredentialsAWS;
 import org.urbancode.terraform.credentials.aws.CredentialsParserAWS;
 import org.urbancode.terraform.credentials.vmware.CredentialsParserVmware;
 import org.urbancode.terraform.credentials.vmware.CredentialsVmware;
+import org.urbancode.terraform.tasks.EnvironmentCreationException;
+import org.urbancode.terraform.tasks.EnvironmentDestructionException;
 import org.urbancode.terraform.tasks.common.Context;
 import org.urbancode.terraform.tasks.util.Property;
 import org.urbancode.terraform.tasks.util.PropertyResolver;
@@ -58,7 +61,8 @@ public class Main {
 
     //----------------------------------------------------------------------------------------------
     static public void main(String[] args)
-    throws IOException, XmlParsingException, CredentialsException {
+    throws IOException, XmlParsingException, CredentialsException, EnvironmentCreationException, 
+    EnvironmentDestructionException {
         File inputXmlFile = null;
         File creds = null;
         List<String> unparsedArgs = new ArrayList<String>();
@@ -93,10 +97,28 @@ public class Main {
             throw new IOException("improper args");
         }
 
+        // check to make sure we have legit args
+        if (inputXmlFile == null) {
+            String msg = "No input xml file specified!";
+            throw new IOException(msg);
+        }
+        if (creds == null) {
+            String msg = "No credentials file specified!";
+            throw new IOException(msg);
+        }
+        
         Main myMain = new Main(doCreate, inputXmlFile, creds, unparsedArgs);
         myMain.execute();
     }
 
+    //----------------------------------------------------------------------------------------------
+    /**
+     * Creates a file and runs checks on it
+     *  
+     * @param filePath
+     * @return 
+     * @throws FileNotFoundException
+     */
     static private File createFile(String filePath) 
     throws FileNotFoundException {
         File result = null;
@@ -154,7 +176,7 @@ public class Main {
                     log.debug("Parsing property: " + prop);
                     props.add(parseProperty(prop));
                 }
-                catch (Exception e) {
+                catch (IOException e) {
                     log.error("Unable to parse property: " + prop);
                 }
             }
@@ -163,7 +185,8 @@ public class Main {
 
     //----------------------------------------------------------------------------------------------
     public void execute()
-    throws XmlParsingException, IOException, CredentialsException {
+    throws XmlParsingException, IOException, CredentialsException, EnvironmentCreationException, 
+    EnvironmentDestructionException {
         Context context = null;
         try {
             // parse xml and set context
@@ -176,9 +199,21 @@ public class Main {
             log.debug("Create = " + isCreate);
             if (isCreate) {
                 // create new file if creating a new environment
+//                String name = context.getEnvironment().getName();
                 String uuid = UUID.randomUUID().toString().substring(0,4);
-                context.getEnvironment().addUUIDToEnvName(uuid);
-                outputXmlFile = new File("env-" + context.getEnvironment().getName() + ".xml");
+//                name += ("-" + uuid);
+//                context.getEnvironment().setName(name);
+                if (context.getEnvironment() != null) {
+                    context.getEnvironment().addUUIDToEnvName(uuid);
+                    log.debug("UUID for env " + context.getEnvironment().getName() + " is " + uuid);
+                }
+                else {
+                    throw new NullPointerException("No environment on context!");
+                }
+                
+                String name = context.getEnvironment().getName();
+                log.debug("Output filename = " + name);
+                outputXmlFile = new File("env-" + name + ".xml");
 
                 log.debug("Calling create() on context");
                 context.create();
@@ -191,10 +226,18 @@ public class Main {
                 context.destroy();
             }
         }
-        catch(ParserConfigurationException e1) {
+        catch (EnvironmentCreationException e) {
+            log.fatal("Did not successfully create environment", e);
+            throw e;
+        }
+        catch (EnvironmentDestructionException e) {
+            log.fatal("Did not successfully destroy environment", e);
+            throw e;
+        }
+        catch (ParserConfigurationException e1) {
             throw new XmlParsingException("ParserConfigurationException: " + e1.getMessage(), e1);
         }
-        catch(SAXException e2) {
+        catch (SAXException e2) {
             throw new XmlParsingException("SAXException: " + e2.getMessage(), e2);
         }
         finally {

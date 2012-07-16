@@ -13,89 +13,61 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.urbancode.terraform.tasks.common;
+package org.urbancode.terraform.tasks.aws;
 
-import java.util.ArrayList;
-import java.util.List;
+import org.apache.log4j.Logger;
+import org.urbancode.terraform.tasks.common.Context;
 
 
-public class MultiThreadTask extends Task implements Runnable {
+public class VpcSecurityGroupRefTask extends SecurityGroupRefTask {
     
     //**********************************************************************************************
     // CLASS
     //**********************************************************************************************
+    final static private Logger log = Logger.getLogger(SecurityGroupRefTask.class);
     
     //**********************************************************************************************
     // INSTANCE
     //**********************************************************************************************
     
-    private Task task;
-    private boolean doCreate;
-    private List<Exception> exceptions;
-    
     //----------------------------------------------------------------------------------------------
-    /**
-     * 
-     * @param task - the Task that will be ran in a separate thread
-     * @param doCreate - true for Task.create() or false for Task.destroy()
-     * @param context - the Context of the Task
-     */
-    public MultiThreadTask(Task task, boolean doCreate, Context context) {
+    VpcSecurityGroupRefTask(Context context) {
         super(context);
-        this.task = task;
-        this.doCreate = doCreate;
-        exceptions = new ArrayList<Exception>();
     }
     
-    //----------------------------------------------------------------------------------------------
     /**
      * 
-     * @param context - the Context of the Task
+     * @return the group 
+     * @throws Exception
      */
-    public MultiThreadTask(Context context) {
-        super(context);
-        exceptions = new ArrayList<Exception>();
-    }
-
-    //----------------------------------------------------------------------------------------------
-    /**
-     * Launches a Task in a new thread, running the Task's create() or destroy()
-     */
-    @Override
-    public void run() {
-        try {
-            if (doCreate) {
-                task.create();
+    public SecurityGroupTask fetchSecurityGroup() {
+        if (ref == null) {
+            if (context.getEnvironment() instanceof EnvironmentTaskAWS) {
+                EnvironmentTaskAWS env = (EnvironmentTaskAWS) context.getEnvironment();
+                
+                if (env.getVpc() != null) {
+                    log.debug("Looking for Security Group " + groupName);
+                    
+                    ref = env.getVpc().findSecurityGroupForName(groupName);
+                }
             }
             else {
-                task.destroy();
+                // not supported atm
             }
         }
-        catch (Exception e) {
-            // if we catch any exceptions, add them to our exceptions list
-            exceptions.add(e);
-        }
+        
+        return ref;
     }
     
-    //----------------------------------------------------------------------------------------------
-    /**
-     * 
-     * @return a list of all the caught exceptions 
-     */
-    public List<Exception> getExceptions() {
-        return exceptions;
-    }
-
     //----------------------------------------------------------------------------------------------
     @Override
     public void create() {
         
     }
-
+    
     //----------------------------------------------------------------------------------------------
     @Override
     public void destroy() {
-        
+        ref = null;
     }
-
 }

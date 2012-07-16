@@ -15,25 +15,50 @@
  ******************************************************************************/
 package org.urbancode.terraform.tasks.common;
 
+import org.apache.log4j.Logger;
+import org.urbancode.terraform.tasks.EnvironmentCreationException;
+import org.urbancode.terraform.tasks.EnvironmentDestructionException;
+
 
 public class EnvironmentTask extends Task {
+    
+    //**********************************************************************************************
+    // CLASS
+    //**********************************************************************************************
 
-    private String name;
-    private String prefix;
-    private String uuid = null;
-    private long startTime;
+    final static private Logger log = Logger.getLogger(EnvironmentTask.class);
+    
+    //**********************************************************************************************
+    // INSTANCE
+    //**********************************************************************************************
+
+    protected String name;
+    protected String prefix;
+    protected String uuid = null;
+    protected long startTime;
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * 
+     */
     public EnvironmentTask() {
         super(null);
     }
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * 
+     * @param context - The Context that the enivonment is in
+     */
     public EnvironmentTask(Context context) {
         super(context);
     }
 
     //----------------------------------------------------------------------------------------------
+    /** 
+     * 
+     * @return The name of the environment.
+     */
     public String getName() {
         return name;
     }
@@ -49,38 +74,63 @@ public class EnvironmentTask extends Task {
     }
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * 
+     * @return The time (in milliseconds) that the environment was started.
+     */
     public long getStartTime() {
         return startTime;
     }
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * 
+     * @param startTime - The time (in milliseconds) that the environment was started
+     */
     public void setStartTime(long startTime) {
         this.startTime = startTime;
     }
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * 
+     * @param name - The name of the environment
+     */
     public void setName(String name) {
         this.name = name;
     }
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * Creates the defined environment and all sub-objects it includes.
+     */
     @Override
-    public void create() throws Exception {
-        // TODO Auto-generated method stub
+    public void create() 
+    throws EnvironmentCreationException {
     }
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * Destroys the whole environment, including all sub-objects.
+     */
     @Override
-    public void destroy() throws Exception {
-        // TODO Auto-generated method stub
+    public void destroy() 
+    throws EnvironmentDestructionException {
     }
 
     //----------------------------------------------------------------------------------------------
     public void addUUIDToEnvName(String uuid) {
         this.uuid = uuid;
-        prefix = new String(name);
-        if(uuid != null) {
-            name = name + "-" + uuid;
+        log.debug("Set environment (" + name + ") uuid to " + this.uuid);
+        
+        if (name != null) {
+            log.debug("Environment prefix: " + prefix);
+            prefix = this.name;
         }
+        
+        if(uuid != null) {
+            name = (name + "-" + this.uuid);
+        }
+        log.debug("Environment full name: " + name);
     }
 }

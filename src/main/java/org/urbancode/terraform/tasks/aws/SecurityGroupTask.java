@@ -13,61 +13,89 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
+
 package org.urbancode.terraform.tasks.aws;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.urbancode.terraform.tasks.EnvironmentCreationException;
 import org.urbancode.terraform.tasks.EnvironmentDestructionException;
 import org.urbancode.terraform.tasks.aws.helpers.AWSHelper;
+import org.urbancode.terraform.tasks.common.Context;
 import org.urbancode.terraform.tasks.common.SubTask;
 
 import com.amazonaws.services.ec2.AmazonEC2;
-import com.amazonaws.services.ec2.model.Subnet;
+import com.amazonaws.services.ec2.model.SecurityGroup;
 
-public class SubnetTask extends SubTask {
-    
+
+public abstract class SecurityGroupTask extends SubTask {
+
+
+
     //**********************************************************************************************
     // CLASS
     //**********************************************************************************************
-    final static private Logger log = Logger.getLogger(SubnetTask.class);
+    final static private Logger log = Logger.getLogger(SecurityGroupTask.class);
     
     //**********************************************************************************************
     // INSTANCE
     //**********************************************************************************************
     
-    private AmazonEC2 ec2Client;
-    private AWSHelper helper;
-    private ContextAWS context;
+    protected AmazonEC2 ec2Client;
+    protected AWSHelper helper;
+    protected ContextAWS context;
     
-    private String vpcId;
-    private String zone;
-    private String cidr;
-    private String name;
-    private String subnetId;
-    private RouteTableTask routeTable;
+    protected String vpcId = null;   // not used in EC2, but it makes things a lot easier 
+                                       // to keep this here
+    
+    protected String fullName;        // contains the name with a -UUID appended to it. This is 
+                                       // because we need unique security groups per environment
+    
+    protected String name;
+    protected String descr;
+    protected String groupId;
+    protected List<RuleTask> rules = new ArrayList<RuleTask>();
     
     //----------------------------------------------------------------------------------------------
-    SubnetTask(ContextAWS context) {
-        this.context = context;
+    SecurityGroupTask(Context context) {
+        super(context);
+        if (context instanceof ContextAWS) {
+            this.context = (ContextAWS) context;
+        }
         helper = new AWSHelper();
     }
     
     //----------------------------------------------------------------------------------------------
-    public String getId() {
-        return subnetId;
-    }
-
-    //----------------------------------------------------------------------------------------------
-    public String getZone() {
-        return zone;
+    public void setId(String id) {
+        this.groupId = id;
     }
     
     //----------------------------------------------------------------------------------------------
-    public String getCidr() {
-        return cidr;
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    //----------------------------------------------------------------------------------------------
+    public void setDescription(String descr) {
+        this.descr = descr;
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    public String getFullName() {
+        return fullName;
+    }
+
+    //----------------------------------------------------------------------------------------------
+    public String getId() {
+        return groupId;
     }
     
     //----------------------------------------------------------------------------------------------
@@ -76,38 +104,20 @@ public class SubnetTask extends SubTask {
     }
     
     //----------------------------------------------------------------------------------------------
-    public RouteTableTask getRouteTable() {
-        return routeTable;
+    public String getDescription() {
+        return descr;
     }
     
     //----------------------------------------------------------------------------------------------
-    public void setRouteTable(RouteTableTask routeTable) {
-        this.routeTable = routeTable;
+    public List<RuleTask> getRules() {
+        return Collections.unmodifiableList(rules);
     }
     
     //----------------------------------------------------------------------------------------------
-    public void setCidr(String cidr) {
-        this.cidr = cidr;
-    }
-    
-    //----------------------------------------------------------------------------------------------
-    public void setName(String name) {
-        this.name = name;
-    }
-    
-    //----------------------------------------------------------------------------------------------
-    public void setZone(String zone) {
-        this.zone = zone;
-    }
-    
-    //----------------------------------------------------------------------------------------------
-    public void setId(String id) {
-        this.subnetId = id;
-    }
-    
-    //----------------------------------------------------------------------------------------------
-    public void setVpcId(String vpcId) {
-        this.vpcId = vpcId;
+    public RuleTask createRule() {
+        RuleTask rule = new RuleTask(context);
+        rules.add(rule);
+        return rule;
     }
     
     //----------------------------------------------------------------------------------------------
@@ -117,71 +127,56 @@ public class SubnetTask extends SubTask {
         }
         boolean result = false;
         List<String> id = new ArrayList<String>();
-        id.add(subnetId);
+        id.add(groupId);
         
-        List<Subnet> subnets = helper.getSubnets(id, ec2Client);
+        List<SecurityGroup> group = helper.getSecurityGroups(id, ec2Client);
         
-        if (subnets != null && !subnets.isEmpty()) {
+        if (group != null && !group.isEmpty()) {
             result = true;
         }
         
         return result;
     }
     
-    //----------------------------------------------------------------------------------------------
-    public boolean verify() {
-        // will return false if the id is null
-        boolean result = false;
-        if (subnetId != null) {
-            if (ec2Client == null) {
-                ec2Client = context.getEC2Client();
-            }
-            
-            List<String> id = new ArrayList<String>();
-            id.add(subnetId);
-            
-            List<Subnet> subnets = helper.getSubnets(id, ec2Client);
-            if (subnets != null && !subnets.isEmpty()) {
-                for (Subnet subnet : subnets) {
-                    if (subnet.getAvailabilityZone().equalsIgnoreCase(zone)) {
-                        if (subnet.getCidrBlock().equals(cidr)) {
-                            result = true;
-                        }
-                    }
-                }
-            }
-        }
-        return result;
-    }
-    
+    abstract protected boolean exists();
+     
     //----------------------------------------------------------------------------------------------
     @Override
     public void create() 
     throws EnvironmentCreationException {
-        boolean verified = false;
-        
         if (ec2Client == null) {
             ec2Client = context.getEC2Client();
         }
-
+        
+        // give unique name
+        //String uuid = UUID.randomUUID().toString().substring(0, 5);
+        String uuid = context.getEnvironment().fetchUUID();
+        fullName = name + ("-" + uuid);
+        log.debug("Security Group " + name + " has fullname " + fullName);
+        
         try {
-            if (subnetId != null) {
-                verified = verify();
-            }
-            
-            if (!verified) {
-                setId(null);
-                log.info("Creating Subnet...");
-                setId(helper.createSubnet(vpcId, cidr, zone, ec2Client));
-                log.info("Subnet " + name + " created with id: " + subnetId);
-                helper.tagInstance(subnetId, "terraform.environment", context.getEnvironment().getName(), ec2Client);
+            if (exists()) {
+                log.warn("Security Group exists " + fullName);
             }
             else {
-                log.info("Subnet " + name + " : " + subnetId + " already exists in AWS.");
+                log.info("Creating SecurityGroup");
+                setId(helper.createSecurityGroup(fullName, vpcId, descr, ec2Client));
+                log.info("SecurityGroup " + name + " created with id: " + groupId);
+                helper.tagInstance(groupId, "terraform.environment", 
+                        context.getEnvironment().getName(), ec2Client);
+
+                if (getRules() != null) {
+                    for (RuleTask rule : getRules()) {
+                        rule.setGroupId(groupId);
+                        rule.create();
+                    }
+                }
             }
+            
         }
         catch (Exception e) {
-            throw new EnvironmentCreationException("Could not create Subnet completely", e);
+            throw new EnvironmentCreationException("Could not create Security Group completely.",
+                    e);
         }
         finally {
             ec2Client = null;
@@ -197,13 +192,14 @@ public class SubnetTask extends SubTask {
         }
         
         try {
-            log.info("Destroying Subnet...");
-            helper.deleteSubnet(subnetId, ec2Client);
-            log.info("Subnet " + name + " : " + subnetId + " destroyed.");
+            log.info("Destroying SecurityGroup...");
+            helper.deleteSecurityGroup(groupId, ec2Client);
+            log.info("SecurityGroup " + fullName + " : " + groupId + " destroyed");
             setId(null);
         }
         catch (Exception e) {
-            throw new EnvironmentDestructionException("Could not destroy Subnet completely", e);
+            throw new EnvironmentDestructionException("Could not destroy Security Group " + 
+                    fullName + "completely.", e);
         }
         finally {
             ec2Client = null;

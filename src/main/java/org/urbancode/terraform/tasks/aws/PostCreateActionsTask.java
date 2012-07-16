@@ -20,6 +20,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.log4j.Logger;
+import org.urbancode.terraform.tasks.PostCreateException;
 import org.urbancode.terraform.tasks.common.Context;
 import org.urbancode.terraform.tasks.common.SubTask;
 
@@ -35,7 +36,7 @@ public class PostCreateActionsTask extends SubTask {
     // INSTANCE
     //**********************************************************************************************
     
-    private List<SshTask> actions = new ArrayList<SshTask>();
+    private List<PostCreateActionTask> actions = new ArrayList<PostCreateActionTask>();
     private String host;
     private String idFilePath;
     
@@ -55,7 +56,7 @@ public class PostCreateActionsTask extends SubTask {
     }
 
     //----------------------------------------------------------------------------------------------
-    public List<SshTask> getPostCreateActions() {
+    public List<PostCreateActionTask> getPostCreateActions() {
         return Collections.unmodifiableList(actions);
     }
     
@@ -69,17 +70,23 @@ public class PostCreateActionsTask extends SubTask {
     //----------------------------------------------------------------------------------------------
     @Override
     public void create() 
-    throws Exception {
-        
+    throws PostCreateException {
+        log.debug("Attempting to run Post Create Actions");
         if (actions != null) {
-            for (SshTask action : actions) {
+            for (PostCreateActionTask action : actions) {
                 if (idFilePath != null) {
                     action.setIdFilePath(idFilePath);
                 }
                 
                 if (host != null) {
                     action.setHost(host);
-                    action.create();
+                    try {
+                        action.create();
+                    }
+                    catch (Exception e) {
+                        log.error("Could not complete Post Create Action completely", e);
+                        throw new PostCreateException("Failed Post Create Action", e);
+                    }
                 }
                 else {
                     log.error("Host is null!" +
@@ -93,7 +100,7 @@ public class PostCreateActionsTask extends SubTask {
     //----------------------------------------------------------------------------------------------
     @Override
     public void destroy() 
-    throws Exception {
+    throws PostCreateException {
         
     }
 }

@@ -2,40 +2,46 @@ package org.urbancode.terraform.tasks.aws;
 
 import org.apache.log4j.Logger;
 import org.urbancode.terraform.tasks.common.Context;
-import org.urbancode.terraform.tasks.common.SubTask;
 
-public abstract class SecurityGroupRefTask extends SubTask {
+public class Ec2SecurityGroupRefTask extends SecurityGroupRefTask {
     
     //**********************************************************************************************
     // CLASS
     //**********************************************************************************************
-    final static private Logger log = Logger.getLogger(VpcSecurityGroupRefTask.class);
+    final static private Logger log = Logger.getLogger(Ec2SecurityGroupRefTask.class);
     
     //**********************************************************************************************
     // INSTANCE
     //**********************************************************************************************
 
-    protected Context context;
-    protected String groupName;
-    protected SecurityGroupTask ref; 
-    
     //----------------------------------------------------------------------------------------------
-    public SecurityGroupRefTask(Context context) {
-        this.context = context;
+    public Ec2SecurityGroupRefTask(Context context) {
+        super(context);
     }
     
     //----------------------------------------------------------------------------------------------
-    public void setSecurityGroupName(String groupName) {
-        this.groupName = groupName;
+    public SecurityGroupTask fetchSecurityGroup() {
+        if (ref == null) {
+            if (context.getEnvironment() instanceof EnvironmentTaskAWS) {
+                EnvironmentTaskAWS env = (EnvironmentTaskAWS)context.getEnvironment();
+                ref = env.findSecurityGroupByName(groupName);
+            }
+        }
+        
+        return ref;
     }
-    
-    //----------------------------------------------------------------------------------------------
-    public String getSecurityGroupName() {
-        return groupName;
-    }
-    
-    //----------------------------------------------------------------------------------------------
-    // TODO return generic type
-    abstract public SecurityGroupTask fetchSecurityGroup();
 
+    //----------------------------------------------------------------------------------------------
+    @Override
+    public void create() 
+    throws Exception {
+        
+    }
+
+    //----------------------------------------------------------------------------------------------
+    @Override
+    public void destroy() 
+    throws Exception {
+        
+    }
 }

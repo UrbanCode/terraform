@@ -114,8 +114,11 @@ import com.amazonaws.services.elasticloadbalancing.model.CreateLoadBalancerResul
 import com.amazonaws.services.elasticloadbalancing.model.DeleteLoadBalancerRequest;
 import com.amazonaws.services.elasticloadbalancing.model.DeregisterInstancesFromLoadBalancerRequest;
 import com.amazonaws.services.elasticloadbalancing.model.DeregisterInstancesFromLoadBalancerResult;
+import com.amazonaws.services.elasticloadbalancing.model.DescribeLoadBalancersRequest;
+import com.amazonaws.services.elasticloadbalancing.model.DescribeLoadBalancersResult;
 import com.amazonaws.services.elasticloadbalancing.model.HealthCheck;
 import com.amazonaws.services.elasticloadbalancing.model.Listener;
+import com.amazonaws.services.elasticloadbalancing.model.LoadBalancerDescription;
 import com.amazonaws.services.elasticloadbalancing.model.RegisterInstancesWithLoadBalancerRequest;
 import com.amazonaws.services.elasticloadbalancing.model.RegisterInstancesWithLoadBalancerResult;
 
@@ -591,7 +594,8 @@ public class AWSHelper {
             RegisterInstancesWithLoadBalancerRequest request = new RegisterInstancesWithLoadBalancerRequest()
             .withInstances(instances)
             .withLoadBalancerName(loadBalancerName);
-            RegisterInstancesWithLoadBalancerResult result = lbClient.registerInstancesWithLoadBalancer(request);
+            RegisterInstancesWithLoadBalancerResult result = 
+                    lbClient.registerInstancesWithLoadBalancer(request);
             updatedInstances = result.getInstances();
         }
 
@@ -613,16 +617,20 @@ public class AWSHelper {
      * @throws NullPointerException
      */
     public String launchLoadBalancer(String loadBalancerName, List<String> subnets,
-                                        List<String> secGroups, List<Listener> listeners,
-                                        AmazonElasticLoadBalancing lbClient)
+                                        List<String> secGroups, List<Listener> listeners, 
+                                        List<String> zones, AmazonElasticLoadBalancing lbClient)
     throws NullPointerException {
         CreateLoadBalancerRequest request = new CreateLoadBalancerRequest()
                                                 .withLoadBalancerName(loadBalancerName);
         if (subnets != null && !subnets.isEmpty()) {
             request = request.withSubnets(subnets);
         }
+        else if (zones != null && !zones.isEmpty()) {
+            request = request.withAvailabilityZones(zones);
+        }
         else {
-            throw new NullPointerException("List of subnets must not be null!");
+            throw new NullPointerException("Must specify either zones or subnets for load balancer " 
+                                            + loadBalancerName);
         }
 
         if (listeners != null && !listeners.isEmpty()) {
@@ -651,6 +659,7 @@ public class AWSHelper {
      */
     public String getAssociationIdForAllocationId(String allocId, AmazonEC2 ec2Client) {
         String assocId = null;
+        try {
         DescribeAddressesRequest request = new DescribeAddressesRequest().withAllocationIds(allocId);
         DescribeAddressesResult result = ec2Client.describeAddresses(request);
         List<Address> addresses = result.getAddresses();
@@ -659,6 +668,13 @@ public class AWSHelper {
                 log.error("Found more than one Address for allocationId ( " + allocId + " ) !");
             }
             assocId = addresses.get(0).getAssociationId();
+        }
+        }
+        catch (AmazonServiceException e) {
+            log.error("AmazonSerivceException caught while trying to get Association Id", e);
+            if (!"InvalidAllocationID.NotFound".equals(e.getErrorCode())) {
+                throw e;
+            }
         }
         return assocId;
     }
@@ -1286,7 +1302,7 @@ public class AWSHelper {
     /**
      * 
      * @param groupName
-     * @param vpcId
+     * @param vpcId leave null if you do not want your security group to be associated with a VPC
      * @param descr
      * @param ec2Client
      * @return
@@ -1296,8 +1312,12 @@ public class AWSHelper {
         try {
             CreateSecurityGroupRequest request = new CreateSecurityGroupRequest()
                                                       .withGroupName(groupName)
-                                                      .withVpcId(vpcId)
                                                       .withDescription(descr);
+            
+            if (vpcId != null) {
+                request = request.withVpcId(vpcId);
+            }
+            
             CreateSecurityGroupResult result = ec2Client.createSecurityGroup(request);
             groupId = result.getGroupId();
         
@@ -1529,6 +1549,38 @@ public class AWSHelper {
 
         return ownerId;
     }
+    
+    //----------------------------------------------------------------------------------------------
+    /**
+     * 
+     * @param ownerId
+     * @param imageIds
+     * @param ec2Client
+     * @return
+     */
+    public List<Image> getImages(String ownerId, List<String> imageIds, AmazonEC2 ec2Client) {
+        List<Image> images = null;
+        DescribeImagesRequest request = new DescribeImagesRequest();
+        
+        if (ownerId != null && !ownerId.isEmpty()) {
+            request = request.withOwners(ownerId);
+        }
+        
+        if (imageIds != null && !imageIds.isEmpty()) {
+            request = request.withImageIds(imageIds);
+        }
+        
+        DescribeImagesResult result = ec2Client.describeImages(request);
+        
+        if (result != null) {
+            images = result.getImages();
+        }
+        else {
+            log.warn("No images found");
+        }
+        
+        return images;
+    }
 
     //----------------------------------------------------------------------------------------------
     /**
@@ -1539,18 +1591,11 @@ public class AWSHelper {
      * @return images - returns a List<Image> of all images for that owner
      */
     public List<Image> getImages(String ownerId, AmazonEC2 ec2Client) {
-        List<Image> images = new ArrayList<Image>();
         if (ownerId == null || "".equals(ownerId)) {
             ownerId = getCurrentOwnerId(ec2Client);
         }
 
-        DescribeImagesRequest request = new DescribeImagesRequest()
-                                             .withOwners(ownerId);
-        DescribeImagesResult result = ec2Client.describeImages(request);
-
-        images = result.getImages();
-
-        return images;
+        return getImages(ownerId, null, ec2Client);
     }
 
     //----------------------------------------------------------------------------------------------
@@ -1571,6 +1616,11 @@ public class AWSHelper {
         return privateIp;
     }
 
+    /**
+     * 
+     * @param loadBalancerName
+     * @param elbClient
+     */
     public void deleteLoadBalancer(String loadBalancerName, AmazonElasticLoadBalancing elbClient) {
         try {
             DeleteLoadBalancerRequest deleteRequest = new DeleteLoadBalancerRequest()
@@ -1579,7 +1629,67 @@ public class AWSHelper {
         }
         catch (AmazonServiceException e) {
             log.error("Could not delete Load Balancer " + loadBalancerName, e);
-            throw e;
+            if (e.getErrorCode().equals("LoadBalancerNotFound")) {
+                log.warn("Could not find load balancer " + loadBalancerName);
+            }
+            else {
+                throw e;
+            }
         }
+    }
+    
+    /**
+     * 
+     * @param name
+     * @param elbClient
+     * @return
+     */
+    public LoadBalancerDescription getLoadBalancerForName(String name, AmazonElasticLoadBalancing elbClient) {
+        LoadBalancerDescription loadBalancer = null;
+        try {
+            DescribeLoadBalancersRequest request = new DescribeLoadBalancersRequest()
+                                                         .withLoadBalancerNames(name);
+            DescribeLoadBalancersResult result = elbClient.describeLoadBalancers(request);
+            
+            if (result != null && result.getLoadBalancerDescriptions() != null) {
+                // grab first entry since we only requested 1 LB
+                // Though, maybe this will grab all vpc ELBs with names too? 
+                loadBalancer = result.getLoadBalancerDescriptions().get(0);
+            }
+        }
+        catch (AmazonServiceException e) {
+            if (e.getErrorCode().equals("LoadBalancerNotFound")) {
+                // if we can't find the ELB to delete, it's already gone, that's probably good
+                log.warn("Could not find Load Balancer " + name, e);
+            }
+        }
+        return loadBalancer;
+    }
+    
+    /**
+     * 
+     * @param name
+     * @param ec2Client
+     * @return
+     */
+    public SecurityGroup getSecurityGroupForName(String name, AmazonEC2 ec2Client) {
+        SecurityGroup group = null;
+        try {
+        DescribeSecurityGroupsRequest request = new DescribeSecurityGroupsRequest()
+                                                      .withGroupNames(name);
+        DescribeSecurityGroupsResult result = ec2Client.describeSecurityGroups(request);
+        
+        if (result != null && result.getSecurityGroups() != null) {
+            group = result.getSecurityGroups().get(0);
+        }
+        }
+        catch (AmazonServiceException e) {
+            log.warn("Could not find Security Group with name " + name, e);
+            if (!e.getErrorCode().equals("InvalidGroup.NotFound")) {
+                throw e;
+            }
+        }
+        
+        return group;
     }
 }

@@ -38,7 +38,8 @@ public class ScriptTask extends BootActionSubTask {
     
     private String url;     // url where to grab the script
     private String shell;   // the shell that the script will be ran in
-    private List<ParamTask> params; // list of parameters to be passed to the script
+    // list of parameters to be passed to the script
+    private List<ParamTask> params = new ArrayList<ParamTask>();
     
     // This is the shell that makes up the User-Data, not the shell to run the script in.
     // This is used for determining how to check for a connection and grab the script.
@@ -46,8 +47,8 @@ public class ScriptTask extends BootActionSubTask {
     
     //----------------------------------------------------------------------------------------------
     public ScriptTask(ContextAWS context) {
+        super(context);
         this.context = context;
-        params = new ArrayList<ParamTask>();
     }
     
     public ParamTask createParam() {

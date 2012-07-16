@@ -55,7 +55,7 @@ public class VpcTask extends Task {
     //----------------------------------------------------------------------------------------------
     public VpcTask(ContextAWS context) {
         this.context = context;
-        helper = context.getAWSHelper();
+        helper = new AWSHelper();
     }
     
     //----------------------------------------------------------------------------------------------
@@ -133,6 +133,10 @@ public class VpcTask extends Task {
     //----------------------------------------------------------------------------------------------
     public VpcSecurityGroupTask createVpcSecurityGroup() {
         VpcSecurityGroupTask group = new VpcSecurityGroupTask(context);
+        // set the vpcId on the sec group if possible
+        if (vpcId != null) {
+            group.setVpcId(vpcId);
+        }
         securityGroups.add(group);
         
         return group;
@@ -287,7 +291,7 @@ public class VpcTask extends Task {
             startSecurityGroups();
         }
         catch (Exception e) {
-            log.error("EXCEPTION CAUGHT WHEN CREATING VPC", e);
+            log.error("Did not create VPC completely.", e);
             throw new EnvironmentCreationException("Could not completely create Vpc", e);
         }
         finally {

@@ -17,16 +17,20 @@ package org.urbancode.terraform.tasks.common;
 
 import org.urbancode.terraform.credentials.Credentials;
 import org.urbancode.terraform.credentials.CredentialsException;
+import org.urbancode.terraform.tasks.EnvironmentCreationException;
+import org.urbancode.terraform.tasks.EnvironmentDestructionException;
 import org.urbancode.terraform.tasks.util.PropertyResolver;
 
 
 public interface Context {
 
     //----------------------------------------------------------------------------------------------
-    public void create();
+    public void create()
+    throws EnvironmentCreationException;
 
     //----------------------------------------------------------------------------------------------
-    public void destroy();
+    public void destroy()
+    throws EnvironmentDestructionException;
 
     //----------------------------------------------------------------------------------------------
     public void setResolver(PropertyResolver resolver);

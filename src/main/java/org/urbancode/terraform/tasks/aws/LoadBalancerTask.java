@@ -16,8 +16,10 @@
 package org.urbancode.terraform.tasks.aws;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 import org.apache.log4j.Logger;
 import org.urbancode.terraform.tasks.EnvironmentCreationException;
@@ -26,7 +28,6 @@ import org.urbancode.terraform.tasks.aws.helpers.AWSHelper;
 import org.urbancode.terraform.tasks.common.SubTask;
 
 import com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancing;
-import com.amazonaws.services.elasticloadbalancing.model.DeleteLoadBalancerRequest;
 import com.amazonaws.services.elasticloadbalancing.model.Listener;
 
 public class LoadBalancerTask extends SubTask {
@@ -46,10 +47,15 @@ public class LoadBalancerTask extends SubTask {
     
     private String loadBalancerName;
     private String subnetName;
+    private List<String> subnetNamesList;
     private String appCookieName;
     private String DNSName;
+    private String zones;
+    private List<String> zonesList;
     
     private HealthCheckTask healthCheck;
+    
+    private String fullName; 
     
     private List<SecurityGroupRefTask> secGroupRefs = new ArrayList<SecurityGroupRefTask>();
     private List<ListenerTask> listeners = new ArrayList<ListenerTask>();
@@ -57,7 +63,34 @@ public class LoadBalancerTask extends SubTask {
     //----------------------------------------------------------------------------------------------
     LoadBalancerTask(ContextAWS context) {
         this.context = context;
-        helper = context.getAWSHelper();
+        helper = new AWSHelper();
+    }
+    
+    private List<String> parseStringToList(String string) {
+        List<String> result = new ArrayList<String>();
+        
+        String[] tmp = string.split("\\s+"); // split on whitespace
+        
+        result = Arrays.asList(tmp);         // change to List
+        
+        log.debug("Creating list out of " + string);
+        for (String s : result) {
+            s.trim();
+            log.debug(s);
+        }
+        
+        return result;
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    public void setZones(String zones) {
+        this.zones = zones;
+        zonesList = parseStringToList(zones);
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
     }
     
     //----------------------------------------------------------------------------------------------
@@ -68,6 +101,7 @@ public class LoadBalancerTask extends SubTask {
     //----------------------------------------------------------------------------------------------
     public void setSubnetName(String subnetName) {
         this.subnetName = subnetName;
+        subnetNamesList = parseStringToList(subnetName);
     }
 
     //----------------------------------------------------------------------------------------------
@@ -78,6 +112,11 @@ public class LoadBalancerTask extends SubTask {
     //----------------------------------------------------------------------------------------------
     public void setAppCookieName(String appCookieName) {
         this.appCookieName = appCookieName;
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    public String getFullName() {
+        return fullName;
     }
     
     //----------------------------------------------------------------------------------------------
@@ -116,8 +155,31 @@ public class LoadBalancerTask extends SubTask {
     }
     
     //----------------------------------------------------------------------------------------------
-    public SecurityGroupRefTask createSecurityGroupRef() {
-        SecurityGroupRefTask group = new SecurityGroupRefTask(context);
+    public String getZones() {
+        return zones;
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    public boolean containsZone(String zone) {
+        boolean result = false;
+        if (zonesList != null && zonesList.contains(zone)) {
+            result = true;
+        }
+        return result;
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    public boolean containsSubnet(String subnetName) {
+        boolean result = false;
+        if (subnetNamesList != null && subnetNamesList.contains(subnetName)) {
+            result = true;
+        }
+        return result;
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    public VpcSecurityGroupRefTask createVpcSecurityGroupRef() {
+        VpcSecurityGroupRefTask group = new VpcSecurityGroupRefTask(context);
         secGroupRefs.add(group);
         return group;
     }
@@ -136,27 +198,83 @@ public class LoadBalancerTask extends SubTask {
     }
     
     //----------------------------------------------------------------------------------------------
-    // TODO - this should accept a List<String>
-    private List<String> resolveSubnetIds(String subnetName) throws Exception {
+    private List<String> resolveSubnetIds(String subnetName) 
+    throws Exception {
         List<String> result = new ArrayList<String>();
+        VpcTask vpc = null;
         
-        String tmp = ((EnvironmentTaskAWS)context.getEnvironment()).getVpc().findSubnetForName(subnetName).getId();
+        // make sure we have a context and an EnvironmentAWS
+        if (context != null && context.getEnvironment() != null 
+            && context.getEnvironment() instanceof EnvironmentTaskAWS) {
+            
+            EnvironmentTaskAWS env = (EnvironmentTaskAWS) context.getEnvironment();
+            // grab the vpc
+            if (env.getVpc() != null) {
+                vpc = env.getVpc();
+            }
+            else {
+                throw new NullPointerException("No VPC found for load balancer " 
+                        + fullName);
+            }
+        }
+        // prevent against duplicate Zones in subnets
+        List<String> usedZones = new ArrayList<String>();
         
-        result.add(tmp);
+        if (subnetNamesList != null) {
+            for (String name : subnetNamesList) {
+                SubnetTask tmp = vpc.findSubnetForName(name);
+                if (tmp != null && tmp.getId() != null) {
+                    log.debug("Adding subnetId " + tmp.getId() + " to load balancer " 
+                              + fullName);
+                    String curZone = tmp.getZone();
+                    if (!usedZones.contains(curZone)) {
+                        usedZones.add(curZone);
+                        result.add(tmp.getId());
+                    }
+                    else {
+                        log.warn("Not adding Subnet " + tmp.getName() + " to load balancer " 
+                                 + fullName + " because zone " + tmp.getZone() + " is " 
+                                 + "already used on the load balancer.");
+                    }
+                }
+                else {
+                    log.error("Could not find subnet " + name + " in the VPC");
+                }
+            }
+        }
+        else {
+            log.error("No Subnets listed");
+            throw new NullPointerException("Loadbalancer must have a list of Subnet names if " +
+                                            "launching into VPC");
+        }
         
         return result;
     }
     
     //----------------------------------------------------------------------------------------------
-    private List<String> resolveSecGroupIds(List<SecurityGroupRefTask> secGroupNames) throws Exception {
+    private List<String> resolveSecGroupIds(List<SecurityGroupRefTask> list) 
+    throws Exception {
+        // TODO - will be a comma separated list - need to parse
         List<String> result = new ArrayList<String>();
-        
-        
-        if (secGroupNames != null && !secGroupNames.isEmpty()) {
-            for (SecurityGroupRefTask ref : secGroupNames) {
-                String tmp = ((EnvironmentTaskAWS)context.getEnvironment()).getVpc()
-                                .findSecurityGroupForName(ref.getSecurityGroupName()).getId();
-                result.add(tmp);
+        if (list != null && !list.isEmpty()) {
+            // Check out the env
+            EnvironmentTaskAWS env = null;
+            env = (EnvironmentTaskAWS) context.getEnvironment();
+            
+            for (SecurityGroupRefTask ref : list) {
+                String id = null;
+                if (ref instanceof VpcSecurityGroupRefTask) {
+                    VpcSecurityGroupTask tmp = 
+                            env.getVpc().findSecurityGroupForName(ref.getSecurityGroupName());
+                    if (tmp != null) {
+                        id = tmp.getId();
+                    }
+                    else {
+                        log.error("Security Group " + ref.getSecurityGroupName() + 
+                                  " not found in VPC in environment " + env.getName());
+                    }
+                }
+                result.add(id);
             }
         }
         
@@ -164,71 +282,113 @@ public class LoadBalancerTask extends SubTask {
     }
     
     //----------------------------------------------------------------------------------------------
+    private List<String> resolveZones(String zones) {
+        
+        // prevent duplicate zones
+        List<String> usedZones = new ArrayList<String>();
+        if (zonesList != null) {
+            for (String zone : zonesList) {
+                if (!usedZones.contains(zone)) {
+                    usedZones.add(zone);
+                    
+                }
+                else {
+                    log.warn("");
+                }
+            }
+        }
+        
+        return usedZones;
+    }
+    
+    //----------------------------------------------------------------------------------------------
     @Override
     public void create() 
     throws EnvironmentCreationException {
-        log.debug("LoadBalancerAWS: create()");
         if (DNSName == null) {
             if (elbClient == null) {
                 elbClient = context.getELBClient();
             }
             
-            String stickyPolicyName = "StickyPolicy";   // scope of the policy name? Will this need to change?
+            // give unique name
+            //String uuid = UUID.randomUUID().toString().substring(0, 5);
+            String uuid = context.getEnvironment().fetchUUID();
+            fullName = loadBalancerName + ("-" + uuid);
+            log.debug("Security Group " + loadBalancerName + " has fullname " + fullName);
+            
+            // scope of the policy name? Will this need to change?
+            String stickyPolicyName = "StickyPolicy";
             long defaultCookieExp = 60000;
             
             // get amazon ids 
             List<String> subnetIds = null;
+            List<String> availZones = null;
             List<String> secGroupIds = null;
             try {
-                 subnetIds = resolveSubnetIds(getSubnetName());
-                 if (subnetIds != null) {
-                     secGroupIds = resolveSecGroupIds(getSecRefs());
-        
-                    List<Listener> listeners = new ArrayList<Listener>();
-                    if (getListeners() != null) {
-                        for (ListenerTask task : getListeners()) {
-                            Listener tmp = new Listener(task.getProtocol(), task.getLoadBalancerPort(), task.getInstancePort());
-                            if (task.isSecure()) {
-                                tmp.setSSLCertificateId(task.getCertId());  // TODO - test
-                            }
-                            listeners.add(tmp);
+
+                if (subnetName != null && !subnetName.isEmpty()) {
+                    subnetIds = resolveSubnetIds(subnetName);
+                }
+                else {
+                    log.warn("No subnets specified on load balancer " + fullName);
+                    if (zones != null && !zones.isEmpty()) {
+                        availZones = resolveZones(zones);
+                    }
+                    else {
+                        log.warn("No zones specified on load balancer " + fullName);
+                        throw new EnvironmentCreationException("Must specify either zones or "
+                                + "subnets on load balancer " + fullName);
+                    }
+                }
+                
+                secGroupIds = resolveSecGroupIds(getSecRefs());
+    
+                List<Listener> listeners = new ArrayList<Listener>();
+                if (getListeners() != null) {
+                    for (ListenerTask task : getListeners()) {
+                        Listener tmp = new Listener(task.getProtocol(), 
+                                task.getLoadBalancerPort(), task.getInstancePort());
+                        if (task.isSecure()) {
+                            tmp.setSSLCertificateId(task.getCertId());  // TODO - test
                         }
+                        listeners.add(tmp);
                     }
-                    else {
-                        log.warn("No listeners specified for LoadBalancer: " + loadBalancerName 
-                               + "\nThis load balancer is not configured to balance any instances.");
-                    }
-                    
-                    // launch the load balancer
-                    DNSName = helper.launchLoadBalancer(getName(), subnetIds, secGroupIds, listeners, elbClient);
-                    
-                    // configure sticky sessions
-                    helper.createStickyPolicy(loadBalancerName, stickyPolicyName, getAppCookieName(), defaultCookieExp, elbClient);
-                    
-                    // configure the HealthChecks on the instances for them to be registered properly
-                    if (getHealthCheck() != null) {
-                        String hcTarget = getHealthCheck().getProtocol() + ":" + getHealthCheck().getPort() + getHealthCheck().getPath();
-                        int health = getHealthCheck().getHealthyCount();
-                        int unhealth = getHealthCheck().getUnhealthyCount();
-                        int interval = getHealthCheck().getInterval();
-                        int timeout = getHealthCheck().getTimeout();
-                        helper.setupHealthCheck(getName(), hcTarget, health, unhealth, interval, timeout, elbClient);
-                    }
-                    else {
-                        log.warn("No HealthCheck specified for load balancer " + getName()
-                                + "\nYou may not be able to reach the instances behind this load balancer.");
-                    }
-                 } 
-                 else {
-                     String msg = "Could not find subnet " + getSubnetName() + " for load balancer " + getName() + 
-                                  "\nLoad Balancer " + getName() + " not created.";
-                     log.error(msg);
-                     throw new EnvironmentCreationException(msg);
-                 }
+                }
+                else {
+                    log.warn("No listeners specified for LoadBalancer: " + fullName 
+                           + "\nThis load balancer is not configured to balance any " 
+                           + "instances.");
+                }
+                
+                // launch the load balancer
+                DNSName = helper.launchLoadBalancer(fullName, subnetIds, secGroupIds, 
+                        listeners, availZones, elbClient);
+                
+                // configure sticky sessions
+                helper.createStickyPolicy(fullName, stickyPolicyName, 
+                        getAppCookieName(), defaultCookieExp, elbClient);
+                
+                // configure the HealthChecks on the instances for them to be registered 
+                if (getHealthCheck() != null) {
+                    String hcTarget = getHealthCheck().getProtocol() + ":" + getHealthCheck()
+                                        .getPort() + getHealthCheck().getPath();
+                    int health = getHealthCheck().getHealthyCount();
+                    int unhealth = getHealthCheck().getUnhealthyCount();
+                    int interval = getHealthCheck().getInterval();
+                    int timeout = getHealthCheck().getTimeout();
+                    helper.setupHealthCheck(fullName, hcTarget, health, unhealth, interval, 
+                                            timeout, elbClient);
+                }
+                else {
+                    log.warn("No HealthCheck specified for load balancer " + fullName
+                            + "\nYou may not be able to reach the instances behind this "
+                            + "load balancer.");
+                }
             }
             catch (Exception e) {
-                log.error("Could not create load balancer " + loadBalancerName + " completely");
-                throw new EnvironmentCreationException("Could not start load balancer " + loadBalancerName, e);
+                log.error("Could not create load balancer " + fullName + " completely");
+                throw new EnvironmentCreationException("Could not start load balancer " + 
+                        fullName, e);
             }
             finally {
                 elbClient = null;
@@ -245,12 +405,13 @@ public class LoadBalancerTask extends SubTask {
         }
         try {
             helper = context.getAWSHelper();
-            helper.deleteLoadBalancer(getName(), elbClient);
+            helper.deleteLoadBalancer(fullName, elbClient);
             // will auto-delete policies and listeners associated with loadBalancer
         }
         catch (Exception e) {
-            log.error("Could not create load balancer " + loadBalancerName + " completely");
-            throw new EnvironmentDestructionException("Could not destroy load balancer " + loadBalancerName, e);
+            log.error("Could not create load balancer " + fullName + " completely");
+            throw new EnvironmentDestructionException("Could not destroy load balancer " + 
+                    fullName, e);
         }
         finally {
             setDnsName(null);

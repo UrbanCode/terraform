@@ -50,15 +50,14 @@ public class RouteTableTask extends SubTask {
     private String subnetName;
     private String assId;
     
-    private List<RouteTask> routes;
+    private List<RouteTask> routes = new ArrayList<RouteTask>();
     
     private boolean isMainTable = false;
     
     //----------------------------------------------------------------------------------------------
     RouteTableTask(ContextAWS context) {
         this.context = context;
-        helper = context.getAWSHelper();
-        routes = new ArrayList<RouteTask>();
+        helper = new AWSHelper();
     }
 
     //----------------------------------------------------------------------------------------------
