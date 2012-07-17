@@ -356,7 +356,7 @@ public class EnvironmentTaskAWS extends EnvironmentTask {
     private void detachENIs() {
         // detach any ENIs that we can
         if (getVpc() != null && getVpc().getId() != null) {
-            List<NetworkInterface> interfaces = helper.describeNetworkInterfaces(null, getVpc().getId(), ec2Client);
+            List<NetworkInterface> interfaces = helper.getNetworkInterfaces(null, getVpc().getId(), ec2Client);
             List<String> detachIds = new ArrayList<String>();
             if (interfaces != null) {
                 // refactor this into helper?

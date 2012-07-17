@@ -14,7 +14,7 @@ public class IOUtil {
     //**********************************************************************************************
 
     static private final Logger log = Logger.getLogger(IOUtil.class);
-    static private final int BUFFER_SIZE = 8192;
+    static private final int BUFFER_SIZE = 8192;    // hangs if 0
 
     private static IOUtil instance = null;
 

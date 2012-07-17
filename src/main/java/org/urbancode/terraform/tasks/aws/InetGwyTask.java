@@ -103,7 +103,7 @@ public class InetGwyTask extends SubTask {
             List<String> id = new ArrayList<String>();
             id.add(gatewayId);
             
-            List<InternetGateway> gateways = helper.describeInternetGateways(id, ec2Client);
+            List<InternetGateway> gateways = helper.getInternetGateways(id, ec2Client);
             if (gateways != null && !gateways.isEmpty()) {
                 for (InternetGateway gateway : gateways) {
                     List<InternetGatewayAttachment> attachments = gateway.getAttachments();

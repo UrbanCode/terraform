@@ -422,7 +422,7 @@ public class InstanceTask extends Task {
             List<String> id = new ArrayList<String>();
             id.add(instanceId);
             
-            List<Instance> instances = helper.describeInstances(id, ec2Client);
+            List<Instance> instances = helper.getInstances(id, ec2Client);
             if (instances != null && !instances.isEmpty()) {
                 for (Instance instance : instances) {
                     if (instance.getImageId().equals(amiId)) {

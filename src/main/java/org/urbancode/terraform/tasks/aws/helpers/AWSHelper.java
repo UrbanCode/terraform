@@ -1395,7 +1395,7 @@ public class AWSHelper {
      * @param ec2Client
      * @return
      */
-    public List<InternetGateway> describeInternetGateways(List<String> gatewayIds, AmazonEC2 ec2Client) {
+    public List<InternetGateway> getInternetGateways(List<String> gatewayIds, AmazonEC2 ec2Client) {
         DescribeInternetGatewaysRequest request = new DescribeInternetGatewaysRequest();
 
         if (gatewayIds != null && !gatewayIds.isEmpty()) {
@@ -1413,7 +1413,7 @@ public class AWSHelper {
      * @param ec2Client
      * @return
      */
-    public List<Instance> describeInstances(List<String> instanceIds, AmazonEC2 ec2Client) {
+    public List<Instance> getInstances(List<String> instanceIds, AmazonEC2 ec2Client) {
         DescribeInstancesRequest request = new DescribeInstancesRequest();
 
         if (instanceIds != null && !instanceIds.isEmpty()) {
@@ -1443,7 +1443,7 @@ public class AWSHelper {
      * @param ec2Client
      * @return
      */
-    public List<Route> describeRoutes(List<String> routeIds, String routeTableId, AmazonEC2 ec2Client) {
+    public List<Route> getRoutes(List<String> routeIds, String routeTableId, AmazonEC2 ec2Client) {
         List<String> routeTableIds = new ArrayList<String>();
         routeTableIds.add(routeTableId);
         List<RouteTable> tables = getRouteTables(routeTableIds, ec2Client); // only returns 1 table
@@ -1460,7 +1460,7 @@ public class AWSHelper {
      * @param ec2Client
      * @return
      */
-    public List<NetworkInterface> describeNetworkInterfaces(List<String> interfaceIds, String vpcId, AmazonEC2 ec2Client) {
+    public List<NetworkInterface> getNetworkInterfaces(List<String> interfaceIds, String vpcId, AmazonEC2 ec2Client) {
         DescribeNetworkInterfacesRequest request = new DescribeNetworkInterfacesRequest();
 
         if (interfaceIds != null) {

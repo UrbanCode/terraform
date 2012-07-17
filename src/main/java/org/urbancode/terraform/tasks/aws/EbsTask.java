@@ -44,8 +44,12 @@ public class EbsTask extends SubTask {
     private String volumeId;
     private String instanceId;
     private String zone;
+    
     private int volumeSize;
+    
     private boolean persist;
+    private boolean onLaunch;
+    private boolean mount;
     
     private BlockDeviceMapping blockMap;
     
@@ -120,38 +124,31 @@ public class EbsTask extends SubTask {
         return deviceName;
     }
     
+    //----------------------------------------------------------------------------------------------
     public String getSnapshotId() {
         return snapshotId;
     }
 
+    //----------------------------------------------------------------------------------------------
     public int getVolumeSize() {
         return volumeSize;
     }
     
     //----------------------------------------------------------------------------------------------
-    @Override
-    public void create() {
+    public boolean isVerified() {
         boolean verified = false;
         
-        // commented out since we're not making any connections to ec2 at the moment
-//        if (ec2Client == null) {
-//            ec2Client = context.getEC2Client();
-//        }
+        // TODO - verify this
         
-        // TODO - verify
-        
-        // This is for creating a volume an attaching it to the instance. This will not mount
-        // the block device. 
-//        if (!verified) {
-//            log.info("Creating EBS Volume...");
-//            volumeId = helper.createEbsVolume(zone, volumeSize, snapshotId, ec2Client);
-//            log.info("EBS Volume " + name + " created with id: " + volumeId);
-//            
-//            log.info("Attaching volume...");
-//            helper.attachEbsVolumeToInstance(volumeId, instanceId, deviceName, ec2Client);
-//            log.info("EBS Volume " + volumeId + " attached to instance " + instanceId + " at " + deviceName);
-//        }
-        
+        return verified;
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    /**
+     * Creates the EBS volume on instance launch. Only the data structures are required as we send
+     * then with the RunInstancesRequest.
+     */
+    private void createOnLaunch() {
         // These AWS data structures are needed when launching an ami/running an instance.
         // this will need to be handled differently if creating/attaching an EBS volume
         //  to an already existing instance.
@@ -165,31 +162,100 @@ public class EbsTask extends SubTask {
                                            .withDeviceName(deviceName)
                                            .withEbs(block)
                                            .withVirtualName(name);
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    /**
+     * Creates the EBS volume after the instance has launched. A connection to Amazon EC2 is needed.
+     * The volume is created, and then attached to the instance.
+     */
+    private void createPostLaunch() {
+        if (ec2Client == null) {
+            ec2Client = context.getEC2Client();
+        }
         
+        if (!isVerified()) {
+            log.info("Creating EBS Volume...");
+            // TODO - null checks
+            volumeId = helper.createEbsVolume(zone, volumeSize, snapshotId, ec2Client);
+            log.info("EBS Volume " + name + " created with id: " + volumeId);
+            
+            log.info("Attaching volume...");
+            // TODO - null checks
+            helper.attachEbsVolumeToInstance(volumeId, instanceId, deviceName, ec2Client);
+            log.info("EBS Volume " + volumeId + " attached to instance " + instanceId + " at " + 
+                    deviceName);
+        }
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    /**
+     * 
+     */
+    private void mountVolume() {
+        // TODO 
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    /**
+     * 
+     */
+    private void destroyOnLaunch() {
+        // TODO 
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    /**
+     * 
+     */
+    private void destroyPostLaunch() {
+        if (ec2Client == null) {
+            ec2Client = context.getEC2Client();
+        }
+        
+        // detach with force
+        log.info("Detaching volume...");
+        helper.detachEbsVolumeFromInstance(volumeId, instanceId, deviceName, true, ec2Client);
+        log.info("Volume " + volumeId + " detached from instance " + instanceId + " at " + 
+                deviceName);
+
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    @Override
+    public void create() {
+        if (onLaunch) {
+            createOnLaunch();
+        }
+        else {
+            createPostLaunch();
+        }
+        
+        if (mount) {
+            mountVolume();
+        }
     }
 
     //----------------------------------------------------------------------------------------------
     @Override
     public void destroy() {
-        // not currently making any ec2 connections
-//        if (ec2Client == null) {
-//            ec2Client = context.getEC2Client();
-//        }
         
-//        // detach with force
-//        log.info("Detaching volume...");
-//        helper.detachEbsVolumeFromInstance(volumeId, instanceId, deviceName, true, ec2Client);
-//        log.info("Volume " + volumeId + " detached from instance " + instanceId + " at " + deviceName);
-//        
-        // commented since we're not deleting anything here. it's done by amazon when deleting the instance
-        // delete volume if no persist
-//        if (!persist) {
-//            log.info("Deleting volume...");
-//            helper.deleteEbsVolume(volumeId, ec2Client);
-//            log.info("Volume " + volumeId + " deleted");
-//        }
-//        else {
-//            log.info("Volume " + volumeId + " persited in AWS");
-//        }
+        // try to unmount?
+        
+        if (onLaunch) {
+            destroyOnLaunch();
+        }
+        else {
+            destroyPostLaunch(); 
+        }
+        
+        if (!persist) {
+            log.info("Deleting volume...");
+            helper.deleteEbsVolume(volumeId, ec2Client);
+            log.info("Volume " + volumeId + " deleted");
+        }
+        else {
+            log.info("Volume " + volumeId + " persited in AWS");
+        }
     }
 }
