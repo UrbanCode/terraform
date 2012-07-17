@@ -29,7 +29,7 @@ public class VpcSecurityGroupTask extends SecurityGroupTask {
     //**********************************************************************************************
     
     //----------------------------------------------------------------------------------------------
-    VpcSecurityGroupTask(ContextAWS context) {
+    public VpcSecurityGroupTask(ContextAWS context) {
         super(context);
     }
     

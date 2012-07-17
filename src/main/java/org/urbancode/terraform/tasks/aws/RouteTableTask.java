@@ -55,7 +55,7 @@ public class RouteTableTask extends SubTask {
     private boolean isMainTable = false;
     
     //----------------------------------------------------------------------------------------------
-    RouteTableTask(ContextAWS context) {
+    public RouteTableTask(ContextAWS context) {
         this.context = context;
         helper = new AWSHelper();
     }

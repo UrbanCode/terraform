@@ -45,7 +45,7 @@ public class PuppetTask extends BootActionSubTask {
     
     //----------------------------------------------------------------------------------------------
     public PuppetTask(ContextAWS context) {
-//        this.context = context;
+        super(context);
     }
 
     //----------------------------------------------------------------------------------------------

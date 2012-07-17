@@ -61,11 +61,12 @@ public class LoadBalancerTask extends SubTask {
     private List<ListenerTask> listeners = new ArrayList<ListenerTask>();
     
     //----------------------------------------------------------------------------------------------
-    LoadBalancerTask(ContextAWS context) {
+    public LoadBalancerTask(ContextAWS context) {
         this.context = context;
         helper = new AWSHelper();
     }
     
+    //----------------------------------------------------------------------------------------------
     private List<String> parseStringToList(String string) {
         List<String> result = new ArrayList<String>();
         

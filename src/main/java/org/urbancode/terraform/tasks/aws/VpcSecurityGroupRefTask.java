@@ -31,7 +31,7 @@ public class VpcSecurityGroupRefTask extends SecurityGroupRefTask {
     //**********************************************************************************************
     
     //----------------------------------------------------------------------------------------------
-    VpcSecurityGroupRefTask(Context context) {
+    public VpcSecurityGroupRefTask(Context context) {
         super(context);
     }
     

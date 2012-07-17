@@ -43,7 +43,7 @@ public class RouteTask extends SubTask {
     private String targetName;
 
     //----------------------------------------------------------------------------------------------
-    RouteTask(ContextAWS context) {
+    public RouteTask(ContextAWS context) {
         super(context);
         this.context = context;
         helper = new AWSHelper();

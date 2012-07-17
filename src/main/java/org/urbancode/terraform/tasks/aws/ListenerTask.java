@@ -39,7 +39,7 @@ public class ListenerTask extends SubTask {
     private int loadBalancerPort;
     
     //----------------------------------------------------------------------------------------------
-    ListenerTask(ContextAWS context) {
+    public ListenerTask(ContextAWS context) {
         super(context);
     }
     

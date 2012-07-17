@@ -60,7 +60,7 @@ public abstract class SecurityGroupTask extends SubTask {
     protected List<RuleTask> rules = new ArrayList<RuleTask>();
     
     //----------------------------------------------------------------------------------------------
-    SecurityGroupTask(Context context) {
+    public SecurityGroupTask(Context context) {
         super(context);
         if (context instanceof ContextAWS) {
             this.context = (ContextAWS) context;

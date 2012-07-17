@@ -17,6 +17,11 @@ public class DataTask extends BootActionSubTask {
     private String name;
     
     //----------------------------------------------------------------------------------------------
+    public DataTask() {
+        
+    }
+    
+    //----------------------------------------------------------------------------------------------
     public void setValue(String value) {
         this.value = value;
     }

@@ -36,7 +36,7 @@ public class InstanceRefTask extends SubTask {
     private InstanceTask ref;
     
     //----------------------------------------------------------------------------------------------
-    InstanceRefTask(ContextAWS context) {
+    public InstanceRefTask(ContextAWS context) {
         this.context = context;
     }
     

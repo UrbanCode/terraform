@@ -312,8 +312,10 @@ public class VpcTask extends Task {
         try {
             helper.waitForPublicAddresses(ec2Client);
             
-            getInetGwy().setVpcId(vpcId);
-            getInetGwy().destroy();
+            if (getInetGwy() != null) {
+                getInetGwy().setVpcId(vpcId);
+                getInetGwy().destroy();
+            }
             
             helper.waitForPublicAddresses(ec2Client);
             
@@ -342,7 +344,6 @@ public class VpcTask extends Task {
             
             // delete Vpc
             helper.deleteVpc(vpcId, ec2Client);
-            
             vpcId = null;
         }
         catch (Exception e) {

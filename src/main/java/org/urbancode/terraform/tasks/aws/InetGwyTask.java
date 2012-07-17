@@ -47,7 +47,7 @@ public class InetGwyTask extends SubTask {
     private String name;
     
     //----------------------------------------------------------------------------------------------
-    InetGwyTask(ContextAWS context) {
+    public InetGwyTask(ContextAWS context) {
         this.context = context;
         helper = new AWSHelper();
     }

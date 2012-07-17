@@ -54,7 +54,7 @@ public class EbsTask extends SubTask {
     private BlockDeviceMapping blockMap;
     
     //----------------------------------------------------------------------------------------------
-    EbsTask(ContextAWS context) {
+    public EbsTask(ContextAWS context) {
         this.context = context;
         helper = new AWSHelper();
     }

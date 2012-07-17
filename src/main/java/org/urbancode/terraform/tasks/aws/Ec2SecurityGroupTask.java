@@ -33,7 +33,7 @@ public class Ec2SecurityGroupTask extends SecurityGroupTask {
     //**********************************************************************************************
 
     //----------------------------------------------------------------------------------------------
-    Ec2SecurityGroupTask(ContextAWS context) {
+    public Ec2SecurityGroupTask(ContextAWS context) {
         super(context);
     }
     

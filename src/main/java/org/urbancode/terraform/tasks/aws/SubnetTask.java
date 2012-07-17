@@ -50,7 +50,7 @@ public class SubnetTask extends SubTask {
     private RouteTableTask routeTable;
     
     //----------------------------------------------------------------------------------------------
-    SubnetTask(ContextAWS context) {
+    public SubnetTask(ContextAWS context) {
         this.context = context;
         helper = new AWSHelper();
     }
