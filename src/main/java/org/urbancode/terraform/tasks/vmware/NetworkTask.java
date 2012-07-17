@@ -151,6 +151,13 @@ public class NetworkTask extends SubTask {
     }
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * Creates a virtual switch and port group.
+     * The virtual switch has a randomly generated name of 10 hexadecimal characters.
+     * The port group has the same name as the virtual switch with the suffix "-network" appended.
+     * @return a SwitchResult object storing the VI Java Network object and paths to the port group and virtual switch
+     * @throws RemoteException
+     */
     private SwitchResult createSwitch()
     throws RemoteException {
         String newSwitchName = UUID.randomUUID().toString().replaceAll("-", "");

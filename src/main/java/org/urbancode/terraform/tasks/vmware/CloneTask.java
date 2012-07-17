@@ -229,6 +229,10 @@ public class CloneTask extends SubTask implements Cloneable, Comparable<CloneTas
     }
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * Sets the IP stored IP list and allocates the IPs in the Global IP Pool.
+     * @param ipListAsString
+     */
     public void setIpList(String ipListAsString) {
         ipList.clear();
         String[] split = ipListAsString.split(",");
@@ -248,6 +252,12 @@ public class CloneTask extends SubTask implements Cloneable, Comparable<CloneTas
     }
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * Retrieves IP addresses on the VM from vCenter. The VI Java API's method for returning
+     * the IP addresses can be unreliable - it depends on when the VM is polled by Terraform.
+     * Only IPv4 addresses will be added - IPv6 addresses are ignored right now.
+     * Sets the IP addresses as a comma-separated list. This will be written out to XML.
+     */
     public void setIpListFromVmInfo() {
         ipList.clear();
         GuestNicInfo[] nicInfos = vm.getGuest().getNet();
@@ -316,6 +326,14 @@ public class CloneTask extends SubTask implements Cloneable, Comparable<CloneTas
     }
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * Creates the VM clone by cloning the specified image.
+     * This is currently done from a template if no snapshot is specified, or done via a
+     * linked clone if a snapshot is specified. Linked clones are much faster.
+     * After the VM is cloned, NICs will be attached, routing rules will be applied (if a router
+     * exists), post create tasks will be run, and then the VM will be powered on. Note that
+     * post create tasks may power on the VM first anyways.
+     */
     @Override
     public void create() {
         log.debug("Calling create method on clone");
@@ -362,6 +380,9 @@ public class CloneTask extends SubTask implements Cloneable, Comparable<CloneTas
     }
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * Deletes the VM from disc and frees any IP addresses that were allocated to it.
+     */
     @Override
     public void destroy() {
         try {
@@ -395,6 +416,13 @@ public class CloneTask extends SubTask implements Cloneable, Comparable<CloneTas
     }
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * Clones from a template if no snapshot is specified, or from a linked clone if a valid
+     * snapshot is specified.
+     * @return
+     * @throws RemoteException
+     * @throws InterruptedException
+     */
     public VirtualMachine cloneVM()
     throws RemoteException, InterruptedException {
         VirtualMachine result = null;
@@ -447,6 +475,12 @@ public class CloneTask extends SubTask implements Cloneable, Comparable<CloneTas
     }
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * Searches the snapshot tree for the specified snapshot.
+     * @param snapTree
+     * @param snapshotName
+     * @return
+     */
     private ManagedObjectReference traverseSnapshotInTree(
             VirtualMachineSnapshotTree[] snapTree, String snapshotName) {
         ManagedObjectReference result = null;
@@ -588,6 +622,10 @@ public class CloneTask extends SubTask implements Cloneable, Comparable<CloneTas
     }
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * Generates a status for a VM based on whether it is powered on and has VMTools running.
+     * @return A string representing the VM status.
+     */
     public String fetchVmStatus() {
         String result = null;
         try {
@@ -715,6 +753,10 @@ public class CloneTask extends SubTask implements Cloneable, Comparable<CloneTas
     }
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * Compares 2 CloneTasks based on their order attribute. Clones are executed from
+     * lowest to highest. If order is equal they are executed in parallel.
+     */
     @Override
     public int compareTo(CloneTask o) {
         int result;
