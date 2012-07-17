@@ -254,16 +254,18 @@ public class CloneTask extends SubTask implements Cloneable, Comparable<CloneTas
         if (nicInfos == null) {
             log.warn("problem retrieving network info from VM");
         }
-        for (int i=0; i<nicInfos.length; i++) {
-            String[] nicInfoIpList = nicInfos[i].getIpAddress();
-            for (int j=0; j<nicInfoIpList.length; j++) {
-                //ip4 addresses only; vsphere 5 likes to return ip4 and ip6
-                String unparsedIp = nicInfoIpList[j];
-                if (!unparsedIp.contains(":")) {
-                    Ip4 newIp = new Ip4(unparsedIp);
-                    ipList.add(newIp);
-                }
+        else {
+            for (int i=0; i<nicInfos.length; i++) {
+                String[] nicInfoIpList = nicInfos[i].getIpAddress();
+                for (int j=0; j<nicInfoIpList.length; j++) {
+                    //ip4 addresses only; vsphere 5 likes to return ip4 and ip6
+                    String unparsedIp = nicInfoIpList[j];
+                    if (!unparsedIp.contains(":")) {
+                        Ip4 newIp = new Ip4(unparsedIp);
+                        ipList.add(newIp);
+                    }
 
+                }
             }
         }
     }
@@ -644,7 +646,7 @@ public class CloneTask extends SubTask implements Cloneable, Comparable<CloneTas
                 result = "Shut Down";
             }
             else {
-                result = "Starting";
+                result = "Unknown";
             }
         }
         if (result == null) {
