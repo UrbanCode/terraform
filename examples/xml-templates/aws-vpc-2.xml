@@ -1,0 +1,29 @@
+<context xmlns="org.urbancode.terraform.tasks.aws" >
+  <environment name="durr" >
+    <vpc cidr="192.168.1.0/16">
+      <subnet name="myHouse" zone="us-east-1d" cidr="192.168.2.0/24" />
+      <inet-gwy name="myGateway" />
+      <route-table subnet-name="myHouse" default="true"/>
+      <vpc-security-group name="GuardDog" description="Allow traffic for ssh and uDeploy Agent">
+        <rule source="0.0.0.0/0" protocol="tcp" start-port="7918" end-port="7918" inbound="true" />
+        <rule source="0.0.0.0/0" protocol="tcp" start-port="22" end-port="22" inbound="true" />
+      </vpc-security-group>
+    </vpc>
+
+    <instance name="derp" ami-id="ami-707ca619" subnet-name="myHouse" count="1"
+              elastic-ip="true" private-key-ref="nick-portal" image-size="m1.small" >
+      <vpc-security-group-ref security-group-name="GuardDog" />
+      <boot-actions shell="/bin/bash">
+        <script url="https://s3.amazonaws.com/ncc.misc/agentConf.sh" >
+          <param value="${ud.host}" />
+          <param value="${ud.port}" />
+          <param value="${server.name}" />
+        </script>
+        <script url="https://s3.amazonaws.com/ncc.misc/setupTomcat.sh" />
+      </boot-actions>
+      <post-create-actions>
+        <!-- <ssh user="ubuntu" cmds="echo TEST > /home/ubuntu/test.tt" /> -->
+      </post-create-actions>
+    </instance>
+  </environment>
+</context>

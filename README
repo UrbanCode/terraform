@@ -12,7 +12,7 @@ Installation Instructions
 **************************************************
 
  Need:
-   Java 1.5 (or higher)
+   Java 1.6
    vmrun (only for VMware environments)
    Maven (for building/dependencies) 
 

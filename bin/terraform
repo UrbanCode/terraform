@@ -35,34 +35,58 @@ export INPUT_FILE
 export CREDS
 
 # -- Create ---------------------------------------------------------------------
-LIB=$TERRAFORM_HOME/lib
-MTARGET=$TERRAFORM_HOME/target
 CLASSPATH=""
-for FILE in $LIB/*.jar
-do
-	CLASSPATH=$FILE:$CLASSPATH
-done
+LIB=$TERRAFORM_HOME/lib
+if [ ! -d $LIB ]; then
+  CURRENTDIR=`pwd`
+  cd $TERRAFORM_HOME
+  mvn dependency:build-classpath -Dmdep.outputFile=$TERRAFORM_HOME/bin/classpath
+  cd $CURRENTDIR
+  CLASSPATH=`cat $TERRAFORM_HOME/bin/classpath`
+else 
+    JARS=`find $LIB -name "*.jar"`
+    for JAR in $JARS
+    do
+      if [ -z $CLASSPATH ]; then
+        CLASSPATH=$JAR
+      else 
+        CLASSPATH=$CLASSPATH:$JAR
+      fi
+    done
+fi
 
+MTARGET=$TERRAFORM_HOME/target
+
+nTFJARS=`ls -1 $MTARGET | grep terraform | wc -l`
+if [ $nTFJARS -gt 1 ]; then
+    echo "\t\tWARNING\n\t**Multiple terraform jars found!**\n\t**/target should include only one terraform jar**\n"
+    exit 1
+fi
+
+
+# adds all terraform jars - not a good idea
 TFJAR=`find $MTARGET -name "terraform*.jar"`
 
 # tack on the terraform jar since we have a : at the end already
-CP="$CLASSPATH"$TFJAR":$TERRAFORM_HOME/conf"
+CP="$CLASSPATH:$TFJAR:$TERRAFORM_HOME/conf"
+
+FNCT=$1
+
 PROPS=""
 
-for ARG in $@; do
-  if [ "$ARG" = "$1" ]; then
-   echo "$ARG"
-  elif [ "$ARG" = "$2" ] ; then
-   echo "$ARG"
-  elif [ "$ARG" = "$3" ] ; then
-   echo "$ARG"
-  else 
-    PROPS="$PROPS $ARG" 
-  fi
-done
-echo "Properties: $PROPS" 
+if [ $# -lt 3 ]; then
+    echo "\t\tWARNING\n\t**Not Enough Arguments found!**\n"
+    FNCT="BAD"
+else 
+    shift 3
+    for ARG in $@; do
+      PROPS="$PROPS $ARG" 
+    done
+fi 
 
-if [ "$1" = "create" ] ; then
+echo "Properties: $PROPS\n" 
+
+if [ "$FNCT" = "create" ] ; then
   command_line="\"$javacmd\" $JAVA_OPTS 
     -cp \"$CP\" \
     $create_class create \"$INPUT_FILE\" \"$CREDS\" $PROPS"
@@ -71,7 +95,7 @@ if [ "$1" = "create" ] ; then
   eval $command_line
 # -- Destroy ----------------------------------------------------------------------
 
-elif [ "$1" = "destroy" ] ; then
+elif [ "$FNCT" = "destroy" ] ; then
 
 #  shift
 #  FORCE=0
@@ -90,6 +114,6 @@ elif [ "$1" = "destroy" ] ; then
 else
 #	Also, create -debug|destroy -debug to instruct java to listen on port 10000
 #	for remote JPDA Debugger connections.
-  echo "Usage: terraform {create|destroy} {input-file} {credentials-file} {prop1=val1 prop2=val2 ... }"
+  echo "Usage: terraform {create|destroy} {input-file} {credentials-file} {prop1=val1 prop2=val2 ... }\n"
   exit 1
 fi
