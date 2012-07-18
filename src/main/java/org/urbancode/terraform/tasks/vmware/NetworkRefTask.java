@@ -109,6 +109,12 @@ public class NetworkRefTask extends SubTask {
     }
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * Attaches a NIC to a VM.
+     * @see VirtualHost
+     * @throws RemoteException
+     * @throws InterruptedException
+     */
     public void attachNic()
     throws RemoteException, InterruptedException {
         try {
