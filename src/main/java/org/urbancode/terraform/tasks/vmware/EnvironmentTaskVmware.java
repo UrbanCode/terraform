@@ -140,6 +140,9 @@ public class EnvironmentTaskVmware extends EnvironmentTask {
     }
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * Gives the folder a unique name based on the environment's UUID suffix.
+     */
     public void addUUIDToFolderName() {
         folderName = folderName + "-" + fetchUUID();
     }
@@ -235,6 +238,14 @@ public class EnvironmentTaskVmware extends EnvironmentTask {
     }
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * Order of operations:
+     * Creates folder in vCenter.
+     * Creates private network (virtual switch and port group) if one was specified.
+     * Creates clones in order (see create method on CloneTask for order of that operation).
+     * Sleeps for some seconds to give vCenter time to update.
+     * Fetches the IP addresses of the VMs.
+     */
     @Override
     public void create() {
 
@@ -281,6 +292,12 @@ public class EnvironmentTaskVmware extends EnvironmentTask {
     }
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * Order of operations:
+     * Deletes each VM from disk.
+     * Deletes the folder.
+     * Deletes the virtual switch and port group.
+     */
     @Override
     public void destroy() {
         //vm clone tasks
@@ -331,6 +348,13 @@ public class EnvironmentTaskVmware extends EnvironmentTask {
     }
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * Spins off a new thread for each clone in this "chunk" to be created in parallel.
+     * @param cloneTaskList
+     * @throws RemoteException
+     * @throws InterruptedException
+     * @throws Exception
+     */
     private void handleCloneCreation(List<CloneTask> cloneTaskList)
     throws RemoteException, InterruptedException, Exception {
         long pollInterval = 3000L;
@@ -380,6 +404,12 @@ public class EnvironmentTaskVmware extends EnvironmentTask {
     }
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * Creates clones in the order specified in the xml by the "order" attribute.
+     * Clones with the same order number will be created in parallel.
+     * Each chunk of clones is passed off to handleCloneCreation.
+     * @throws Exception
+     */
     private void createClonesInOrder()
     throws Exception {
         PriorityQueue<CloneTask> taskQueue = new PriorityQueue<CloneTask>(cloneTasks);
@@ -407,6 +437,15 @@ public class EnvironmentTaskVmware extends EnvironmentTask {
     }
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * Generates the status of the environment. The overall environment status will reflect whatever
+     * the status is of the most atypical VM.
+     * Here is the "priority" given to statuses - the environment status will be equal to the status
+     * with the highest priority. So if all clone statuses are "Running", the environment is
+     * "Running". If 3 clones are "Running" and one is "Starting", the environment is "Starting".
+     * Shut Down > Shutting Down > Starting > Powered Off Or Starting > Not Started Or Powered Off > Running
+     * @return A string representing the environment status.
+     */
     public String fetchEnvironmentStatus() {
         String result = "";
         String allStatuses = "";

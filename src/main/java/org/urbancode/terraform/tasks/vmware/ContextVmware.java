@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Urbancode, Inc
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -55,6 +55,7 @@ public class ContextVmware implements Context {
     }
 
     //----------------------------------------------------------------------------------------------
+    @Override
     public void setProperty(String name, String value) {
         resolver.setProperty(name, value);
     }
@@ -78,6 +79,7 @@ public class ContextVmware implements Context {
     }
 
     //----------------------------------------------------------------------------------------------
+    @Override
     public String resolve(String string) {
         return resolver.resolve(string);
     }
@@ -90,6 +92,11 @@ public class ContextVmware implements Context {
     }
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * A virtual host holds the ServiceInstance object and executes commands at the datacenter level.
+     * @return
+     * @throws IOException
+     */
     private VirtualHost createVirtualHost()
     throws IOException {
         VirtualHost result = null;
