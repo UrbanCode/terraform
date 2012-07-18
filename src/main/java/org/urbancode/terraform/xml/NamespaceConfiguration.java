@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.regex.Matcher;
 
 import org.apache.commons.collections.BidiMap;
 import org.apache.commons.collections.bidimap.DualHashBidiMap;
@@ -114,9 +115,9 @@ public class NamespaceConfiguration {
     //----------------------------------------------------------------------------------------------
     private void loadNameSpaceFromClassPath(String nameSpace) {
         BidiMap biMap = new DualHashBidiMap();
-        String filePath = nameSpace.replaceAll("[:.:]", File.separator);
-        String resourceName = filePath + File.separator + NAMESPACE_FILE;
-
+        String filePath = nameSpace.replaceAll("\\.", Matcher.quoteReplacement("/"));
+        String resourceName = filePath + "/" + NAMESPACE_FILE;
+//        System.out.println("RESROUCENAME: " + resourceName);
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         Properties props = new Properties();
 
