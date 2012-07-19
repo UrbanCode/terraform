@@ -95,10 +95,10 @@ public class RouteTableTask extends SubTask {
         this.assId = assocId;
     }
     
-    //----------------------------------------------------------------------------------------------
-    public void setMainTable(boolean isMainTable) {
-        this.isMainTable = isMainTable;
-    }
+//    //----------------------------------------------------------------------------------------------
+//    public void setMainTable(boolean isMainTable) {
+//        this.isMainTable = isMainTable;
+//    }
     
     //----------------------------------------------------------------------------------------------
     public void setSubnetName(String subnetName) {
@@ -155,14 +155,16 @@ public class RouteTableTask extends SubTask {
     private String setupMainTable(boolean defaultRoute) {
         String result = null;
         
-        
         // grab id of first (only) route table in vpc
         List<RouteTable> tables = helper.getRouteTables(null, ec2Client);
         
+        log.debug("tables found: " + tables.size());
         for (RouteTable table : tables) {
+            log.debug("Table: " + table.getRouteTableId());
+            log.debug("VPC: " + table.getVpcId());
             if (table.getVpcId().equals(vpcId)) {
-                log.info("Found route table.");
                 routeTableId = table.getRouteTableId();
+                log.info("Found main route table " + routeTableId);
                 break;
             }
         }
@@ -183,6 +185,8 @@ public class RouteTableTask extends SubTask {
     @Override
     public void create() 
     throws EnvironmentCreationException { 
+        log.debug("Main: " + isMainTable);
+        
         if (ec2Client == null) {
             ec2Client = context.getEC2Client();
         }
@@ -191,18 +195,22 @@ public class RouteTableTask extends SubTask {
             log.info("Creating RouteTable...");
             
             if (isMainTable) {
+                log.info("Setting up main table");
                 setupMainTable(true);
             }
             else {
+                log.info("Setting route table VpcId to: " + vpcId);
                 setId(helper.createRouteTable(vpcId, ec2Client));
             }
             log.info("RouteTableId created with routeTableId: " + routeTableId);
             helper.tagInstance(routeTableId, "terraform.environment", context.getEnvironment().getName(), ec2Client);
             
             // create any other routes
-            for (RouteTask route : getRoutes()) {
-                route.setRouteTableId(routeTableId);
-                route.create();   
+            if (routes != null) {
+                for (RouteTask route : getRoutes()) {
+                    route.setRouteTableId(routeTableId);
+                    route.create();   
+                }
             }
         
             String subnetId = ((EnvironmentTaskAWS)context.getEnvironment()).getVpc().findSubnetForName(subnetName).getId();

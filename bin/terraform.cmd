@@ -23,7 +23,10 @@ IF EXIST "%TERRAFORM_HOME%\lib" (
 	set CLASSPATH=%TERRAFORM_HOME%\lib\*
 ) ELSE (
 	echo "building cp with maven"
+	cd %TERRAFORM_HOME%
 	mvn dependency:build-classpath -Dmdep.outputFile="%SCRIPT_HOME%\classpath"
+	set CLASSPATH=type %SCRIPT_HOME%\classpath
+	cd %currdur%
 	goto cont
 )
 

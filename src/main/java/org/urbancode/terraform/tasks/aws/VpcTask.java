@@ -188,7 +188,8 @@ public class VpcTask extends Task {
     }
     
     //----------------------------------------------------------------------------------------------
-    private void startSubnets() throws Exception {
+    private void startSubnets() 
+    throws Exception {
         if (subnets != null || subnets.size() != 0) {
             for (SubnetTask subnet : subnets) {
                 subnet.setVpcId(vpcId);
@@ -204,38 +205,49 @@ public class VpcTask extends Task {
     private void startRouteTables() 
     throws Exception {
         boolean mainfound = false;
-        if (getRouteTables() != null && !getRouteTables().isEmpty()) {
-            for (RouteTableTask table : getRouteTables()) {
-                if (table.getId() == null) {
-                    if (table.getDefault()) {
-                        if (inetGwy != null) {
-                            table.setRouteTarget(inetGwy.getId());
-                        }
-                        table.setMainTable(true);
-                        mainfound = true;
+        if (routeTables != null) {
+            // create main table first - since we grab its id by assuming it is the only table
+            for (RouteTableTask table : routeTables) {
+                if (table.getDefault()) {
+                    log.debug("Found main table");
+                    String gwyName = "empty";
+                    if (inetGwy != null) {
+                        table.setRouteTarget(inetGwy.getId());
+                        gwyName = inetGwy.getName();
                     }
-                    
-                    if (mainfound && table.getDefault()) {
-                        log.error("Found multiple default Route Tables." +
-                                  "There can only be one default Route Table per VPC." +
-                                  "Not setting table as default since we already have one.");
-                    }
-                    
-                    log.info("Starting Route Table...");
+                    table.setVpcId(vpcId);
+                    mainfound = true;
+                    table.create();
+                    log.info("Main route table found with id " + table.getId());
+                    log.info("Default route added :\n" +
+                             "0.0.0.0/0 -> " + gwyName + " (Internet Gateway) ");
+                    break;
+                }
+                else {
+                    log.debug("Not main table - skip");
+                }
+            }
+            
+            // see if we found a main table
+            if (!mainfound) {
+                log.warn("No main route table found!");
+                log.warn("the table created will be set as the main table");
+                log.error("No default route set in VPC " + vpcId + 
+                          " - No internet access unless a route was specified manually!");
+            }
+            
+            // create all the other tables afterwards
+            log.debug("Starting secondary route tables");
+            for (RouteTableTask table : routeTables) {
+                if (!table.getDefault()) {
+                    log.debug("Found secondary route table");
                     table.setVpcId(vpcId);
                     table.create();
                 }
                 else {
-                    log.info("Route Table with id " + table.getId() + " already exists.");
+                    log.debug("Not a secondary route table - skip");
                 }
             }
-        }
-        else {
-            log.info("No Route Tables specified.");
-        }
-        
-        if (!mainfound) {
-            log.warn("No default Route Table found.");
         }
     }
     
