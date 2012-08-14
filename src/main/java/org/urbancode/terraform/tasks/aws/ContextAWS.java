@@ -257,7 +257,29 @@ public class ContextAWS implements Context {
     //----------------------------------------------------------------------------------------------
     @Override
     public void restore() throws EnvironmentRestorationException {
-        // TODO Auto-generated method stub
+        try {
+            if (environment != null) {
+                environment.restore();
+            }
+            else {
+                throw new NullPointerException("No environment");
+            }
+        } catch (EnvironmentRestorationException e) {
+            log.fatal("Could not completely destroy environment!", e);
+            throw e;
+        }
+        finally {
+            if (ec2Client != null) {
+                ec2Client.shutdown();
+                ec2Client = null;
+                log.info("Closed connection to AWS:EC2");
+            }
+            if (elbClient != null) {
+                elbClient.shutdown();
+                elbClient = null;
+                log.info("Closed conenction to AWS:ELB");
+            }
+        }
 
     }
 }

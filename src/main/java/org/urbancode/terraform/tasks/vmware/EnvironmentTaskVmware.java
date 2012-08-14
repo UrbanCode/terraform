@@ -61,12 +61,6 @@ public class EnvironmentTaskVmware extends EnvironmentTask {
 
     private TaskEventService eventService;
 
-    // should NEVER have a null context
-//    //----------------------------------------------------------------------------------------------
-//    public EnvironmentTaskVmware() {
-//        this(null);
-//    }
-
     //----------------------------------------------------------------------------------------------
     public EnvironmentTaskVmware(Context context) {
         super(context);

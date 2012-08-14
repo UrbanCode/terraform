@@ -31,6 +31,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.log4j.Logger;
+import org.urbancode.terraform.commands.vmware.SuspendCommand;
 import org.urbancode.terraform.credentials.Credentials;
 import org.urbancode.terraform.credentials.CredentialsException;
 import org.urbancode.terraform.credentials.CredentialsParser;
@@ -41,9 +42,12 @@ import org.urbancode.terraform.credentials.vmware.CredentialsParserVmware;
 import org.urbancode.terraform.credentials.vmware.CredentialsVmware;
 import org.urbancode.terraform.tasks.EnvironmentCreationException;
 import org.urbancode.terraform.tasks.EnvironmentDestructionException;
+import org.urbancode.terraform.tasks.EnvironmentRestorationException;
+import org.urbancode.terraform.tasks.aws.ContextAWS;
 import org.urbancode.terraform.tasks.common.Context;
 import org.urbancode.terraform.tasks.util.Property;
 import org.urbancode.terraform.tasks.util.PropertyResolver;
+import org.urbancode.terraform.tasks.vmware.ContextVmware;
 import org.urbancode.terraform.xml.XmlModelParser;
 import org.urbancode.terraform.xml.XmlParsingException;
 import org.urbancode.terraform.xml.XmlWrite;
@@ -63,7 +67,7 @@ public class Main {
     //----------------------------------------------------------------------------------------------
     static public void main(String[] args)
     throws IOException, XmlParsingException, CredentialsException, EnvironmentCreationException,
-    EnvironmentDestructionException {
+    EnvironmentDestructionException, EnvironmentRestorationException {
         File inputXmlFile = null;
         File creds = null;
         List<String> unparsedArgs = new ArrayList<String>();
@@ -184,7 +188,7 @@ public class Main {
     //----------------------------------------------------------------------------------------------
     public void execute()
     throws XmlParsingException, IOException, CredentialsException, EnvironmentCreationException,
-    EnvironmentDestructionException {
+    EnvironmentDestructionException, EnvironmentRestorationException {
         Context context = null;
         try {
             // parse xml and set context
@@ -218,9 +222,33 @@ public class Main {
                 log.debug("Calling destroy() on context");
                 context.destroy();
             }
+
+            else if (AllowedCommands.SUSPEND.getCommandName().equalsIgnoreCase(command)) {
+                // we want to write out the environments whether we succeed in destroying them
+                // or fail (then it will write out whatever is left)
+                outputXmlFile = inputXmlFile;
+                log.debug("Calling restore() on context");
+                context.restore();
+                if (context instanceof ContextVmware) {
+                    SuspendCommand newCommand = new SuspendCommand((ContextVmware) context);
+                    newCommand.execute();
+                }
+                else if (context instanceof ContextAWS) {
+                    org.urbancode.terraform.commands.aws.SuspendCommand newCommand =
+                            new org.urbancode.terraform.commands.aws.SuspendCommand((ContextAWS) context);
+                    newCommand.execute();
+                }
+                else {
+                    log.warn("Could not resolve context to call command \"" + command + "\"");
+                }
+            }
         }
         catch (EnvironmentCreationException e) {
             log.fatal("Did not successfully create environment", e);
+            throw e;
+        }
+        catch (EnvironmentRestorationException e) {
+            log.fatal("Did not successfully restore environment", e);
             throw e;
         }
         catch (EnvironmentDestructionException e) {

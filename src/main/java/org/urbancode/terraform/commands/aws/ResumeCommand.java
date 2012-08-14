@@ -1,8 +1,10 @@
 package org.urbancode.terraform.commands.aws;
 
 import org.urbancode.terraform.commands.common.Command;
+import org.urbancode.terraform.commands.common.CommandException;
+import org.urbancode.terraform.tasks.aws.ContextAWS;
 
-public class ResumeCommand extends Command {
+public class ResumeCommand implements Command {
 
     //**********************************************************************************************
     // CLASS
@@ -11,16 +13,20 @@ public class ResumeCommand extends Command {
     //**********************************************************************************************
     // INSTANCE
     //**********************************************************************************************
+    private ContextAWS context;
 
     //----------------------------------------------------------------------------------------------
-    public ResumeCommand() {
-        super();
+    public ResumeCommand(ContextAWS context) {
+        this.context = context;
     }
+
 
     //----------------------------------------------------------------------------------------------
     @Override
-    public void execute() throws Exception {
-        // TODO this command will start all stopped instances in an environment
+    public void execute()
+    throws CommandException {
+        // TODO this command will resume all instances in an environment
+
     }
 
 }

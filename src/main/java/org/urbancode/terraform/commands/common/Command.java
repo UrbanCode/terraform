@@ -1,8 +1,6 @@
 package org.urbancode.terraform.commands.common;
 
-import org.urbancode.terraform.tasks.common.Context;
-
-public abstract class Command {
+public interface Command {
 
     //**********************************************************************************************
     // CLASS
@@ -11,22 +9,6 @@ public abstract class Command {
     //**********************************************************************************************
     // INSTANCE
     //**********************************************************************************************
-    protected Context context = null;
 
-    //----------------------------------------------------------------------------------------------
-    protected Command() {
-    }
-
-    //----------------------------------------------------------------------------------------------
-    protected Command(Context context) {
-        this.context = context;
-    }
-
-    //----------------------------------------------------------------------------------------------
-    protected Context getContext() {
-        return context;
-    }
-
-    //----------------------------------------------------------------------------------------------
-    abstract public void execute() throws Exception;
+    public void execute() throws CommandException;
 }

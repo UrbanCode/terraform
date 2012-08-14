@@ -640,6 +640,17 @@ public class CloneTask extends SubTask implements Cloneable, Comparable<CloneTas
     }
 
     //----------------------------------------------------------------------------------------------
+    public void suspendVm()
+    throws InvalidProperty, RuntimeFault, RemoteException, InterruptedException {
+        VirtualMachineRuntimeInfo vmri = vm.getRuntime();
+        if (vmri.getPowerState() == VirtualMachinePowerState.poweredOn) {
+            com.vmware.vim25.mo.Task task = vm.suspendVM_Task();
+            task.waitForTask();
+            log.info("vm:" + vm.getName() + " was suspended.");
+        }
+    }
+
+    //----------------------------------------------------------------------------------------------
     public void restoreVm()
     throws RemoteException {
         // restore by vm name and folder

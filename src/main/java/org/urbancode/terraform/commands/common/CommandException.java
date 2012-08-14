@@ -1,32 +1,32 @@
-package org.urbancode.terraform.commands.vmware;
+package org.urbancode.terraform.commands.common;
 
-import org.urbancode.terraform.commands.common.Command;
-import org.urbancode.terraform.commands.common.CommandException;
-import org.urbancode.terraform.tasks.vmware.ContextVmware;
-
-public class ResumeCommand implements Command {
+public class CommandException extends RuntimeException {
 
     //**********************************************************************************************
     // CLASS
     //**********************************************************************************************
+    final static private long serialVersionUID = 1L;
 
     //**********************************************************************************************
     // INSTANCE
     //**********************************************************************************************
-    private ContextVmware context;
 
     //----------------------------------------------------------------------------------------------
-    public ResumeCommand(ContextVmware context) {
-        this.context = context;
+    public CommandException() {
     }
-
 
     //----------------------------------------------------------------------------------------------
-    @Override
-    public void execute()
-    throws CommandException {
-        // TODO this command will resume all instances in an environment
-
+    public CommandException(String message, Throwable cause) {
+        super(message, cause);
     }
 
+    //----------------------------------------------------------------------------------------------
+    public CommandException(String message) {
+        super(message);
+    }
+
+    //----------------------------------------------------------------------------------------------
+    public CommandException(Throwable cause) {
+        super(cause);
+    }
 }
