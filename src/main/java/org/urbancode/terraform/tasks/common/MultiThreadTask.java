@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Urbancode, Inc
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,22 +20,22 @@ import java.util.List;
 
 
 public class MultiThreadTask extends Task implements Runnable {
-    
+
     //**********************************************************************************************
     // CLASS
     //**********************************************************************************************
-    
+
     //**********************************************************************************************
     // INSTANCE
     //**********************************************************************************************
-    
+
     private Task task;
     private boolean doCreate;
     private List<Exception> exceptions;
-    
+
     //----------------------------------------------------------------------------------------------
     /**
-     * 
+     *
      * @param task - the Task that will be ran in a separate thread
      * @param doCreate - true for Task.create() or false for Task.destroy()
      * @param context - the Context of the Task
@@ -46,10 +46,10 @@ public class MultiThreadTask extends Task implements Runnable {
         this.doCreate = doCreate;
         exceptions = new ArrayList<Exception>();
     }
-    
+
     //----------------------------------------------------------------------------------------------
     /**
-     * 
+     *
      * @param context - the Context of the Task
      */
     public MultiThreadTask(Context context) {
@@ -76,11 +76,11 @@ public class MultiThreadTask extends Task implements Runnable {
             exceptions.add(e);
         }
     }
-    
+
     //----------------------------------------------------------------------------------------------
     /**
-     * 
-     * @return a list of all the caught exceptions 
+     *
+     * @return a list of all the caught exceptions
      */
     public List<Exception> getExceptions() {
         return exceptions;
@@ -89,13 +89,21 @@ public class MultiThreadTask extends Task implements Runnable {
     //----------------------------------------------------------------------------------------------
     @Override
     public void create() {
-        
+
     }
 
     //----------------------------------------------------------------------------------------------
     @Override
     public void destroy() {
-        
+
     }
+
+    //----------------------------------------------------------------------------------------------
+    @Override
+    public void restore() {
+
+    }
+
+
 
 }

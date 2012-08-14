@@ -23,6 +23,7 @@ import org.apache.log4j.Logger;
 import org.urbancode.terraform.credentials.Credentials;
 import org.urbancode.terraform.credentials.vmware.CredentialsVmware;
 import org.urbancode.terraform.tasks.EnvironmentCreationException;
+import org.urbancode.terraform.tasks.EnvironmentRestorationException;
 import org.urbancode.terraform.tasks.common.Context;
 import org.urbancode.terraform.tasks.common.EnvironmentTask;
 import org.urbancode.terraform.tasks.util.PropertyResolver;
@@ -177,5 +178,19 @@ public class ContextVmware implements Context {
         }
         env.setVirtualHost(host);
         env.destroy();
+    }
+
+    //----------------------------------------------------------------------------------------------
+    @Override
+    public void restore() throws EnvironmentRestorationException {
+        VirtualHost host = null;
+        try {
+            host = createVirtualHost();
+        }
+        catch (IOException e) {
+            log.fatal("IOException when trying to run destroy() on context!", e);
+        }
+        env.setVirtualHost(host);
+        env.restore();
     }
 }

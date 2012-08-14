@@ -66,4 +66,10 @@ public class SecurityGroupRefTask extends SubTask {
         //security group rules are applied via vmrun commands in post create tasks
     }
 
+    //----------------------------------------------------------------------------------------------
+    @Override
+    public void restore() {
+        //security group rules are applied via vmrun commands in post create tasks
+    }
+
 }

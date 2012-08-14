@@ -124,6 +124,7 @@ public class FolderTask extends SubTask {
     }
 
     //----------------------------------------------------------------------------------------------
+    @Override
     public void restore() throws RemoteException {
         this.folderRef = new Path(destPath, folderName);
         log.debug("restoring folder " + this.folderRef.toString());

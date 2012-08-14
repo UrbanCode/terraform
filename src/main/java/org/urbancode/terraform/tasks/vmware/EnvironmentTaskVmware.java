@@ -238,93 +238,6 @@ public class EnvironmentTaskVmware extends EnvironmentTask {
     }
 
     //----------------------------------------------------------------------------------------------
-    /**
-     * Order of operations:
-     * Creates folder in vCenter.
-     * Creates private network (virtual switch and port group) if one was specified.
-     * Creates clones in order (see create method on CloneTask for order of that operation).
-     * Sleeps for some seconds to give vCenter time to update.
-     * Fetches the IP addresses of the VMs.
-     */
-    @Override
-    public void create() {
-
-        if (host == null) {
-            throw new NullPointerException("Host is null!");
-        }
-
-        //folder task
-        createFolder();
-        addUUIDToFolderName();
-        folderTask.setFolderName(folderName);
-        folderTask.create();
-
-        //private network tasks
-        for (NetworkTask network : networkTasks) {
-            network.setVirtualHost(host);
-            network.setHostPath(hostPath);
-            network.create();
-        }
-
-        //vm clone tasks
-        addToCloneTasks();
-
-        try {
-            createClonesInOrder();
-        } catch (Exception e1) {
-            log.warn("exception while creating clones", e1);
-        }
-        try {
-            //wait for new IPs to get updated
-            log.info("Sleeping until new IPs are allocated.");
-            Thread.sleep(20000);
-        } catch (InterruptedException e1) {
-            log.warn("interrupted exception while waiting for new IPs", e1);
-        }
-        for (CloneTask cloneTask : cloneTasks) {
-            try {
-                cloneTask.setIpListFromVmInfo();
-            }
-            catch (Exception e) {
-                log.warn("exception when setting IP info", e);
-            }
-        }
-    }
-
-    //----------------------------------------------------------------------------------------------
-    /**
-     * Order of operations:
-     * Deletes each VM from disk.
-     * Deletes the folder.
-     * Deletes the virtual switch and port group.
-     */
-    @Override
-    public void destroy() {
-        //vm clone tasks
-        try {
-            //restore folder task and vmware Folder object
-            createFolder();
-            folderTask.setFolderName(folderName);
-            folderTask.restore();
-
-            for (CloneTask cloneTask : cloneTasks) {
-                cloneTask.destroy();
-            }
-
-            folderTask.destroy();
-
-            for (NetworkTask network : networkTasks) {
-                network.setVirtualHost(host);
-                network.setHostPath(hostPath);
-                network.destroy();
-            }
-        }
-        catch (RemoteException e) {
-            log.warn("RemoteException when deleting vm", e);
-        }
-    }
-
-    //----------------------------------------------------------------------------------------------
     private void addToCloneTasks() {
         List<CloneTask> newCloneList = new ArrayList<CloneTask>();
         for (CloneTask cloneTask : cloneTasks) {
@@ -479,6 +392,117 @@ public class EnvironmentTaskVmware extends EnvironmentTask {
             result = "Unknown";
         }
         return result;
+    }
+
+    //----------------------------------------------------------------------------------------------
+    /**
+     * Order of operations:
+     * Creates folder in vCenter.
+     * Creates private network (virtual switch and port group) if one was specified.
+     * Creates clones in order (see create method on CloneTask for order of that operation).
+     * Sleeps for some seconds to give vCenter time to update.
+     * Fetches the IP addresses of the VMs.
+     */
+    @Override
+    public void create() {
+
+        if (host == null) {
+            throw new NullPointerException("Host is null!");
+        }
+
+        //folder task
+        createFolder();
+        addUUIDToFolderName();
+        folderTask.setFolderName(folderName);
+        folderTask.create();
+
+        //private network tasks
+        for (NetworkTask network : networkTasks) {
+            network.setVirtualHost(host);
+            network.setHostPath(hostPath);
+            network.create();
+        }
+
+        //vm clone tasks
+        addToCloneTasks();
+
+        try {
+            createClonesInOrder();
+        } catch (Exception e1) {
+            log.warn("exception while creating clones", e1);
+        }
+        try {
+            //wait for new IPs to get updated
+            log.info("Sleeping until new IPs are allocated.");
+            Thread.sleep(20000);
+        } catch (InterruptedException e1) {
+            log.warn("interrupted exception while waiting for new IPs", e1);
+        }
+        for (CloneTask cloneTask : cloneTasks) {
+            try {
+                cloneTask.setIpListFromVmInfo();
+            }
+            catch (Exception e) {
+                log.warn("exception when setting IP info", e);
+            }
+        }
+    }
+
+    //----------------------------------------------------------------------------------------------
+    /**
+     * Order of operations:
+     * Deletes each VM from disk.
+     * Deletes the folder.
+     * Deletes the virtual switch and port group.
+     */
+    @Override
+    public void destroy() {
+        //vm clone tasks
+        try {
+            //restore folder task and vmware Folder object
+            createFolder();
+            folderTask.setFolderName(folderName);
+            folderTask.restore();
+
+            for (CloneTask cloneTask : cloneTasks) {
+                cloneTask.destroy();
+            }
+
+            folderTask.destroy();
+
+            for (NetworkTask network : networkTasks) {
+                network.setVirtualHost(host);
+                network.setHostPath(hostPath);
+                network.destroy();
+            }
+        }
+        catch (RemoteException e) {
+            log.warn("RemoteException when deleting vm", e);
+        }
+    }
+
+    //----------------------------------------------------------------------------------------------
+    @Override
+    public void restore() {
+        //vm clone tasks
+        try {
+            //restore folder task and vmware Folder object
+            createFolder();
+            folderTask.setFolderName(folderName);
+            folderTask.restore();
+
+            for (CloneTask cloneTask : cloneTasks) {
+                cloneTask.restore();
+            }
+
+            for (NetworkTask network : networkTasks) {
+                network.setVirtualHost(host);
+                network.setHostPath(hostPath);
+            }
+        }
+        catch (RemoteException e) {
+            log.warn("RemoteException when deleting vm", e);
+        }
     }
 
 }

@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Urbancode, Inc
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,6 +21,7 @@ import org.urbancode.terraform.credentials.CredentialsException;
 import org.urbancode.terraform.credentials.aws.CredentialsAWS;
 import org.urbancode.terraform.tasks.EnvironmentCreationException;
 import org.urbancode.terraform.tasks.EnvironmentDestructionException;
+import org.urbancode.terraform.tasks.EnvironmentRestorationException;
 import org.urbancode.terraform.tasks.aws.helpers.AWSHelper;
 import org.urbancode.terraform.tasks.common.Context;
 import org.urbancode.terraform.tasks.common.EnvironmentTask;
@@ -38,53 +39,54 @@ public class ContextAWS implements Context {
     // CLASS
     //**********************************************************************************************
     static private final Logger log = Logger.getLogger(ContextAWS.class);
-    
+
     //**********************************************************************************************
     // INSTANCE
     //**********************************************************************************************
-   
+
     private AmazonEC2 ec2Client;
     private AmazonElasticLoadBalancing elbClient;
     private AWSHelper helper;
-   
+
     private CredentialsAWS credentials;
     private EnvironmentTaskAWS environment;
-   
+
     private PropertyResolver resolver;
-    
+
     //----------------------------------------------------------------------------------------------
     /**
-     * 
+     *
      * @throws Exception
      */
     public ContextAWS() {
         environment = null;
         helper = new AWSHelper();
     }
-    
+
     //----------------------------------------------------------------------------------------------
+    @Override
     public void setProperty(String name, String value) {
         resolver.setProperty(name, value);
     }
-    
+
     //----------------------------------------------------------------------------------------------
     /**
-     * 
+     *
      * @return Basic AWS Credentials used to make connection to Amazon Web Services (e.g. EC2)
      */
     protected AWSCredentials getBasicAwsCreds() {
         AWSCredentials result = null;
-        
+
         if (credentials != null) {
             result = credentials.getBasicAWSCredentials();
         }
-        
+
         return result;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     /**
-     * 
+     *
      * @return an AmazonEC2 which is an active connection to Amazon EC2
      */
     protected AmazonEC2 getEC2Client() {
@@ -93,10 +95,10 @@ public class ContextAWS implements Context {
         }
         return ec2Client;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     /**
-     * 
+     *
      * @return an AmazonElasticLoadBalancing which is an active connection to Amazon Elastic Load
      * Balancing
      */
@@ -106,26 +108,26 @@ public class ContextAWS implements Context {
         }
         return elbClient;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     /**
-     * 
+     *
      * @return AWS helper class used for making calls to Amazon
      */
     protected AWSHelper getAWSHelper() {
         return helper;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     /**
-     * 
+     *
      * @return the environment
      */
     @Override
     public EnvironmentTask getEnvironment() {
         return environment;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     /**
      * Creates and return a new EnvironmentTaskAWS
@@ -135,19 +137,20 @@ public class ContextAWS implements Context {
         environment = new EnvironmentTaskAWS(this);
         return environment;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     /**
      * A property is declared with ${}  (e.g.  ${server.name} )
-     * 
+     *
      * @param toResolve - The string to be ran through the resolver
-     * 
+     *
      * @return the same string as the input, but with all properties resolved
      */
+    @Override
     public String resolve(String toResolve) {
         return resolver.resolve(toResolve);
     }
-    
+
     //----------------------------------------------------------------------------------------------
     /**
      * @param resolver - The property resolver to use for this Context
@@ -159,7 +162,7 @@ public class ContextAWS implements Context {
 
     //----------------------------------------------------------------------------------------------
     /**
-     *  @return the Credentials file that this context holds - used to make connections to the 
+     *  @return the Credentials file that this context holds - used to make connections to the
      *  service provider
      */
     @Override
@@ -173,7 +176,7 @@ public class ContextAWS implements Context {
      * CredentialsAWS because we need the Amazon connection info.
      */
     @Override
-    public void setCredentials(Credentials credentials) 
+    public void setCredentials(Credentials credentials)
     throws CredentialsException {
         if (credentials instanceof CredentialsAWS) {
             this.credentials = (CredentialsAWS) credentials;
@@ -183,13 +186,13 @@ public class ContextAWS implements Context {
             throw new CredentialsException("Bad credential type");
         }
     }
-    
+
     //----------------------------------------------------------------------------------------------
     /**
      * Creates the whole environment and shutsdown connection afterwards
      */
     @Override
-    public void create() 
+    public void create()
     throws EnvironmentCreationException {
         log.debug("ContextAWS: create()");
         try {
@@ -216,7 +219,7 @@ public class ContextAWS implements Context {
                 log.info("Closed conenction to AWS:ELB");
             }
         }
-        
+
     }
 
     //----------------------------------------------------------------------------------------------
@@ -224,7 +227,7 @@ public class ContextAWS implements Context {
      * Destroys the whole environment and shutsdown connections afterwards
      */
     @Override
-    public void destroy() 
+    public void destroy()
     throws EnvironmentDestructionException {
         try {
             if (environment != null) {
@@ -249,6 +252,13 @@ public class ContextAWS implements Context {
                 log.info("Closed conenction to AWS:ELB");
             }
         }
+    }
+
+    //----------------------------------------------------------------------------------------------
+    @Override
+    public void restore() throws EnvironmentRestorationException {
+        // TODO Auto-generated method stub
+
     }
 }
 

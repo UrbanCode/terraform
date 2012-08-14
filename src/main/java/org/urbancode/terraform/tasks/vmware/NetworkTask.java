@@ -127,30 +127,6 @@ public class NetworkTask extends SubTask {
     }
 
     //----------------------------------------------------------------------------------------------
-    @Override
-    public void create() {
-        try {
-            this.vSwitch = createSwitch();
-        }
-        catch (RemoteException e) {
-            log.warn("RemoteException while creating virtual switch", e);
-        }
-    }
-
-    //----------------------------------------------------------------------------------------------
-    @Override
-    public void destroy() {
-        try {
-            restoreNetwork(host);
-            host.removePortGroup(vSwitch.getPortGroupPath());
-            host.removeSwitch(vSwitch.getSwitchPath());
-        }
-        catch (RemoteException e) {
-            log.warn("Unable to delete network", e);
-        }
-    }
-
-    //----------------------------------------------------------------------------------------------
     /**
      * Creates a virtual switch and port group.
      * The virtual switch has a randomly generated name of 10 hexadecimal characters.
@@ -225,5 +201,40 @@ public class NetworkTask extends SubTask {
         Path portGroupPath = new Path(hostPath, portGroupName);
         SwitchResult switchResult = new SwitchResult(network, switchPath, portGroupPath);
         this.vSwitch = switchResult;
+    }
+
+    //----------------------------------------------------------------------------------------------
+    @Override
+    public void create() {
+        try {
+            this.vSwitch = createSwitch();
+        }
+        catch (RemoteException e) {
+            log.warn("RemoteException while creating virtual switch", e);
+        }
+    }
+
+    //----------------------------------------------------------------------------------------------
+    @Override
+    public void destroy() {
+        try {
+            restoreNetwork(host);
+            host.removePortGroup(vSwitch.getPortGroupPath());
+            host.removeSwitch(vSwitch.getSwitchPath());
+        }
+        catch (RemoteException e) {
+            log.warn("Unable to delete network", e);
+        }
+    }
+
+    //----------------------------------------------------------------------------------------------
+    @Override
+    public void restore() {
+        try {
+            restoreNetwork(host);
+        }
+        catch (RemoteException e) {
+            log.warn("Unable to delete network", e);
+        }
     }
 }

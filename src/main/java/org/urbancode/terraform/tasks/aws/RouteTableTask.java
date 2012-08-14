@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Urbancode, Inc
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,30 +30,30 @@ import com.amazonaws.services.ec2.model.RouteTable;
 import com.amazonaws.services.ec2.model.RouteTableAssociation;
 
 public class RouteTableTask extends SubTask {
-    
+
     //**********************************************************************************************
     // CLASS
     //**********************************************************************************************
     final static private Logger log = Logger.getLogger(RouteTableTask.class);
-    
+
     //**********************************************************************************************
     // INSTANCE
     //**********************************************************************************************
-    
+
     private AmazonEC2 ec2Client;
     private AWSHelper helper;
     private ContextAWS context;
-    
+
     private String routeTableId;
     private String target;
     private String vpcId;
     private String subnetName;
     private String assId;
-    
+
     private List<RouteTask> routes = new ArrayList<RouteTask>();
-    
+
     private boolean isMainTable = false;
-    
+
     //----------------------------------------------------------------------------------------------
     public RouteTableTask(ContextAWS context) {
         this.context = context;
@@ -64,100 +64,100 @@ public class RouteTableTask extends SubTask {
     public String getAssocId() {
         return assId;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public String getSubnetName() {
         return subnetName;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public String getId() {
         return routeTableId;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public List<RouteTask> getRoutes() {
         return Collections.unmodifiableList(routes);
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public boolean getDefault() {
         return isMainTable;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public void setDefault(boolean isMainTable) {
         this.isMainTable = isMainTable;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public void setAssocId(String assocId) {
         this.assId = assocId;
     }
-    
+
 //    //----------------------------------------------------------------------------------------------
 //    public void setMainTable(boolean isMainTable) {
 //        this.isMainTable = isMainTable;
 //    }
-    
+
     //----------------------------------------------------------------------------------------------
     public void setSubnetName(String subnetName) {
         this.subnetName = subnetName;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public void setVpcId(String vpcId) {
         this.vpcId = vpcId;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public void setRouteTarget(String target) {
         this.target = target;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public void setId(String id) {
         this.routeTableId = id;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public RouteTask createRoute() {
         RouteTask route = new RouteTask(context);
         routes.add(route);
         return route;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public boolean existsInAws() {
         if (ec2Client == null) {
             ec2Client = context.getEC2Client();
         }
-        
+
         boolean result = false;
-        
+
         List<String> id = new ArrayList<String>();
         id.add(getId());
-        
+
         List<RouteTable> tables = helper.getRouteTables(id, ec2Client);
         if (tables != null && !tables.isEmpty()) {
             result = true;
         }
-        
+
         return result;
     }
-    
+
     /**
-     * 
-     * 
+     *
+     *
      * @param defaultRoute
      * @return
      */
     private String setupMainTable(boolean defaultRoute) {
         String result = null;
-        
+
         // grab id of first (only) route table in vpc
         List<RouteTable> tables = helper.getRouteTables(null, ec2Client);
-        
+
         log.debug("tables found: " + tables.size());
         for (RouteTable table : tables) {
             log.debug("Table: " + table.getRouteTableId());
@@ -168,7 +168,7 @@ public class RouteTableTask extends SubTask {
                 break;
             }
         }
-        
+
         if (defaultRoute) {
             // set default route
             RouteTask dRoute = new RouteTask(context);
@@ -177,23 +177,23 @@ public class RouteTableTask extends SubTask {
             dRoute.setDest("0.0.0.0/0");
             dRoute.create();
         }
-        
+
         return result;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     @Override
-    public void create() 
-    throws EnvironmentCreationException { 
+    public void create()
+    throws EnvironmentCreationException {
         log.debug("Main: " + isMainTable);
-        
+
         if (ec2Client == null) {
             ec2Client = context.getEC2Client();
         }
-        
+
         try {
             log.info("Creating RouteTable...");
-            
+
             if (isMainTable) {
                 log.info("Setting up main table");
                 setupMainTable(true);
@@ -204,18 +204,18 @@ public class RouteTableTask extends SubTask {
             }
             log.info("RouteTableId created with routeTableId: " + routeTableId);
             helper.tagInstance(routeTableId, "terraform.environment", context.getEnvironment().getName(), ec2Client);
-            
+
             // create any other routes
             if (routes != null) {
                 for (RouteTask route : getRoutes()) {
                     route.setRouteTableId(routeTableId);
-                    route.create();   
+                    route.create();
                 }
             }
-        
+
             String subnetId = ((EnvironmentTaskAWS)context.getEnvironment()).getVpc().findSubnetForName(subnetName).getId();
             assId = helper.associateRouteTableWithSubnet(routeTableId, subnetId, ec2Client);
-            
+
         } catch (Exception e) {
             log.error("RouteTable not created",e );
             throw new EnvironmentCreationException("Could not create RouteTable completely", e);
@@ -224,16 +224,16 @@ public class RouteTableTask extends SubTask {
             ec2Client = null;
         }
     }
-    
+
     //----------------------------------------------------------------------------------------------
     @Override
-    public void destroy() 
+    public void destroy()
     throws EnvironmentDestructionException {
         if (ec2Client == null) {
             ec2Client = context.getEC2Client();
         }
         log.info("Destroying RouteTable...");
-        
+
         try {
             // We need to check to see if the route table is associated with anything before disassociating
             String subnetId = ((EnvironmentTaskAWS)context.getEnvironment()).getVpc().findSubnetForName(subnetName).getId();
@@ -250,11 +250,11 @@ public class RouteTableTask extends SubTask {
                     }
                 }
             }
-            
+
             if (!isMainTable) {
                 helper.deleteRouteTable(routeTableId, ec2Client);
             }
-            
+
             setAssocId(null);
             setId(null);
         }
@@ -265,5 +265,12 @@ public class RouteTableTask extends SubTask {
         finally {
             ec2Client = null;
         }
+    }
+
+    //----------------------------------------------------------------------------------------------
+    @Override
+    public void restore() {
+        // TODO Auto-generated method stub
+
     }
 }

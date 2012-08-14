@@ -326,87 +326,6 @@ public class CloneTask extends SubTask implements Cloneable, Comparable<CloneTas
     }
 
     //----------------------------------------------------------------------------------------------
-    /**
-     * Creates the VM clone by cloning the specified image.
-     * This is currently done from a template if no snapshot is specified, or done via a
-     * linked clone if a snapshot is specified. Linked clones are much faster.
-     * After the VM is cloned, NICs will be attached, routing rules will be applied (if a router
-     * exists), post create tasks will be run, and then the VM will be powered on. Note that
-     * post create tasks may power on the VM first anyways.
-     */
-    @Override
-    public void create() {
-        log.debug("Calling create method on clone");
-        TaskEventService eventService = environment.fetchEventService();
-        for (TaskEventListener listener : listeners) {
-            eventService.addEventListener(listener);
-        }
-
-        try {
-            this.vm = cloneVM();
-
-            for (NetworkRefTask networkRef : networkRefs) {
-                networkRef.setVirtualSwitch(environment.restoreNetworkForName(networkRef.getNetworkName()).fetchSwitch());
-                networkRef.setVirtualMachine(this.vm);
-                networkRef.setVirtualHost(environment.fetchVirtualHost());
-                networkRef.create();
-            }
-
-            for (SecurityGroupRefTask sgr : securityGroupRefs) {
-                sgr.setSecurityGroup(environment.restoreSecurityGroupForName(sgr.getName()));
-            }
-        }
-        catch (RemoteException e) {
-            log.warn("remote exception when creating clone task", e);
-        }
-        catch (InterruptedException e) {
-            log.warn("interrupted exception when creating clone task", e);
-        }
-        catch (Exception e) {
-            log.warn("unknown exception when creating clone task", e);
-        }
-
-        CloneVmCreatedEvent actionEvent = new CloneVmCreatedEvent(this);
-        environment.fetchEventService().sendEvent(actionEvent);
-
-        runPostCreateTasks();
-
-        try {
-            powerOnVm();
-        }
-        catch (Exception e) {
-            log.warn("exception when powering on vm", e);
-        }
-    }
-
-    //----------------------------------------------------------------------------------------------
-    /**
-     * Deletes the VM from disc and frees any IP addresses that were allocated to it.
-     */
-    @Override
-    public void destroy() {
-        try {
-            restoreVm();
-            GlobalIpAddressPool globalIpPool = GlobalIpAddressPool.getInstance();
-            for (Ip4 ip : ipList) {
-                globalIpPool.releaseIp(ip);
-            }
-            powerOffVm();
-            removeVm();
-            for(PostCreateTask pct : postCreateTaskList) {
-                pct.destroy();
-            }
-        }
-        catch (RemoteException e) {
-            log.warn("remote exception when deleting clone task", e);
-        }
-        catch (InterruptedException e) {
-            log.warn("interruption exception when deleting clone task", e);
-        }
-
-    }
-
-    //----------------------------------------------------------------------------------------------
     public void runPostCreateTasks() {
         for (PostCreateTask task : postCreateTaskList) {
             task.setUser(user);
@@ -773,6 +692,105 @@ public class CloneTask extends SubTask implements Cloneable, Comparable<CloneTas
             result = 1;
         }
         return result;
+    }
+
+    //----------------------------------------------------------------------------------------------
+    /**
+     * Creates the VM clone by cloning the specified image.
+     * This is currently done from a template if no snapshot is specified, or done via a
+     * linked clone if a snapshot is specified. Linked clones are much faster.
+     * After the VM is cloned, NICs will be attached, routing rules will be applied (if a router
+     * exists), post create tasks will be run, and then the VM will be powered on. Note that
+     * post create tasks may power on the VM first anyways.
+     */
+    @Override
+    public void create() {
+        log.debug("Calling create method on clone");
+        TaskEventService eventService = environment.fetchEventService();
+        for (TaskEventListener listener : listeners) {
+            eventService.addEventListener(listener);
+        }
+
+        try {
+            this.vm = cloneVM();
+
+            for (NetworkRefTask networkRef : networkRefs) {
+                networkRef.setVirtualSwitch(environment.restoreNetworkForName(networkRef.getNetworkName()).fetchSwitch());
+                networkRef.setVirtualMachine(this.vm);
+                networkRef.setVirtualHost(environment.fetchVirtualHost());
+                networkRef.create();
+            }
+
+            for (SecurityGroupRefTask sgr : securityGroupRefs) {
+                sgr.setSecurityGroup(environment.restoreSecurityGroupForName(sgr.getName()));
+            }
+        }
+        catch (RemoteException e) {
+            log.warn("remote exception when creating clone task", e);
+        }
+        catch (InterruptedException e) {
+            log.warn("interrupted exception when creating clone task", e);
+        }
+        catch (Exception e) {
+            log.warn("unknown exception when creating clone task", e);
+        }
+
+        CloneVmCreatedEvent actionEvent = new CloneVmCreatedEvent(this);
+        environment.fetchEventService().sendEvent(actionEvent);
+
+        runPostCreateTasks();
+
+        try {
+            powerOnVm();
+        }
+        catch (Exception e) {
+            log.warn("exception when powering on vm", e);
+        }
+    }
+
+    //----------------------------------------------------------------------------------------------
+    /**
+     * Deletes the VM from disc and frees any IP addresses that were allocated to it.
+     */
+    @Override
+    public void destroy() {
+        try {
+            restoreVm();
+            GlobalIpAddressPool globalIpPool = GlobalIpAddressPool.getInstance();
+            for (Ip4 ip : ipList) {
+                globalIpPool.releaseIp(ip);
+            }
+            powerOffVm();
+            removeVm();
+            for(PostCreateTask pct : postCreateTaskList) {
+                pct.destroy();
+            }
+        }
+        catch (RemoteException e) {
+            log.warn("remote exception when deleting clone task", e);
+        }
+        catch (InterruptedException e) {
+            log.warn("interruption exception when deleting clone task", e);
+        }
+
+    }
+
+    //----------------------------------------------------------------------------------------------
+    @Override
+    public void restore() {
+        try {
+            restoreVm();
+            GlobalIpAddressPool globalIpPool = GlobalIpAddressPool.getInstance();
+
+            for (NetworkRefTask networkRef : networkRefs) {
+                networkRef.setVirtualSwitch(environment.restoreNetworkForName(networkRef.getNetworkName()).fetchSwitch());
+                networkRef.setVirtualMachine(this.vm);
+                networkRef.setVirtualHost(environment.fetchVirtualHost());
+            }
+        }
+        catch (RemoteException e) {
+            log.warn("remote exception when restoring clone task", e);
+        }
     }
 
 }

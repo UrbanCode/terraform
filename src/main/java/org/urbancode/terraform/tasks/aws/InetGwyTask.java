@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Urbancode, Inc
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -33,11 +33,11 @@ public class InetGwyTask extends SubTask {
     // CLASS
     //**********************************************************************************************
     final static private Logger log = Logger.getLogger(InetGwyTask.class);
-    
+
     //**********************************************************************************************
     // INSTANCE
     //**********************************************************************************************
-    
+
     private AmazonEC2 ec2Client;
     private AWSHelper helper;
     private ContextAWS context;
@@ -45,41 +45,41 @@ public class InetGwyTask extends SubTask {
     private String gatewayId;
     private String vpcId;
     private String name;
-    
+
     //----------------------------------------------------------------------------------------------
     public InetGwyTask(ContextAWS context) {
         this.context = context;
         helper = new AWSHelper();
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public String getId() {
         return gatewayId;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public String getName() {
         return name;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public void setName(String name) {
         this.name = name;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public void setVpcId(String vpcId) {
         this.vpcId = vpcId;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public void setId(String id) {
         this.gatewayId = id;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public boolean existsInAws() {
-        boolean result = false; 
+        boolean result = false;
         DescribeInternetGatewaysRequest req = new DescribeInternetGatewaysRequest().withInternetGatewayIds(getId());
         if (context.getEC2Client().describeInternetGateways(req).getInternetGateways().isEmpty()) {
             log.error("InternetGateway ( " + getId() + " ) does not exist in AWS!");
@@ -87,10 +87,10 @@ public class InetGwyTask extends SubTask {
         else {
             result = true;
         }
-        
+
         return result;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public boolean verify() {
         // will return false if the id is null
@@ -99,10 +99,10 @@ public class InetGwyTask extends SubTask {
             if (ec2Client == null) {
                 ec2Client = context.getEC2Client();
             }
-            
+
             List<String> id = new ArrayList<String>();
             id.add(gatewayId);
-            
+
             List<InternetGateway> gateways = helper.getInternetGateways(id, ec2Client);
             if (gateways != null && !gateways.isEmpty()) {
                 for (InternetGateway gateway : gateways) {
@@ -120,7 +120,7 @@ public class InetGwyTask extends SubTask {
         }
         return result;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     @Override
     public void create() {
@@ -128,12 +128,12 @@ public class InetGwyTask extends SubTask {
         if (ec2Client == null) {
             ec2Client = context.getEC2Client();
         }
-        
+
         try {
             if (gatewayId != null) {
                 verified = verify();
             }
-            
+
             if(!verified)  {
                 setId(null);
                 log.info("Creating InternetGateway with AWS connection : " + ec2Client);
@@ -147,14 +147,14 @@ public class InetGwyTask extends SubTask {
             ec2Client = null;
         }
     }
-    
+
     //----------------------------------------------------------------------------------------------
     @Override
     public void destroy() {
         if (ec2Client == null) {
             ec2Client = context.getEC2Client();
         }
-        
+
         try {
             log.info("Destroying InternetGateway");
             if (vpcId != null) {
@@ -167,6 +167,13 @@ public class InetGwyTask extends SubTask {
             ec2Client = null;
             log.info("InternetGateway Destroyed.");
         }
-        
+
+    }
+
+    //----------------------------------------------------------------------------------------------
+    @Override
+    public void restore() {
+        // TODO Auto-generated method stub
+
     }
 }

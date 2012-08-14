@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Urbancode, Inc
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,20 +24,20 @@ import org.urbancode.terraform.tasks.common.SubTask;
 
 
 public class BootActionsTask extends SubTask {
-    
+
     //**********************************************************************************************
     // CLASS
     //**********************************************************************************************
     final static private Logger log = Logger.getLogger(BootActionsTask.class);
-    
+
     //**********************************************************************************************
     // INSTANCE
     //**********************************************************************************************
-    
+
     private ContextAWS context;
-    
+
     private String platform;
-    
+
     private String shell;
     private String userData;
     private List<BootActionSubTask> actions;
@@ -48,46 +48,46 @@ public class BootActionsTask extends SubTask {
         this.context = context;
         actions = new ArrayList<BootActionSubTask>();
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public void setPlatform(String platform) {
         this.platform = platform;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public void setShell(String shell) {
         this.shell = shell;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public void setUserData(String userData) {
         this.userData = userData;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public String getUserData() {
         return userData;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public List<BootActionSubTask> getScript() {
         return Collections.unmodifiableList(actions);
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public String getShell() {
         return shell;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public ScriptTask createScript() {
         BootActionSubTask scriptTask = new ScriptTask(context);
         actions.add(scriptTask);
         return (ScriptTask)scriptTask;
     }
-    
+
     // TODO - not tested if works with puppetTasks AND scriptTasks.
-    //         You should be able to just complete teh puppet task 
+    //         You should be able to just complete teh puppet task
     //         with the scriptTask.
     //----------------------------------------------------------------------------------------------
     public BootActionSubTask createPuppet() {
@@ -95,12 +95,12 @@ public class BootActionsTask extends SubTask {
         actions.add(puppet);
         return puppet;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     @Override
     public void create() {
         String userData = "";
-        
+
         if (platform.equalsIgnoreCase("windows")) {
             // stuff
         }
@@ -123,6 +123,13 @@ public class BootActionsTask extends SubTask {
     public void destroy() {
         setUserData(null);
         //already disconnected
+    }
+
+    //----------------------------------------------------------------------------------------------
+    @Override
+    public void restore() throws Exception {
+        // TODO Auto-generated method stub
+
     }
 
 }

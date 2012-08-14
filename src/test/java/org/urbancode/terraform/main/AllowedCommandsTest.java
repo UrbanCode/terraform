@@ -1,8 +1,10 @@
-package org.urbancode.terraform.commands.aws;
+package org.urbancode.terraform.main;
 
-import org.urbancode.terraform.commands.common.Command;
+import junit.framework.Assert;
 
-public class StopCommand extends Command {
+import org.junit.Test;
+
+public class AllowedCommandsTest {
 
     //**********************************************************************************************
     // CLASS
@@ -13,14 +15,9 @@ public class StopCommand extends Command {
     //**********************************************************************************************
 
     //----------------------------------------------------------------------------------------------
-    public StopCommand() {
-        super();
+    @Test
+    public void testEnum() {
+        String create = "create";
+        Assert.assertEquals(true, AllowedCommands.contains(create));
     }
-
-    //----------------------------------------------------------------------------------------------
-    @Override
-    public void execute() throws Exception {
-        // TODO this command will stop (not delete) all instances in an environment
-    }
-
 }

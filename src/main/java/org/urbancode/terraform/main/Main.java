@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Urbancode, Inc
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -50,6 +50,7 @@ import org.urbancode.terraform.xml.XmlWrite;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
+import org.urbancode.terraform.main.AllowedCommands;
 
 
 public class Main {
@@ -61,24 +62,21 @@ public class Main {
 
     //----------------------------------------------------------------------------------------------
     static public void main(String[] args)
-    throws IOException, XmlParsingException, CredentialsException, EnvironmentCreationException, 
+    throws IOException, XmlParsingException, CredentialsException, EnvironmentCreationException,
     EnvironmentDestructionException {
         File inputXmlFile = null;
         File creds = null;
         List<String> unparsedArgs = new ArrayList<String>();
-        boolean doCreate;
+        String command = null;
 
         if (args != null && args.length >= 3) {
-            if ("destroy".equalsIgnoreCase(args[0])) {
-                doCreate = false;
-            }
-            else if ("create".equalsIgnoreCase(args[0])) {
-                doCreate = true;
-            }
-            else {
+            if (!AllowedCommands.contains(args[0])) {
                 String msg = "Invalid first argument: "+args[0];
                 log.fatal(msg);
                 throw new IOException(msg);
+            }
+            else {
+                command = args[0].toLowerCase();
             }
 
             inputXmlFile = createFile(args[1]);
@@ -106,20 +104,20 @@ public class Main {
             String msg = "No credentials file specified!";
             throw new IOException(msg);
         }
-        
-        Main myMain = new Main(doCreate, inputXmlFile, creds, unparsedArgs);
+
+        Main myMain = new Main(command, inputXmlFile, creds, unparsedArgs);
         myMain.execute();
     }
 
     //----------------------------------------------------------------------------------------------
     /**
      * Creates a file and runs checks on it
-     *  
+     *
      * @param filePath
-     * @return 
+     * @return
      * @throws FileNotFoundException
      */
-    static private File createFile(String filePath) 
+    static private File createFile(String filePath)
     throws FileNotFoundException {
         File result = null;
 
@@ -157,16 +155,16 @@ public class Main {
     //**********************************************************************************************
     // INSTANCE
     //**********************************************************************************************
-    private boolean isCreate;
+    private String command;
     private File inputXmlFile;
     private File outputXmlFile;
     private File credsFile;
     private List<Property> props;
 
     //----------------------------------------------------------------------------------------------
-    private Main(boolean create, File inputXmlFile, File credsFile, List<String> unparsed) {
+    private Main(String command, File inputXmlFile, File credsFile, List<String> unparsed) {
+        this.command = command;
         startCredsParser();
-        this.isCreate = create;
         this.credsFile = credsFile;
         this.inputXmlFile = inputXmlFile;
         props = new ArrayList<Property>();
@@ -185,24 +183,19 @@ public class Main {
 
     //----------------------------------------------------------------------------------------------
     public void execute()
-    throws XmlParsingException, IOException, CredentialsException, EnvironmentCreationException, 
+    throws XmlParsingException, IOException, CredentialsException, EnvironmentCreationException,
     EnvironmentDestructionException {
         Context context = null;
         try {
             // parse xml and set context
             context = parseContext(inputXmlFile);
-            
-            Credentials credentials = parseCredentials(credsFile);
-            
-            context.setCredentials(credentials);
 
-            log.debug("Create = " + isCreate);
-            if (isCreate) {
+            Credentials credentials = parseCredentials(credsFile);
+
+            context.setCredentials(credentials);
+            if (AllowedCommands.CREATE.getCommandName().equalsIgnoreCase(command)) {
                 // create new file if creating a new environment
-//                String name = context.getEnvironment().getName();
                 String uuid = UUID.randomUUID().toString().substring(0,4);
-//                name += ("-" + uuid);
-//                context.getEnvironment().setName(name);
                 if (context.getEnvironment() != null) {
                     context.getEnvironment().addUUIDToEnvName(uuid);
                     log.debug("UUID for env " + context.getEnvironment().getName() + " is " + uuid);
@@ -210,7 +203,7 @@ public class Main {
                 else {
                     throw new NullPointerException("No environment on context!");
                 }
-                
+
                 String name = context.getEnvironment().getName();
                 log.debug("Output filename = " + name);
                 outputXmlFile = new File("env-" + name + ".xml");
@@ -218,7 +211,7 @@ public class Main {
                 log.debug("Calling create() on context");
                 context.create();
             }
-            else {
+            else if (AllowedCommands.DESTROY.getCommandName().equalsIgnoreCase(command)) {
                 // we want to write out the environments whether we succeed in destroying them
                 // or fail (then it will write out whatever is left)
                 outputXmlFile = inputXmlFile;
@@ -252,7 +245,7 @@ public class Main {
     private PropertyResolver createResolver() {
         return new PropertyResolver(props);
     }
-    
+
     //----------------------------------------------------------------------------------------------
     private Credentials parseCredentials(File credsFile) {
         Credentials result = null;
@@ -270,13 +263,13 @@ public class Main {
 
         return result;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     private Properties loadPropertiesFromFile(File propFile) {
         Properties result = new Properties();
-        
+
         String path = propFile.getAbsolutePath();
-        
+
         InputStream in = null;
         try {
             in = new FileInputStream(propFile);
@@ -300,10 +293,10 @@ public class Main {
                 // swallow
             }
         }
-    
+
         return result;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     private Credentials parseCredsFromProps(Properties props) {
         Credentials result = null;

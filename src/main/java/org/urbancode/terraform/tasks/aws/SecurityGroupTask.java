@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Urbancode, Inc
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -39,26 +39,26 @@ public abstract class SecurityGroupTask extends SubTask {
     // CLASS
     //**********************************************************************************************
     final static private Logger log = Logger.getLogger(SecurityGroupTask.class);
-    
+
     //**********************************************************************************************
     // INSTANCE
     //**********************************************************************************************
-    
+
     protected AmazonEC2 ec2Client;
     protected AWSHelper helper;
     protected ContextAWS context;
-    
-    protected String vpcId = null;   // not used in EC2, but it makes things a lot easier 
+
+    protected String vpcId = null;   // not used in EC2, but it makes things a lot easier
                                        // to keep this here
-    
-    protected String fullName;        // contains the name with a -UUID appended to it. This is 
+
+    protected String fullName;        // contains the name with a -UUID appended to it. This is
                                        // because we need unique security groups per environment
-    
+
     protected String name;
     protected String descr;
     protected String groupId;
     protected List<RuleTask> rules = new ArrayList<RuleTask>();
-    
+
     //----------------------------------------------------------------------------------------------
     public SecurityGroupTask(Context context) {
         super(context);
@@ -67,12 +67,12 @@ public abstract class SecurityGroupTask extends SubTask {
         }
         helper = new AWSHelper();
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public void setId(String id) {
         this.groupId = id;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public void setName(String name) {
         this.name = name;
@@ -82,12 +82,12 @@ public abstract class SecurityGroupTask extends SubTask {
     public void setDescription(String descr) {
         this.descr = descr;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public void setFullName(String fullName) {
         this.fullName = fullName;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public String getFullName() {
         return fullName;
@@ -97,29 +97,29 @@ public abstract class SecurityGroupTask extends SubTask {
     public String getId() {
         return groupId;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public String getName() {
         return name;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public String getDescription() {
         return descr;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public List<RuleTask> getRules() {
         return Collections.unmodifiableList(rules);
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public RuleTask createRule() {
         RuleTask rule = new RuleTask(context);
         rules.add(rule);
         return rule;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public boolean existsInAws() {
         if (ec2Client == null) {
@@ -128,32 +128,32 @@ public abstract class SecurityGroupTask extends SubTask {
         boolean result = false;
         List<String> id = new ArrayList<String>();
         id.add(groupId);
-        
+
         List<SecurityGroup> group = helper.getSecurityGroups(id, ec2Client);
-        
+
         if (group != null && !group.isEmpty()) {
             result = true;
         }
-        
+
         return result;
     }
-    
+
     abstract protected boolean exists();
-     
+
     //----------------------------------------------------------------------------------------------
     @Override
-    public void create() 
+    public void create()
     throws EnvironmentCreationException {
         if (ec2Client == null) {
             ec2Client = context.getEC2Client();
         }
-        
+
         // give unique name
         //String uuid = UUID.randomUUID().toString().substring(0, 5);
         String uuid = context.getEnvironment().fetchUUID();
         fullName = name + ("-" + uuid);
         log.debug("Security Group " + name + " has fullname " + fullName);
-        
+
         try {
             if (exists()) {
                 log.warn("Security Group exists " + fullName);
@@ -162,7 +162,7 @@ public abstract class SecurityGroupTask extends SubTask {
                 log.info("Creating SecurityGroup");
                 setId(helper.createSecurityGroup(fullName, vpcId, descr, ec2Client));
                 log.info("SecurityGroup " + name + " created with id: " + groupId);
-                helper.tagInstance(groupId, "terraform.environment", 
+                helper.tagInstance(groupId, "terraform.environment",
                         context.getEnvironment().getName(), ec2Client);
 
                 if (getRules() != null) {
@@ -172,7 +172,7 @@ public abstract class SecurityGroupTask extends SubTask {
                     }
                 }
             }
-            
+
         }
         catch (Exception e) {
             throw new EnvironmentCreationException("Could not create Security Group completely.",
@@ -182,15 +182,15 @@ public abstract class SecurityGroupTask extends SubTask {
             ec2Client = null;
         }
     }
-    
+
     //----------------------------------------------------------------------------------------------
     @Override
-    public void destroy() 
+    public void destroy()
     throws EnvironmentDestructionException {
         if (ec2Client == null) {
             ec2Client = context.getEC2Client();
         }
-        
+
         try {
             log.info("Destroying SecurityGroup...");
             helper.deleteSecurityGroup(groupId, ec2Client);
@@ -198,11 +198,18 @@ public abstract class SecurityGroupTask extends SubTask {
             setId(null);
         }
         catch (Exception e) {
-            throw new EnvironmentDestructionException("Could not destroy Security Group " + 
+            throw new EnvironmentDestructionException("Could not destroy Security Group " +
                     fullName + "completely.", e);
         }
         finally {
             ec2Client = null;
         }
+    }
+
+    //----------------------------------------------------------------------------------------------
+    @Override
+    public void restore() {
+        // TODO Auto-generated method stub
+
     }
 }

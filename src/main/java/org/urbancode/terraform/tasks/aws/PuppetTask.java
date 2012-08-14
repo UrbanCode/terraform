@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Urbancode, Inc
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,29 +20,28 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 import org.apache.log4j.Logger;
-import org.urbancode.terraform.tasks.common.Context;
 
 
 public class PuppetTask extends BootActionSubTask {
-    
+
     //**********************************************************************************************
     // CLASS
     //**********************************************************************************************
     final static private Logger log = Logger.getLogger(PuppetTask.class);
-    
+
     //**********************************************************************************************
     // INSTANCE
     //**********************************************************************************************
-    
+
 //    private ContextEC2 context;
-    
+
     private String name;
     private String manifestUrl;
     private String destPath;
     private String workingDir;
     private boolean isModule;
     private File postCreateScript;
-    
+
     //----------------------------------------------------------------------------------------------
     public PuppetTask(ContextAWS context) {
         super(context);
@@ -52,27 +51,27 @@ public class PuppetTask extends BootActionSubTask {
     public void setModule(boolean module) {
         this.isModule = module;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public boolean getModule() {
         return isModule;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public void setScript(File script) {
         this.postCreateScript = script;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public File findScript() {
         return this.postCreateScript;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public void setName(String name) {
         this.name = name;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public String getName() {
         return name;
@@ -82,22 +81,22 @@ public class PuppetTask extends BootActionSubTask {
     public void setManifestUrl(String url) {
         this.manifestUrl = url;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public String getManifestUrl() {
         return manifestUrl;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public void setDestPath(String path) {
         this.destPath = path;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public String getDestPath() {
         return destPath;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     @Override
     public void create() {
@@ -111,12 +110,12 @@ public class PuppetTask extends BootActionSubTask {
             fw.write("FILE_NAME=\"" + getName() + "\"\n");
             fw.write("DEST_PATH=\"" + getDestPath() + "\"\n");
             fw.write("WORK_DIR=\"" + workingDir + "\"\n\n");
-            
-            String setDir   = "cd $WORK_DIR; "            + "\n" + 
-                              "wget -t 45 $MANIFEST_URL; " + "\n" + 
+
+            String setDir   = "cd $WORK_DIR; "            + "\n" +
+                              "wget -t 45 $MANIFEST_URL; " + "\n" +
                               "mkdir -p $DEST_PATH; "     + "\n";
             fw.write(setDir);
-            
+
             if (getModule()) {
                 fw.write("mv $FILE_NAME.tar.gz $DEST_PATH" + "\n ");
                 fw.write("cd $DEST_PATH" + "\n");
@@ -137,7 +136,7 @@ public class PuppetTask extends BootActionSubTask {
                 e.printStackTrace();
             }
         }
-        
+
     }
 
     //----------------------------------------------------------------------------------------------
@@ -154,5 +153,12 @@ public class PuppetTask extends BootActionSubTask {
     @Override
     protected String getCmds() {
         return script;
+    }
+
+    //----------------------------------------------------------------------------------------------
+    @Override
+    public void restore() {
+        // TODO Auto-generated method stub
+
     }
 }

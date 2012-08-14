@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Urbancode, Inc
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,7 +20,6 @@ import org.urbancode.terraform.tasks.aws.helpers.AWSHelper;
 import org.urbancode.terraform.tasks.common.SubTask;
 
 import com.amazonaws.services.ec2.AmazonEC2;
-import com.amazonaws.services.ec2.model.CreateRouteRequest;
 
 public class RouteTask extends SubTask {
 
@@ -28,11 +27,11 @@ public class RouteTask extends SubTask {
     // CLASS
     //**********************************************************************************************
     final static private Logger log = Logger.getLogger(RouteTask.class);
-    
+
     //**********************************************************************************************
     // INSTANCE
     //**********************************************************************************************
-    
+
     private AmazonEC2 ec2Client;
     private AWSHelper helper;
     private ContextAWS context;
@@ -48,49 +47,49 @@ public class RouteTask extends SubTask {
         this.context = context;
         helper = new AWSHelper();
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public String getTarget() {
         return target;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public String getTargetName() {
         return targetName;
     }
-   
+
     //----------------------------------------------------------------------------------------------
     public String getDest() {
         return cidr;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public void setRouteTableId(String id) {
         this.routeTableId = id;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public void setTarget(String id) {
         this.target = id;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public void setTargetName(String name) {
         this.targetName = name;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public void setDest(String cidr) {
         this.cidr = cidr;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     @Override
     public void create() {
         if (ec2Client == null) {
             ec2Client = context.getEC2Client();
         }
-        
+
         log.info("Creating Route");
         try {
             if (target == null || cidr == null || routeTableId == null) {
@@ -108,19 +107,26 @@ public class RouteTask extends SubTask {
             ec2Client = null;
         }
     }
-    
+
     //----------------------------------------------------------------------------------------------
     @Override
     public void destroy() {
         if (ec2Client == null) {
             ec2Client = context.getEC2Client();
         }
-        
+
         try {
             helper.deleteRoute(routeTableId, cidr, ec2Client);
         }
         finally {
             ec2Client = null;
         }
+    }
+
+    //----------------------------------------------------------------------------------------------
+    @Override
+    public void restore() {
+        // TODO Auto-generated method stub
+
     }
 }

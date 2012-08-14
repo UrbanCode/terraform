@@ -80,4 +80,10 @@ public class PortRangeTask extends SubTask {
         //port range rules are applied via vmrun commands in post create tasks
     }
 
+    //----------------------------------------------------------------------------------------------
+    @Override
+    public void restore() {
+        //port range rules are applied via vmrun commands in post create tasks
+    }
+
 }

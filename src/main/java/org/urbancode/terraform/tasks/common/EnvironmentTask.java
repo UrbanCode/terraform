@@ -18,16 +18,17 @@ package org.urbancode.terraform.tasks.common;
 import org.apache.log4j.Logger;
 import org.urbancode.terraform.tasks.EnvironmentCreationException;
 import org.urbancode.terraform.tasks.EnvironmentDestructionException;
+import org.urbancode.terraform.tasks.EnvironmentRestorationException;
 
 
 public class EnvironmentTask extends Task {
-    
+
     //**********************************************************************************************
     // CLASS
     //**********************************************************************************************
 
     final static private Logger log = Logger.getLogger(EnvironmentTask.class);
-    
+
     //**********************************************************************************************
     // INSTANCE
     //**********************************************************************************************
@@ -39,7 +40,7 @@ public class EnvironmentTask extends Task {
 
     //----------------------------------------------------------------------------------------------
     /**
-     * 
+     *
      */
     public EnvironmentTask() {
         super(null);
@@ -47,7 +48,7 @@ public class EnvironmentTask extends Task {
 
     //----------------------------------------------------------------------------------------------
     /**
-     * 
+     *
      * @param context - The Context that the enivonment is in
      */
     public EnvironmentTask(Context context) {
@@ -55,8 +56,8 @@ public class EnvironmentTask extends Task {
     }
 
     //----------------------------------------------------------------------------------------------
-    /** 
-     * 
+    /**
+     *
      * @return The name of the environment.
      */
     public String getName() {
@@ -75,7 +76,7 @@ public class EnvironmentTask extends Task {
 
     //----------------------------------------------------------------------------------------------
     /**
-     * 
+     *
      * @return The time (in milliseconds) that the environment was started.
      */
     public long getStartTime() {
@@ -84,7 +85,7 @@ public class EnvironmentTask extends Task {
 
     //----------------------------------------------------------------------------------------------
     /**
-     * 
+     *
      * @param startTime - The time (in milliseconds) that the environment was started
      */
     public void setStartTime(long startTime) {
@@ -93,7 +94,7 @@ public class EnvironmentTask extends Task {
 
     //----------------------------------------------------------------------------------------------
     /**
-     * 
+     *
      * @param name - The name of the environment
      */
     public void setName(String name) {
@@ -102,11 +103,40 @@ public class EnvironmentTask extends Task {
 
     //----------------------------------------------------------------------------------------------
     /**
+     * Appends a unique string to the environment name so there are not file name conflicts
+     * @param uuid
+     */
+    public void addUUIDToEnvName(String uuid) {
+        this.uuid = uuid;
+        log.debug("Set environment (" + name + ") uuid to " + this.uuid);
+
+        if (name != null) {
+            log.debug("Environment prefix: " + prefix);
+            prefix = this.name;
+        }
+
+        if(uuid != null) {
+            name = (name + "-" + this.uuid);
+        }
+        log.debug("Environment full name: " + name);
+    }
+
+    //----------------------------------------------------------------------------------------------
+    /**
      * Creates the defined environment and all sub-objects it includes.
      */
     @Override
-    public void create() 
+    public void create()
     throws EnvironmentCreationException {
+    }
+
+    //----------------------------------------------------------------------------------------------
+    /**
+     * Restore the defined environment and all sub-objects it includes.
+     */
+    @Override
+    public void restore()
+    throws EnvironmentRestorationException {
     }
 
     //----------------------------------------------------------------------------------------------
@@ -114,23 +144,7 @@ public class EnvironmentTask extends Task {
      * Destroys the whole environment, including all sub-objects.
      */
     @Override
-    public void destroy() 
+    public void destroy()
     throws EnvironmentDestructionException {
-    }
-
-    //----------------------------------------------------------------------------------------------
-    public void addUUIDToEnvName(String uuid) {
-        this.uuid = uuid;
-        log.debug("Set environment (" + name + ") uuid to " + this.uuid);
-        
-        if (name != null) {
-            log.debug("Environment prefix: " + prefix);
-            prefix = this.name;
-        }
-        
-        if(uuid != null) {
-            name = (name + "-" + this.uuid);
-        }
-        log.debug("Environment full name: " + name);
     }
 }

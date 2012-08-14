@@ -84,24 +84,6 @@ public class PostCreateTask extends ExtensionTask {
     }
 
     //----------------------------------------------------------------------------------------------
-    @Override
-    public void create() {
-        File configDir = new File(tempConfDirNoSeparator);
-        configDir.mkdirs();
-    }
-
-    //----------------------------------------------------------------------------------------------
-    @Override
-    public void destroy() {
-        File configDir = new File(tempConfDirNoSeparator);
-        try {
-            FileUtils.deleteDirectory(configDir);
-        } catch (IOException e) {
-            log.warn("Unable to delete conf directory", e);
-        }
-    }
-
-    //----------------------------------------------------------------------------------------------
     public void runCommand(String user, String password, String vmRunCommand, String... args)
     throws IOException, InterruptedException {
         runCommand(user, password, vmRunCommand, Arrays.asList(args));
@@ -197,6 +179,30 @@ public class PostCreateTask extends ExtensionTask {
             }
         }
         return result;
+    }
+
+    //----------------------------------------------------------------------------------------------
+    @Override
+    public void create() {
+        File configDir = new File(tempConfDirNoSeparator);
+        configDir.mkdirs();
+    }
+
+    //----------------------------------------------------------------------------------------------
+    @Override
+    public void destroy() {
+        File configDir = new File(tempConfDirNoSeparator);
+        try {
+            FileUtils.deleteDirectory(configDir);
+        } catch (IOException e) {
+            log.warn("Unable to delete conf directory", e);
+        }
+    }
+
+    //----------------------------------------------------------------------------------------------
+    @Override
+    public void restore() {
+        //nothing to restore
     }
 
 }

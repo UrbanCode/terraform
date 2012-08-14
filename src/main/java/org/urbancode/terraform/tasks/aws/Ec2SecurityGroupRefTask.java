@@ -4,12 +4,12 @@ import org.apache.log4j.Logger;
 import org.urbancode.terraform.tasks.common.Context;
 
 public class Ec2SecurityGroupRefTask extends SecurityGroupRefTask {
-    
+
     //**********************************************************************************************
     // CLASS
     //**********************************************************************************************
     final static private Logger log = Logger.getLogger(Ec2SecurityGroupRefTask.class);
-    
+
     //**********************************************************************************************
     // INSTANCE
     //**********************************************************************************************
@@ -18,8 +18,9 @@ public class Ec2SecurityGroupRefTask extends SecurityGroupRefTask {
     public Ec2SecurityGroupRefTask(Context context) {
         super(context);
     }
-    
+
     //----------------------------------------------------------------------------------------------
+    @Override
     public SecurityGroupTask fetchSecurityGroup() {
         if (ref == null) {
             if (context.getEnvironment() instanceof EnvironmentTaskAWS) {
@@ -27,21 +28,28 @@ public class Ec2SecurityGroupRefTask extends SecurityGroupRefTask {
                 ref = env.findSecurityGroupByName(groupName);
             }
         }
-        
+
         return ref;
     }
 
     //----------------------------------------------------------------------------------------------
     @Override
-    public void create() 
+    public void create()
     throws Exception {
-        
+
     }
 
     //----------------------------------------------------------------------------------------------
     @Override
-    public void destroy() 
+    public void destroy()
     throws Exception {
-        
+
+    }
+
+    //----------------------------------------------------------------------------------------------
+    @Override
+    public void restore() {
+        // TODO Auto-generated method stub
+
     }
 }

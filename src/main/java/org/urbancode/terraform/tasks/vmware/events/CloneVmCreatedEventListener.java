@@ -373,4 +373,9 @@ public class CloneVmCreatedEventListener extends ExtensionTask implements TaskEv
     @Override
     public void destroy() throws Exception {
     }
+
+    //----------------------------------------------------------------------------------------------
+    @Override
+    public void restore() throws Exception {
+    }
 }

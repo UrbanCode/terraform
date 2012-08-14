@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Urbancode, Inc
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,24 +30,24 @@ import com.amazonaws.services.ec2.model.DescribeVpcsRequest;
 
 
 public class VpcTask extends Task {
-    
+
     //**********************************************************************************************
     // CLASS
     //**********************************************************************************************
     final static private Logger log = Logger.getLogger(VpcTask.class);
-    
+
     //**********************************************************************************************
     // INSTANCE
     //**********************************************************************************************
-    
+
     private AmazonEC2 ec2Client;
     private AWSHelper helper;
     private ContextAWS context;
-    
+
     private String vpcId;
     private String cidr;
     private InetGwyTask inetGwy;
-    
+
     private List<SubnetTask> subnets = new ArrayList<SubnetTask>();
     private List<VpcSecurityGroupTask> securityGroups = new ArrayList<VpcSecurityGroupTask>();
     private List<RouteTableTask> routeTables = new ArrayList<RouteTableTask>();
@@ -57,7 +57,7 @@ public class VpcTask extends Task {
         this.context = context;
         helper = new AWSHelper();
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public void setId(String id) {
         this.vpcId = id;
@@ -67,37 +67,37 @@ public class VpcTask extends Task {
     public void setCidr(String cidr) {
         this.cidr = cidr;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public String getId() {
         return vpcId;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public String getCidr() {
         return cidr;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public List<SubnetTask> getSubnet() {
         return Collections.unmodifiableList(subnets);
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public List<VpcSecurityGroupTask> getSecurityGroupsList() {
         return Collections.unmodifiableList(securityGroups);
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public InetGwyTask getInetGwy() {
         return inetGwy;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public List<RouteTableTask> getRouteTables() {
         return Collections.unmodifiableList(routeTables);
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public SubnetTask findSubnetForName(String name) {
         SubnetTask result = null;
@@ -109,7 +109,7 @@ public class VpcTask extends Task {
         }
         return result;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public VpcSecurityGroupTask findSecurityGroupForName(String name) {
         VpcSecurityGroupTask result = null;
@@ -121,15 +121,15 @@ public class VpcTask extends Task {
         }
         return result;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public SubnetTask createSubnet() {
         SubnetTask subnet = new SubnetTask(context);
         subnets.add(subnet);
-        
+
         return subnet;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public VpcSecurityGroupTask createVpcSecurityGroup() {
         VpcSecurityGroupTask group = new VpcSecurityGroupTask(context);
@@ -138,22 +138,22 @@ public class VpcTask extends Task {
             group.setVpcId(vpcId);
         }
         securityGroups.add(group);
-        
+
         return group;
     }
 
     //----------------------------------------------------------------------------------------------
     public InetGwyTask createInetGwy() {
         inetGwy = new InetGwyTask(context);
-        
+
         return inetGwy;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public RouteTableTask createRouteTable() {
         RouteTableTask routeTable = new RouteTableTask(context);
         routeTables.add(routeTable);
-        
+
         return routeTable;
     }
 
@@ -169,7 +169,7 @@ public class VpcTask extends Task {
             log.info("Vpc with id " + vpcId + " already exists!");
         }
     }
-    
+
     //----------------------------------------------------------------------------------------------
     private void startInetGwy() {
         if (inetGwy != null && inetGwy.getId() == null) {
@@ -186,9 +186,9 @@ public class VpcTask extends Task {
             }
         }
     }
-    
+
     //----------------------------------------------------------------------------------------------
-    private void startSubnets() 
+    private void startSubnets()
     throws Exception {
         if (subnets != null || subnets.size() != 0) {
             for (SubnetTask subnet : subnets) {
@@ -200,9 +200,9 @@ public class VpcTask extends Task {
             log.info("No subnets specified.");
         }
     }
-    
+
     //----------------------------------------------------------------------------------------------
-    private void startRouteTables() 
+    private void startRouteTables()
     throws Exception {
         boolean mainfound = false;
         if (routeTables != null) {
@@ -227,15 +227,15 @@ public class VpcTask extends Task {
                     log.debug("Not main table - skip");
                 }
             }
-            
+
             // see if we found a main table
             if (!mainfound) {
                 log.warn("No main route table found!");
                 log.warn("the table created will be set as the main table");
-                log.error("No default route set in VPC " + vpcId + 
+                log.error("No default route set in VPC " + vpcId +
                           " - No internet access unless a route was specified manually!");
             }
-            
+
             // create all the other tables afterwards
             log.debug("Starting secondary route tables");
             for (RouteTableTask table : routeTables) {
@@ -250,9 +250,9 @@ public class VpcTask extends Task {
             }
         }
     }
-    
+
     //----------------------------------------------------------------------------------------------
-    private void startSecurityGroups() 
+    private void startSecurityGroups()
     throws Exception {
         if (securityGroups != null && !securityGroups.isEmpty()) {
             for (VpcSecurityGroupTask group : securityGroups) {
@@ -266,35 +266,35 @@ public class VpcTask extends Task {
                 }
             }
         }
-        else { 
+        else {
             log.info("No Security Groups specified.");
         }
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public boolean existsInAws() {
         // since we have an id, check if Vpc exists in AWS
         boolean result = false;
         DescribeVpcsRequest vpcReq = new DescribeVpcsRequest().withVpcIds(vpcId);
         if (context.getEC2Client().describeVpcs(vpcReq) == null) {
-            log.info("Vpc with id " + vpcId + " does NOT exist in AWS!"); 
+            log.info("Vpc with id " + vpcId + " does NOT exist in AWS!");
         }
         else {
             result = true;
         }
         return result;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     @Override
-    public void create() 
+    public void create()
     throws EnvironmentCreationException {
         if (ec2Client == null) {
             ec2Client = context.getEC2Client();
         }
-        
+
         log.info("Creating Vpc...");
-        
+
         try {
             startVpc();
             startInetGwy();
@@ -310,50 +310,50 @@ public class VpcTask extends Task {
             ec2Client = null;
         }
     }
-    
+
     //----------------------------------------------------------------------------------------------
     @Override
-    public void destroy() 
+    public void destroy()
     throws EnvironmentDestructionException {
         if (ec2Client == null) {
             ec2Client = context.getEC2Client();
         }
-        
+
         log.info("Destroying Vpc...");
-        
+
         try {
             helper.waitForPublicAddresses(ec2Client);
-            
+
             if (getInetGwy() != null) {
                 getInetGwy().setVpcId(vpcId);
                 getInetGwy().destroy();
             }
-            
+
             helper.waitForPublicAddresses(ec2Client);
-            
+
             // detach all ENIs - there are none?
-    
+
             // remove route tables
             if (getRouteTables() != null && !getRouteTables().isEmpty()) {
                 for (RouteTableTask table : getRouteTables()) {
                     table.destroy();
                 }
             }
-            
+
             // remove security Groups
             if (securityGroups != null && securityGroups.size() != 0) {
                 for (VpcSecurityGroupTask group : securityGroups) {
                     group.destroy();
                 }
             }
-            
+
             // remove Subnets
             if (subnets != null && subnets.size() != 0) {
                 for (SubnetTask subnet : subnets) {
                     subnet.destroy();
                 }
             }
-            
+
             // delete Vpc
             helper.deleteVpc(vpcId, ec2Client);
             vpcId = null;
@@ -365,5 +365,12 @@ public class VpcTask extends Task {
         finally {
             ec2Client = null;
         }
+    }
+
+    //----------------------------------------------------------------------------------------------
+    @Override
+    public void restore() {
+        // TODO Auto-generated method stub
+
     }
 }

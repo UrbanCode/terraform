@@ -89,26 +89,6 @@ public class NetworkRefTask extends SubTask {
     }
 
     //----------------------------------------------------------------------------------------------
-    @Override
-    public void create() {
-        try {
-            attachNic();
-        }
-        catch (RemoteException e) {
-            log.warn("RemoteException while attaching NIC", e);
-        }
-        catch (InterruptedException e) {
-            log.warn("InterruptedException while attaching NIC", e);
-        }
-    }
-
-    //----------------------------------------------------------------------------------------------
-    @Override
-    public void destroy() {
-        //this gets destroyed when the clone is destroyed
-    }
-
-    //----------------------------------------------------------------------------------------------
     /**
      * Attaches a NIC to a VM.
      * @see VirtualHost
@@ -131,6 +111,31 @@ public class NetworkRefTask extends SubTask {
             log.warn("Tried to attach NIC before card was created. NIC not attached.");
         }
 
+    }
+
+    //----------------------------------------------------------------------------------------------
+    @Override
+    public void create() {
+        try {
+            attachNic();
+        }
+        catch (RemoteException e) {
+            log.warn("RemoteException while attaching NIC", e);
+        }
+        catch (InterruptedException e) {
+            log.warn("InterruptedException while attaching NIC", e);
+        }
+    }
+
+    //----------------------------------------------------------------------------------------------
+    @Override
+    public void destroy() {
+        //this gets destroyed when the clone is destroyed
+    }
+
+    //----------------------------------------------------------------------------------------------
+    @Override
+    public void restore() {
     }
 
 }
