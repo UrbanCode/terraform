@@ -1,14 +1,24 @@
 package org.urbancode.terraform.commands.vmware;
 
+import java.rmi.RemoteException;
+import java.util.Collections;
+import java.util.List;
+
+import org.apache.log4j.Logger;
 import org.urbancode.terraform.commands.common.Command;
 import org.urbancode.terraform.commands.common.CommandException;
+import org.urbancode.terraform.tasks.vmware.CloneTask;
 import org.urbancode.terraform.tasks.vmware.ContextVmware;
+import org.urbancode.terraform.tasks.vmware.EnvironmentTaskVmware;
+
+import com.vmware.vim25.VimFault;
 
 public class TakeSnapshotCommand implements Command {
 
     //**********************************************************************************************
     // CLASS
     //**********************************************************************************************
+    static private final Logger log = Logger.getLogger(TakeSnapshotCommand.class);
 
     //**********************************************************************************************
     // INSTANCE
@@ -20,13 +30,31 @@ public class TakeSnapshotCommand implements Command {
         this.context = context;
     }
 
-
     //----------------------------------------------------------------------------------------------
     @Override
     public void execute()
     throws CommandException {
-        // TODO this command take a snapshot of all VMs in the environment
+        List<CloneTask> cloneTasks = fetchCloneTaskList();
+        Collections.sort(cloneTasks);
+        for(CloneTask clone : cloneTasks) {
+            try {
+                clone.takeSnapshotOfVm();
+            } catch (VimFault e) {
+                log.warn("vSphere faulted when taking snapshot of VM: " + clone.getInstanceName());
+                throw new CommandException();
+            } catch (RemoteException e) {
+                log.warn("RemoteException when taking snapshot of VM: " + clone.getInstanceName());
+                throw new CommandException();
+            } catch (InterruptedException e) {
+                log.warn("InterruptedException when taking snapshot of VM: " + clone.getInstanceName());
+                throw new CommandException();
+            }
+        }
+    }
 
+    //----------------------------------------------------------------------------------------------
+    public List<CloneTask> fetchCloneTaskList() {
+        return ((EnvironmentTaskVmware) context.getEnvironment()).getCloneTasks();
     }
 
 }

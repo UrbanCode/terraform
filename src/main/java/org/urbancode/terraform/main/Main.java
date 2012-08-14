@@ -31,7 +31,9 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.log4j.Logger;
+import org.urbancode.terraform.commands.vmware.ResumeCommand;
 import org.urbancode.terraform.commands.vmware.SuspendCommand;
+import org.urbancode.terraform.commands.vmware.TakeSnapshotCommand;
 import org.urbancode.terraform.credentials.Credentials;
 import org.urbancode.terraform.credentials.CredentialsException;
 import org.urbancode.terraform.credentials.CredentialsParser;
@@ -222,12 +224,10 @@ public class Main {
                 log.debug("Calling destroy() on context");
                 context.destroy();
             }
-
             else if (AllowedCommands.SUSPEND.getCommandName().equalsIgnoreCase(command)) {
-                // we want to write out the environments whether we succeed in destroying them
-                // or fail (then it will write out whatever is left)
                 outputXmlFile = inputXmlFile;
                 log.debug("Calling restore() on context");
+                log.info("Attempting to suspend power on all instances/VMs in the environment.");
                 context.restore();
                 if (context instanceof ContextVmware) {
                     SuspendCommand newCommand = new SuspendCommand((ContextVmware) context);
@@ -238,6 +238,42 @@ public class Main {
                             new org.urbancode.terraform.commands.aws.SuspendCommand((ContextAWS) context);
                     newCommand.execute();
                 }
+                else {
+                    log.warn("Could not resolve context to call command \"" + command + "\"");
+                }
+            }
+            else if (AllowedCommands.RESUME.getCommandName().equalsIgnoreCase(command)) {
+                outputXmlFile = inputXmlFile;
+                log.debug("Calling restore() on context");
+                context.restore();
+                log.info("Attempting to power on all instances/VMs in the environment.");
+                if (context instanceof ContextVmware) {
+                    ResumeCommand newCommand = new ResumeCommand((ContextVmware) context);
+                    newCommand.execute();
+                }
+                else if (context instanceof ContextAWS) {
+                    org.urbancode.terraform.commands.aws.ResumeCommand newCommand =
+                            new org.urbancode.terraform.commands.aws.ResumeCommand((ContextAWS) context);
+                    newCommand.execute();
+                }
+
+                else {
+                    log.warn("Could not resolve context to call command \"" + command + "\"");
+                }
+            }
+            else if (AllowedCommands.TAKE_SNAPSHOT.getCommandName().equalsIgnoreCase(command)) {
+                outputXmlFile = inputXmlFile;
+                log.debug("Calling restore() on context");
+                context.restore();
+                log.info("Attempting to take snapshots of all instances/VMs in the environment.");
+                if (context instanceof ContextVmware) {
+                    TakeSnapshotCommand newCommand = new TakeSnapshotCommand((ContextVmware) context);
+                    newCommand.execute();
+                }
+                else if (context instanceof ContextAWS) {
+                    log.warn("Taking snapshots is not currently supported with Terraform and AWS.");
+                }
+
                 else {
                     log.warn("Could not resolve context to call command \"" + command + "\"");
                 }

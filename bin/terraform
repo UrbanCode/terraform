@@ -15,6 +15,7 @@ CREDS=$3
 
 create_class=org.urbancode.terraform.main.Main
 destroy_class=org.urbancode.terraform.main.Main
+restore_class=org.urbancode.terraform.main.Main
 
 # set TERRAFORM_HOME
 SHELL_NAME=$0
@@ -90,30 +91,52 @@ if [ "$FNCT" = "create" ] ; then
   command_line="\"$javacmd\" $JAVA_OPTS 
     -cp \"$CP\" \
     $create_class create \"$INPUT_FILE\" \"$CREDS\" $PROPS"
-#    $create_class create \"$INPUT_FILE\" \"$CREDS\" $PROPS >\"$TERRAFORM_HOME/bin/stdout\" 2>&1 &"
   echo $command_line
   eval $command_line
 # -- Destroy ----------------------------------------------------------------------
 
 elif [ "$FNCT" = "destroy" ] ; then
 
-#  shift
-#  FORCE=0
   command_line="\"$javacmd\" $JAVA_OPTS 
     -cp \"$CP\" \
     $destroy_class destroy \"$INPUT_FILE\" \"$CREDS\""
-#    $destroy_class destroy \"$INPUT_FILE\" \"$CREDS\" >\"$TERRAFORM_HOME/bin/stdout\" 2>&1 &"
   echo $command_line
   eval $command_line
   if [ "$?" -eq 0 ]
   then 
     rm $INPUT_FILE
   fi
+  
+# -- Suspend ----------------------------------------------------------------------
+elif [ "$FNCT" = "suspend" ] ; then
+
+  command_line="\"$javacmd\" $JAVA_OPTS 
+    -cp \"$CP\" \
+    $restore_class suspend \"$INPUT_FILE\" \"$CREDS\""
+  echo $command_line
+  eval $command_line
+  
+# -- Suspend ----------------------------------------------------------------------
+elif [ "$FNCT" = "resume" ] ; then
+
+  command_line="\"$javacmd\" $JAVA_OPTS 
+    -cp \"$CP\" \
+    $restore_class resume \"$INPUT_FILE\" \"$CREDS\""
+  echo $command_line
+  eval $command_line
+# -- Suspend ----------------------------------------------------------------------
+elif [ "$FNCT" = "snapshot" ] ; then
+
+  command_line="\"$javacmd\" $JAVA_OPTS 
+    -cp \"$CP\" \
+    $restore_class snapshot \"$INPUT_FILE\" \"$CREDS\""
+  echo $command_line
+  eval $command_line
 # -- Usage ---------------------------------------------------------------------
 
 else
 #	Also, create -debug|destroy -debug to instruct java to listen on port 10000
 #	for remote JPDA Debugger connections.
-  echo "Usage: terraform {create|destroy} {input-file} {credentials-file} {prop1=val1 prop2=val2 ... }\n"
+  echo "Usage: terraform {create|destroy|suspend} {input-file} {credentials-file} {prop1=val1 prop2=val2 ... }\n"
   exit 1
 fi

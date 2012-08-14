@@ -2,7 +2,7 @@ package org.urbancode.terraform.main;
 
 public enum AllowedCommands {
 
-    CREATE("create"), DESTROY("destroy"), SUSPEND("suspend"), RESUME("resume"), TAKE_SNAPSHOT("take-snapshot");
+    CREATE("create"), DESTROY("destroy"), SUSPEND("suspend"), RESUME("resume"), TAKE_SNAPSHOT("snapshot");
 
     private String commandName;
 

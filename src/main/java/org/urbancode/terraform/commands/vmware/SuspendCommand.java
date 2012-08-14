@@ -43,15 +43,16 @@ public class SuspendCommand implements Command {
                 clone.suspendVm();
             } catch (InvalidProperty e) {
                 log.warn("InvalidProperty fault when suspending power on VM: " + clone.getInstanceName());
+                throw new CommandException();
             } catch (RuntimeFault e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                log.warn("RuntimeFault when suspending power on VM: " + clone.getInstanceName());
+                throw new CommandException();
             } catch (RemoteException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                log.warn("RemoteException when suspending power on VM: " + clone.getInstanceName());
+                throw new CommandException();
             } catch (InterruptedException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                log.warn("InterruptedException when suspending power on VM: " + clone.getInstanceName());
+                throw new CommandException();
             }
         }
     }

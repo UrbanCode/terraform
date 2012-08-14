@@ -16,7 +16,10 @@
 package org.urbancode.terraform.tasks.vmware;
 
 import java.rmi.RemoteException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import org.apache.log4j.Logger;
@@ -36,6 +39,7 @@ import com.vmware.vim25.InvalidProperty;
 import com.vmware.vim25.ManagedObjectReference;
 import com.vmware.vim25.NotFound;
 import com.vmware.vim25.RuntimeFault;
+import com.vmware.vim25.VimFault;
 import com.vmware.vim25.VirtualMachineCloneSpec;
 import com.vmware.vim25.VirtualMachinePowerState;
 import com.vmware.vim25.VirtualMachineRelocateDiskMoveOptions;
@@ -632,7 +636,8 @@ public class CloneTask extends SubTask implements Cloneable, Comparable<CloneTas
         ComputeResource res = host.getComputeResource(hostPath);
         HostSystem hostSystem = res.getHosts()[0];
         VirtualMachineRuntimeInfo vmri = vm.getRuntime();
-        if (vmri.getPowerState() == VirtualMachinePowerState.poweredOff) {
+        if (vmri.getPowerState() == VirtualMachinePowerState.poweredOff ||
+                vmri.getPowerState() == VirtualMachinePowerState.suspended) {
             com.vmware.vim25.mo.Task task = vm.powerOnVM_Task(hostSystem);
             task.waitForTask();
             log.info("vm:" + vm.getName() + " powered on.");
@@ -647,6 +652,19 @@ public class CloneTask extends SubTask implements Cloneable, Comparable<CloneTas
             com.vmware.vim25.mo.Task task = vm.suspendVM_Task();
             task.waitForTask();
             log.info("vm:" + vm.getName() + " was suspended.");
+        }
+    }
+
+    //----------------------------------------------------------------------------------------------
+    public void takeSnapshotOfVm()
+    throws VimFault, RemoteException, InterruptedException {
+        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        Date date = new Date();
+        String name = dateFormat.format(date);
+        String description = "created by Terraform's take-snapshot command";
+        Task task = vm.createSnapshot_Task(name, description, false, false);
+        if (task.waitForTask() == Task.SUCCESS) {
+            log.info("Created snapshot with name : " + name + " on virtual machine " + instanceName);
         }
     }
 
