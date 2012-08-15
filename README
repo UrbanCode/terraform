@@ -11,7 +11,7 @@
 Installation Instructions
 **************************************************
 
- Need:
+ Requirements:
    Java 1.6
    vmrun (only for VMware environments)
    Maven (for building/dependencies) 
@@ -23,7 +23,7 @@ Installation Instructions
     To use the Amazon Web Services portion of Terraform, you will need to have 
   an AWS Account with the EC2 services. This service is free, but see Amazon
   for limitations.
-      ( to get an AWS account: https://console.aws.amazon.com/console/home )
+      (to get an AWS account: https://console.aws.amazon.com/console/home )
 
 
 
@@ -40,16 +40,20 @@ Basic Installation
   You will find a shell script in terraform/bin. This is used
   to run Terraform. 
 
-  How to run terraform: 
-    terraform [create/destory] [input-xml-file] [input-credentials-file] [prop1=val1 prop2=val2 ...]
+  To run terraform, use the provided terraform script for your operating system: 
+    Unix
+    ./terraform [command] [input-xml-file] [input-credentials-file] [prop1=val1 prop2=val2 ...]
+    Windows
+    terraform [command] [input-xml-file] [input-credentials-file] [prop1=val1 prop2=val2 ...]
+    
+    Allowed commands for all providers: create, destroy
+    Allowed commands for VMware: suspend, resume, snapshot
 
-  The Amazon Web Services Templates do not require any properties. 
-    For more information on the AWS portion of Terraform, see the AWS section 
-    below.
+  The Amazon Web Services Templates do not require any properties. For more information on the AWS 
+  portion of Terraform, see the AWS section below.
 
-  The VMware Templates require specific properties. See below for more details.
-    For more information on the VMware portion of Terraform, see the VMware 
-    section below.
+  The VMware command line calls require specific properties for creating an environment. 
+  See the VMware section below for more details.
 
 
 Environment Templates
@@ -63,7 +67,7 @@ Environment Templates
   What sits under the <environment> depends on the type of environment you want 
   to create. See each individual provider section below.
 
-  Properties can be used in the XML template with ${property.name} and. The 
+  Properties can be used in the XML template with ${property.name}. The 
   properties are passed in as arguments on the command line (anything after the
   3rd argument will be interpreted as a property). 
     e.g. if you set uDeploy.host=12.34.56.78 and uDeploy.port=7918, you can 
@@ -77,9 +81,19 @@ Environment Templates
 VMware
 ======================================
 
-  Example command line call to Terraform with a VMware template:
+Allowed commands:
 
-  terraform create vmware-template.xml vmware-1.key datacenter=my-datacenter
+create - create an environment of VMs, optional networking, etc.
+destroy - delete a previously created environment
+suspend - suspend power on all VMs in the environment (the yellow "pause" icon in vCenter)
+resume - resume all VMs in the environment (power them on)
+snapshot - take a snapshot of all VMs in the environment.
+
+  "create" takes in a template xml file. All other commands take in a generated instance xml file.
+
+  Example "create" command line call to Terraform with a VMware template:
+
+  ./terraform create vmware-template.xml vmware-1.key datacenter=my-datacenter
   host.name=my-host.mysite.com datastore=my-datastore 
   destination=path/to/my-destination/folder
   
@@ -97,10 +111,19 @@ VMware
   No properties are required to destroy an instance.
   Example command line call to Terraform:
   
-  terraform destroy terra-env-1234.xml vmware-1.key
+  terraform destroy terra-env-1234.xml vmware-credentials.key
   
   This will power down the VMs, delete them, delete the folder that Terraform
   created, and delete any virtual switches it created.
+  
+  Example commands for suspend, resume, and snapshot:
+  
+  terraform suspend terra-env-1234.xml vmware-credentials.key
+  terraform resume terra-env-1234.xml vmware-credentials.key
+  terraform snapshot terra-env-1234.xml vmware-credentials.key
+  
+  No properties are needed for any of these commands. The snapshot name will be the current
+  date and time in YYYY-MM-DD hh:mm:ss format. (Example: 2012-08-15 10:01:45)
 
   -----------
   Templates
@@ -162,10 +185,6 @@ VMware
   Terraform supports multiple different clone elements - useful if you want 
   them to have different name prefixes or orders in which they are created.
   
-  An important note about vSphere images: they should be virtual machines, not
-  templates, with at least one snapshot on them. Support for creating clones 
-  from templates will be in a future patch.
-  
   You can add Unix shell commands to be executed once the VM is created using
   the "command" element. The command element has one attribute called "cmd" 
   which takes a shell command. You can also put a series of commands to be 
@@ -211,10 +230,11 @@ VMware
   The router must have one NIC attached to a vSwitch with a physical NIC and a 
   NIC attached to the vSwitch that your VMs are on.
   
-  If you are creating a router to use for the private network, you must use a
-  Linux image that can act as a router. We recommend Debian or Ubuntu.
+  If you are creating a router to use for the private network, and you want Terraform to manage
+  the networking for your environment, you must use a Linux image that can act as a router. 
+  We recommend a Debian or Ubuntu distribution.
   
-  You must also include these elements on the clone:
+  You must also include these elements on the router clone:
   <post-create-task/>
   <event-listener/>
   
@@ -316,11 +336,11 @@ VMware
   
   For vmware, the "type", "name", "username", "password", and "url" properties 
   are all mandatory.
-  The "name" property whatever you want to name your credentials. The name 
+  The "name" property whatever you want to name your credentials. The name should be unique and
   should not contain spaces.
   Username is your vCenter login name.
   Password is your vCenter password.
-  Url is the url pointing to your vCenter server, followed by a /sdk suffix.
+  Url is the url pointing to your vCenter server, followed by a /sdk suffix. HTTPS is recommended.
   
   Vmware environments have 4 required properties when creating an environment. 
   EC2 environments have none.
