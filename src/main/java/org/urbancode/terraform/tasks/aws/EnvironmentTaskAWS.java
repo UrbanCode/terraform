@@ -344,7 +344,7 @@ public class EnvironmentTaskAWS extends EnvironmentTask {
                     }
                 }
                 else {
-                    log.debug("Differnet priority!");
+                    log.debug("Different priority!");
                 }
             }
         }

@@ -484,7 +484,7 @@ public class AWSHelper {
         catch (AmazonServiceException e) {
             log.error("Failed to detach Internet Gateway", e);
             if (!"InvalidInternetGatewayID.NotFound".equalsIgnoreCase(e.getErrorCode())) {
-                // we're only going to swallow the expcetion if the gateway id was not found
+                // only swallow the exception if the gateway id was not found
                 throw e;
             }
         }
@@ -842,27 +842,17 @@ public class AWSHelper {
     public void modifyInstanceAttribute(String instanceId, String attribute, String value, AmazonEC2 ec2Client) {
         ModifyInstanceAttributeRequest request = new ModifyInstanceAttributeRequest();
 
-        if (instanceId != null && !instanceId.isEmpty()) {
+        if(isNotBlank(instanceId) && isNotBlank(attribute) && isNotBlank(value)) {
             request.withInstanceId(instanceId);
+            request = request.withAttribute(attribute);
+            request = request.withValue(value);
         }
-        else {
-            // no instance id!
-        }
-
-        if (attribute != null && !attribute.isEmpty()) {
-            if (value != null && !value.isEmpty()) {
-                request = request.withAttribute(attribute);
-                request = request.withValue(value);
-            }
-            else {
-                // no value!
-            }
-        }
-        else {
-            // no attribute!
-        }
-
         ec2Client.modifyInstanceAttribute(request);
+    }
+
+    //----------------------------------------------------------------------------------------------
+    private boolean isNotBlank(String str) {
+        return str != null && !str.isEmpty() && !str.trim().isEmpty();
     }
 
     //----------------------------------------------------------------------------------------------
@@ -1141,7 +1131,7 @@ public class AWSHelper {
 
             // create container for request
             // we need to use IpPermission object here because the other (old) way
-            // is depreciated and no longer works (but it's still in the code?)
+            // is deprecated and no longer works
             IpPermission perm = new IpPermission().withFromPort(startPort)
                                                    .withToPort(endPort)
                                                    .withIpProtocol(protocol)

@@ -95,11 +95,6 @@ public class RouteTableTask extends SubTask {
         this.assId = assocId;
     }
 
-//    //----------------------------------------------------------------------------------------------
-//    public void setMainTable(boolean isMainTable) {
-//        this.isMainTable = isMainTable;
-//    }
-
     //----------------------------------------------------------------------------------------------
     public void setSubnetName(String subnetName) {
         this.subnetName = subnetName;

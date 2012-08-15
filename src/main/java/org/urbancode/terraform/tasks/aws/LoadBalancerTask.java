@@ -68,9 +68,10 @@ public class LoadBalancerTask extends SubTask {
     private List<String> parseStringToList(String string) {
         List<String> result = new ArrayList<String>();
 
-        String[] tmp = string.split("\\s+"); // split on whitespace
+        // split on whitespace
+        String[] tmp = string.split("\\s+");
 
-        result = Arrays.asList(tmp);         // change to List
+        result = Arrays.asList(tmp);
 
         log.debug("Creating list out of " + string);
         for (String s : result) {
@@ -310,7 +311,6 @@ public class LoadBalancerTask extends SubTask {
             }
 
             // give unique name
-            //String uuid = UUID.randomUUID().toString().substring(0, 5);
             String uuid = context.getEnvironment().fetchUUID();
             fullName = loadBalancerName + ("-" + uuid);
             log.debug("Security Group " + loadBalancerName + " has fullname " + fullName);

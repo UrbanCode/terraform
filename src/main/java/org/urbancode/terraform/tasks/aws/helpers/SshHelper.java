@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Urbancode, Inc
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -45,11 +45,11 @@ public class SshHelper {
     //**********************************************************************************************
 
     private String name = "SshHelper";
-    
+
     // TODO - change prop name
     final static private int BUFFER_SIZE =
             Integer.getInteger("org.urbancode.terraform.util.io.buffer.size", 8192);
-    
+
     //----------------------------------------------------------------------------------------------
     static public void copy(Reader in, Appendable appendable)
     throws IOException {
@@ -60,7 +60,7 @@ public class SshHelper {
             appendable.append(charBuffer, 0, count);
         }
     }
-    
+
     //----------------------------------------------------------------------------------------------
     static public void copy(Reader in, Writer out)
     throws IOException {
@@ -70,7 +70,7 @@ public class SshHelper {
             out.write(buffer, 0, count);
         }
     }
-    
+
     static public OutputStreamWriter writer(OutputStream out, String charset) {
         OutputStreamWriter result;
         if (charset == null) {
@@ -81,7 +81,7 @@ public class SshHelper {
         }
         return result;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     static public OutputStreamWriter writer(OutputStream out, CharsetEncoder encoder) {
         OutputStreamWriter result;
@@ -93,7 +93,7 @@ public class SshHelper {
         }
         return result;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     static public OutputStreamWriter writer(OutputStream out, Charset charset) {
         OutputStreamWriter result;
@@ -107,16 +107,16 @@ public class SshHelper {
         }
         return result;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     static public OutputStreamWriter writer(OutputStream out) {
         OutputStreamWriter result;
-        
+
         result = new OutputStreamWriter(out);
-        
+
         return result;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     static public InputStreamReader reader(InputStream in, String charsetName) {
         InputStreamReader result;
@@ -128,22 +128,22 @@ public class SshHelper {
         }
         return result;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     static public StringReader reader(String string) {
         return new StringReader(string);
     }
-    
+
     //----------------------------------------------------------------------------------------------
     static public InputStreamReader reader(InputStream in) {
         InputStreamReader result;
-        
+
         result = new InputStreamReader(in);
-            
+
         return result;
     }
-    
-    
+
+
     //----------------------------------------------------------------------------------------------
     static public boolean isPortActive(String host, int port) {
         Socket s = null;
@@ -153,8 +153,8 @@ public class SshHelper {
             SocketAddress sa = new InetSocketAddress(host, port);
             s.connect(sa, 3000);
             return true;
-        } 
-        catch (IOException e) { } 
+        }
+        catch (IOException e) { }
         finally {
             if (s != null) {
                 try {
@@ -165,13 +165,13 @@ public class SshHelper {
         }
         return false;
     }
-    
-    static public void waitForPort(String ip, int port) 
+
+    static public void waitForPort(String ip, int port)
     throws RemoteException {
         long pollInterval = 3000L;
         long timeoutInterval = 10L * 60L * 1000L;
         long start = System.currentTimeMillis();
-        
+
         while(!isPortActive(ip, port)) {
             try {
                 Thread.sleep(pollInterval);
@@ -187,7 +187,7 @@ public class SshHelper {
     }
 
     //----------------------------------------------------------------------------------------------
-    static public void waitForSshPort(String ip) 
+    static public void waitForSshPort(String ip)
     throws RemoteException {
         waitForPort(ip, 22);
     }
@@ -195,8 +195,7 @@ public class SshHelper {
     // INSTANCE
     //**********************************************************************************************
     final private ExecutorService threadPool = Executors.newCachedThreadPool();
-            //Executors.newCachedThreadPool(new NamedThreadFactory("ssh-helper", ThreadMode.DAEMON));
-    
+
     //----------------------------------------------------------------------------------------------
     public String getName() {
         return name;

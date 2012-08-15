@@ -72,7 +72,7 @@ public class CloneTask extends SubTask implements Cloneable, Comparable<CloneTas
     private String snapshotName = "";
 
     private int count = 1;
-    private int order = 1;  // default to front of queue. max int is just ugly
+    private int order = 1;  // default to front of queue
 
     private VirtualMachine vm;
     private Path imagePath;
@@ -250,7 +250,6 @@ public class CloneTask extends SubTask implements Cloneable, Comparable<CloneTas
             }
             catch(IpInUseException e) {
                 log.error("Ip " + ip + " already in use!");
-                // TODO - throw
             }
         }
     }

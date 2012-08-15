@@ -15,25 +15,15 @@
  ******************************************************************************/
 package org.urbancode.terraform.tasks.vmware.util;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
-import javax.naming.NamingException;
-
 import org.apache.log4j.Logger;
-import org.urbancode.terraform.tasks.util.IOUtil;
-
-import com.vmware.vim25.HostNetworkPolicy;
-import com.vmware.vim25.HostPortGroupSpec;
-import com.vmware.vim25.HostVirtualSwitchSpec;
 import com.vmware.vim25.NotFound;
 import com.vmware.vim25.VirtualDevice;
 import com.vmware.vim25.VirtualDeviceConfigSpec;
@@ -45,7 +35,6 @@ import com.vmware.vim25.VirtualMachinePowerState;
 import com.vmware.vim25.VirtualMachineToolsStatus;
 import com.vmware.vim25.mo.ComputeResource;
 import com.vmware.vim25.mo.Datacenter;
-import com.vmware.vim25.mo.Datastore;
 import com.vmware.vim25.mo.Folder;
 import com.vmware.vim25.mo.HostNetworkSystem;
 import com.vmware.vim25.mo.HostSystem;
@@ -217,51 +206,6 @@ public class VirtualHost implements Serializable {
     }
 
     //----------------------------------------------------------------------------------------------
-    public SwitchResult createSwitch(Path hostPath, String name, int portCount)
-    throws RemoteException, NamingException {
-        log.debug("Name used when Creating Virtual Switch: " + name);
-        if (name.length() > 31) {
-            log.error("WARNING: " +
-                      "Creation of the Virtual Switch will fail if the name is > 31 characters!");
-            throw new NamingException("Bad Virtual Switch Name");
-        }
-
-        SwitchResult result;
-        ComputeResource res = getComputeResource(hostPath);
-        HostSystem host = res.getHosts()[0];
-        HostNetworkSystem networkSystem = host.getHostNetworkSystem();
-
-        HostVirtualSwitchSpec switchSpec = new HostVirtualSwitchSpec();
-        switchSpec.setNumPorts(portCount);
-        networkSystem.addVirtualSwitch(name, switchSpec);
-
-        String portGroupName = name + "-network";
-        HostPortGroupSpec portGroupSpec = new HostPortGroupSpec();
-        portGroupSpec.setName(portGroupName);
-        portGroupSpec.setVswitchName(name);
-        portGroupSpec.setPolicy(new HostNetworkPolicy());
-        networkSystem.addPortGroup(portGroupSpec);
-
-        Network network = null;
-        for (Network n : host.getNetworks()) {
-            if (n.getName().equals(portGroupName)) {
-                network = n;
-                break;
-            }
-        }
-        if (network == null) {
-            throw new RemoteException("Network created but not found");
-        }
-
-        result = new SwitchResult(
-            network,
-            new Path(hostPath, name),
-            new Path(hostPath, portGroupName));
-
-        return result;
-    }
-
-    //----------------------------------------------------------------------------------------------
     public void removeSwitch(Path path)
     throws RemoteException {
         ComputeResource res = getComputeResource(path.getParent());
@@ -308,28 +252,6 @@ public class VirtualHost implements Serializable {
     }
 
     //----------------------------------------------------------------------------------------------
-    public Network getNetwork(Path path)
-    throws RemoteException {
-        Network result = null;
-
-        String networkName = path.getName();
-
-        ComputeResource res = getComputeResource(path);
-        HostSystem host = res.getHosts()[0];
-        for (Network network : host.getNetworks()) {
-            if (network.getName().equals(networkName)) {
-                result = network;
-                break;
-            }
-        }
-        if (result == null) {
-            throw new NotFound();
-        }
-
-        return result;
-    }
-
-    //----------------------------------------------------------------------------------------------
     public VirtualMachine getVm(UUID vmid)
     throws RemoteException {
         SearchIndex searchIndex = serviceInstance.getSearchIndex();
@@ -344,50 +266,6 @@ public class VirtualHost implements Serializable {
     //----------------------------------------------------------------------------------------------
     public String getVmxPath(VirtualMachine vm) {
         return vm.getConfig().getFiles().getVmPathName();
-    }
-
-    //----------------------------------------------------------------------------------------------
-    public void runCommand(VirtualMachine vm, String user, String password, String... command)
-    throws IOException, InterruptedException {
-        runCommand(vm, user, password, Arrays.asList(command));
-    }
-
-    //----------------------------------------------------------------------------------------------
-    public void runCommand(VirtualMachine vm, String user, String password, List<String> command)
-    throws IOException, InterruptedException {
-        waitForVmtools(vm);
-        String vmx = getVmxPath(vm);
-        List<String> commandLine = new ArrayList<String>();
-        commandLine.add("vmrun");
-        commandLine.add("-T");
-        commandLine.add("server");
-        commandLine.add("-h");
-        commandLine.add(url);
-        commandLine.add("-u");
-        commandLine.add(this.user);
-        commandLine.add("-p");
-        commandLine.add(this.password);
-        commandLine.add("-gu");
-        commandLine.add(user);
-        commandLine.add("-gp");
-        commandLine.add(password);
-        commandLine.add("runProgramInGuest");
-        commandLine.add(vmx);
-        commandLine.addAll(command);
-        if (log.isDebugEnabled()) {
-            log.debug("Command: " + commandLine);
-        }
-        ProcessBuilder builder = new ProcessBuilder(commandLine);
-        builder.redirectErrorStream(true);
-        Process process = builder.start();
-
-        InputStream procIn = process.getInputStream();
-        IOUtil.getInstance().discardStream(procIn);
-
-        int exitCode = process.waitFor();
-        if (exitCode != 0) {
-            throw new IOException("Command failed with code " + exitCode);
-        }
     }
 
     //----------------------------------------------------------------------------------------------
@@ -440,73 +318,6 @@ public class VirtualHost implements Serializable {
     }
 
     //----------------------------------------------------------------------------------------------
-    public VirtualMachine getTemplate(Path path)
-    throws RemoteException {
-        VirtualMachine result = null;
-
-        List<String> folderNames = path.getParentFolders().toList();
-        String targetName = path.getName();
-
-        Datacenter datacenter = getDatacenter(path);
-
-        // traverse folders
-        Folder folder = datacenter.getVmFolder();
-        Folder nextFolder = null;
-        for (String folderName : folderNames) {
-            for (ManagedEntity e : folder.getChildEntity()) {
-                if (e instanceof Folder && e.getName().equals(folderName)) {
-                    nextFolder = (Folder) e;
-                    break;
-                }
-            }
-            if (nextFolder == null) {
-                throw new NotFound();
-            }
-            folder = nextFolder;
-            nextFolder = null;
-        }
-        if (folder == null) {
-            throw new NotFound();
-        }
-
-        // find template
-        for (ManagedEntity e : folder.getChildEntity()) {
-            if (e instanceof VirtualMachine && e.getName().equals(targetName)) {
-                VirtualMachine vm = (VirtualMachine) e;
-                if (vm.getConfig().isTemplate()) {
-                    result = vm;
-                    break;
-                }
-            }
-        }
-        if (result == null) {
-            throw new NotFound();
-        }
-
-        return result;
-    }
-
-    //----------------------------------------------------------------------------------------------
-    public Datastore getDatastore(Path path)
-    throws RemoteException {
-        Datastore result = null;
-
-        Datacenter datacenter = getDatacenter(path);
-
-        for (Datastore d : datacenter.getDatastores()) {
-            if (d.getName().equals(path.getName())) {
-                result = d;
-                break;
-            }
-        }
-        if (result == null) {
-            throw new NotFound();
-        }
-
-        return result;
-    }
-
-    //----------------------------------------------------------------------------------------------
     public ComputeResource getComputeResource(Path path)
     throws RemoteException {
         ComputeResource result = null;
@@ -546,35 +357,4 @@ public class VirtualHost implements Serializable {
         return result;
     }
 
-    //----------------------------------------------------------------------------------------------
-    Folder getFolder(Path path)
-    throws RemoteException {
-        Folder result = null;
-
-        List<String> folderNames = path.getFolders().toList();
-
-        Datacenter datacenter = getDatacenter(path);
-
-        // traverse folders
-        result = datacenter.getVmFolder();
-        Folder nextFolder = null;
-        for (String folderName : folderNames) {
-            for (ManagedEntity e : result.getChildEntity()) {
-                if (e instanceof Folder && e.getName().equals(folderName)) {
-                    nextFolder = (Folder) e;
-                    break;
-                }
-            }
-            if (nextFolder == null) {
-                throw new NotFound();
-            }
-            result = nextFolder;
-            nextFolder = null;
-        }
-        if (result == null) {
-            throw new NotFound();
-        }
-
-        return result;
-    }
 }

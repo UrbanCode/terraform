@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Urbancode, Inc
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -54,7 +54,7 @@ public class XmlWrite {
 
     //----------------------------------------------------------------------------------------------
     public XmlWrite() {
-        
+
     }
 
     //----------------------------------------------------------------------------------------------
@@ -79,7 +79,6 @@ public class XmlWrite {
         List<Method> result = new ArrayList<Method>();
         for (Method method : clazz.getMethods()) {
             if (method.getName().startsWith(methodPrefix)) {
-                // TODO - need to find another solution for this
                 if (!(method.getName().equals("getClass") || Modifier.isProtected(method.getModifiers()))) {
                     result.add(method);
                 }
@@ -91,17 +90,14 @@ public class XmlWrite {
     //----------------------------------------------------------------------------------------------
     public void makeXml(Object object, Document doc, Element parent)
     throws IllegalArgumentException, IllegalAccessException, InvocationTargetException, ClassNotFoundException {
-        
-//        String nameSpace = object.getClass().getPackage().getName();
-        
         String className = object.getClass().getCanonicalName();
         String nameSpace = persistConf.getNameSpaceForClassName(className);
-        
+
         String prefix = persistConf.getPrefixForNameSpace(nameSpace);
-        
+
         String elemName = persistConf.getElementForClassName(className);
         Element element = doc.createElementNS(nameSpace, prefix + ":" + elemName);
-        
+
         if (parent == null) {
             doc.appendChild(element);
         }
@@ -159,7 +155,7 @@ public class XmlWrite {
     }
 
     //----------------------------------------------------------------------------------------------
-    public String docToString(Document doc, Transformer trans) 
+    public String docToString(Document doc, Transformer trans)
     throws TransformerException {
         String result;
 
@@ -173,7 +169,7 @@ public class XmlWrite {
     }
 
     //----------------------------------------------------------------------------------------------
-    public void writeFile(File filePath, String toWrite) 
+    public void writeFile(File filePath, String toWrite)
     throws IOException, FileNotFoundException {
         FileUtils.writeStringToFile(filePath, toWrite);
     }

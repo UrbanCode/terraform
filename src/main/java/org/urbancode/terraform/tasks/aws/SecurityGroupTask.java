@@ -48,11 +48,11 @@ public abstract class SecurityGroupTask extends SubTask {
     protected AWSHelper helper;
     protected ContextAWS context;
 
-    protected String vpcId = null;   // not used in EC2, but it makes things a lot easier
-                                       // to keep this here
+    //variable only used internally
+    protected String vpcId = null;
 
-    protected String fullName;        // contains the name with a -UUID appended to it. This is
-                                       // because we need unique security groups per environment
+    //includes UUID suffix for uniqueness
+    protected String fullName;
 
     protected String name;
     protected String descr;
@@ -149,7 +149,6 @@ public abstract class SecurityGroupTask extends SubTask {
         }
 
         // give unique name
-        //String uuid = UUID.randomUUID().toString().substring(0, 5);
         String uuid = context.getEnvironment().fetchUUID();
         fullName = name + ("-" + uuid);
         log.debug("Security Group " + name + " has fullname " + fullName);

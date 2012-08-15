@@ -129,6 +129,9 @@ public class SubnetTask extends SubTask {
     }
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * @return false if ID is null, or true if it is non-null
+     */
     public boolean verify() {
         // will return false if the id is null
         boolean result = false;

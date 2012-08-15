@@ -134,6 +134,7 @@ public class UDAgentPostCreateTask extends PostCreateTask {
             if (agentName == null) {
                 agentName = context.resolve("${ud.agent.name}");
                 if (agentName == null || "null".equals(agentName)) {
+                    //generate name based on environment name and instance name (should be unique)
                     agentName = environment.getName() + "-" + cloneTask.getInstanceName();
                 }
             }

@@ -202,7 +202,7 @@ public class PostCreateTask extends ExtensionTask {
     //----------------------------------------------------------------------------------------------
     @Override
     public void restore() {
-        //nothing to restore
+        //nothing to restore since VM is restored in constructor
     }
 
 }

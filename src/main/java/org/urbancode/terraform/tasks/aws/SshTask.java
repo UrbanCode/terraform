@@ -180,8 +180,7 @@ public class SshTask extends PostCreateActionTask {
     //----------------------------------------------------------------------------------------------
     @Override
     public void destroy() {
-        // Don't think we have anything to do here
-        // unless we should implement shutdown cmds
+        //not needed for this task
     }
 
     //----------------------------------------------------------------------------------------------

@@ -232,7 +232,12 @@ public class EnvironmentTaskVmware extends EnvironmentTask {
     }
 
     //----------------------------------------------------------------------------------------------
-    private void addToCloneTasks() {
+    /**
+     * Creates a number of copies of CloneTasks equal to the "count" attribute minus 1
+     * For example, if count=3, then 3 VM clones are requested. We need to create 2
+     * more objects to represent those other clones.
+     */
+    private void addNewClonesToTaskList() {
         List<CloneTask> newCloneList = new ArrayList<CloneTask>();
         for (CloneTask cloneTask : cloneTasks) {
             newCloneList.add(cloneTask);
@@ -418,7 +423,7 @@ public class EnvironmentTaskVmware extends EnvironmentTask {
         }
 
         //vm clone tasks
-        addToCloneTasks();
+        addNewClonesToTaskList();
 
         try {
             createClonesInOrder();

@@ -331,8 +331,6 @@ public class VpcTask extends Task {
 
             helper.waitForPublicAddresses(ec2Client);
 
-            // detach all ENIs - there are none?
-
             // remove route tables
             if (getRouteTables() != null && !getRouteTables().isEmpty()) {
                 for (RouteTableTask table : getRouteTables()) {

@@ -35,8 +35,9 @@ public class ScriptTask extends BootActionSubTask {
 
     private ContextAWS context;
 
-    private String url;     // url where to grab the script
-    private String shell;   // the shell that the script will be ran in
+    //url to grab the script and shell the script will be run in
+    private String url;
+    private String shell;
     // list of parameters to be passed to the script
     private List<ParamTask> params = new ArrayList<ParamTask>();
 

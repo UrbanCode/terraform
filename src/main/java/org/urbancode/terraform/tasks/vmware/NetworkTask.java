@@ -181,6 +181,11 @@ public class NetworkTask extends SubTask {
     }
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * Restores the SwitchResult object for the network task
+     * @param host
+     * @throws RemoteException
+     */
     public void restoreNetwork(VirtualHost host)
     throws RemoteException {
         ComputeResource res = host.getComputeResource(hostPath);
@@ -234,7 +239,7 @@ public class NetworkTask extends SubTask {
             restoreNetwork(host);
         }
         catch (RemoteException e) {
-            log.warn("Unable to delete network", e);
+            log.warn("Unable to restore network", e);
         }
     }
 }

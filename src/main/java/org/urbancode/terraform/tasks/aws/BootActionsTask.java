@@ -87,7 +87,7 @@ public class BootActionsTask extends SubTask {
     }
 
     // TODO - not tested if works with puppetTasks AND scriptTasks.
-    //         You should be able to just complete teh puppet task
+    //         You should be able to just complete the puppet task
     //         with the scriptTask.
     //----------------------------------------------------------------------------------------------
     public BootActionSubTask createPuppet() {
@@ -102,7 +102,7 @@ public class BootActionsTask extends SubTask {
         String userData = "";
 
         if (platform.equalsIgnoreCase("windows")) {
-            // stuff
+            // TODO windows boot actions
         }
         else {
             userData += "#!" + shell + " \n\n";  // #! is REQUIRED to be first characters)

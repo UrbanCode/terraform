@@ -391,8 +391,7 @@ public class InstanceTask extends Task {
     }
 
     //----------------------------------------------------------------------------------------------
-    private boolean verifySecurityGroups(Instance instance)
-    throws Exception {
+    private boolean verifySecurityGroups(Instance instance) {
         boolean result = false;
         List<String> expectedIds = new ArrayList<String>();
         for (SecurityGroupRefTask group : getSecurityGroupRefs()) {
@@ -410,8 +409,7 @@ public class InstanceTask extends Task {
     }
 
     //----------------------------------------------------------------------------------------------
-    public boolean verify()
-    throws Exception {
+    public boolean verify() {
         // will return false if the id is null
         boolean result = false;
         if (instanceId != null) {
@@ -509,8 +507,7 @@ public class InstanceTask extends Task {
     }
 
     //----------------------------------------------------------------------------------------------
-    private List<String> findSecurityGroups()
-    throws Exception {
+    private List<String> findSecurityGroups() {
         List<String> groupIds = new ArrayList<String>();
         if (getSecurityGroupRefs() != null) {
             for (SecurityGroupRefTask ref : getSecurityGroupRefs()) {
@@ -640,8 +637,7 @@ public class InstanceTask extends Task {
             if (env.getLoadBalancers() != null) {
                 for (LoadBalancerTask load : env.getLoadBalancers()) {
                     if (load.getName().equals(loadBalancer)) {
-                        // found it
-
+                        // found it, deregistering instance with load balancer
                         List<String> tmp = new ArrayList<String>();
                         tmp.add(instanceId);
                         helper.updateInstancesOnLoadBalancer(load.getFullName(), tmp, false,
@@ -747,10 +743,7 @@ public class InstanceTask extends Task {
         updatePlatform();
 
         try {
-            // temporarily remove verification - fix if there is no VPC
-//            if (instanceId != null) {
-//                verified = verify();
-//            }
+            // TODO determine if verification is necessary
 
             // setup
             userData = setupBootActions();

@@ -296,7 +296,7 @@ public class RouterConfigPostCreateTask extends PostCreateTask {
         // allowable types: "generated", "manual", "assigned"
         nic.setAddressType("generated");
         nic.setBacking(nicBacking);
-        //according to vsphere api keys should be unique, but this does not appear to be enforced
+        //according to vsphere api, keys should be unique, but this does not appear to be enforced
         nic.setKey(0);
 
         nicSpec.setDevice(nic);
