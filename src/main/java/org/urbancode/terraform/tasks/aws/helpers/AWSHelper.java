@@ -1696,14 +1696,22 @@ public class AWSHelper {
     }
 
     //----------------------------------------------------------------------------------------------
-    public void stopInstances(List<String> instanceIds, AmazonEC2 ec2Client) {
+    public void stopInstances(List<String> instanceIds, AmazonEC2 ec2Client)
+    throws RemoteException, InterruptedException {
         StopInstancesRequest stopRequest = new StopInstancesRequest(instanceIds);
         ec2Client.stopInstances(stopRequest);
+        for (String instanceId : instanceIds) {
+            waitForState(instanceId, "stopped", 8, ec2Client);
+        }
     }
 
     //----------------------------------------------------------------------------------------------
-    public void startInstances(List<String> instanceIds, AmazonEC2 ec2Client) {
+    public void startInstances(List<String> instanceIds, AmazonEC2 ec2Client)
+    throws RemoteException, InterruptedException {
         StartInstancesRequest startRequest = new StartInstancesRequest(instanceIds);
         ec2Client.startInstances(startRequest);
+        for (String instanceId : instanceIds) {
+            waitForState(instanceId, "running", 8, ec2Client);
+        }
     }
 }

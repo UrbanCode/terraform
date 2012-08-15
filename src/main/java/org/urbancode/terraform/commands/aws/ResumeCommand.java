@@ -1,9 +1,11 @@
 package org.urbancode.terraform.commands.aws;
 
+import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.log4j.Logger;
 import org.urbancode.terraform.commands.common.Command;
 import org.urbancode.terraform.commands.common.CommandException;
 import org.urbancode.terraform.tasks.aws.ContextAWS;
@@ -19,6 +21,7 @@ public class ResumeCommand implements Command {
     //**********************************************************************************************
     // CLASS
     //**********************************************************************************************
+    static private final Logger log = Logger.getLogger(ResumeCommand.class);
 
     //**********************************************************************************************
     // INSTANCE
@@ -40,7 +43,15 @@ public class ResumeCommand implements Command {
     public void execute()
     throws CommandException {
         List<String> instanceIds = getInstanceIds();
-        helper.startInstances(instanceIds, client);
+        try {
+            helper.startInstances(instanceIds, client);
+        } catch (RemoteException e) {
+            log.warn("RemoteException while attempting to start instance");
+            throw new CommandException(e);
+        } catch (InterruptedException e) {
+            log.warn("InterruptedException while attempting to start instance");
+            throw new CommandException(e);
+        }
     }
 
     //----------------------------------------------------------------------------------------------
