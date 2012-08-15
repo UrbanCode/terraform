@@ -130,7 +130,7 @@ public class RouteTableTask extends SubTask {
     //----------------------------------------------------------------------------------------------
     public boolean existsInAws() {
         if (ec2Client == null) {
-            ec2Client = context.getEC2Client();
+            ec2Client = context.fetchEC2Client();
         }
 
         boolean result = false;
@@ -188,7 +188,7 @@ public class RouteTableTask extends SubTask {
         log.debug("Main: " + isMainTable);
 
         if (ec2Client == null) {
-            ec2Client = context.getEC2Client();
+            ec2Client = context.fetchEC2Client();
         }
 
         try {
@@ -230,7 +230,7 @@ public class RouteTableTask extends SubTask {
     public void destroy()
     throws EnvironmentDestructionException {
         if (ec2Client == null) {
-            ec2Client = context.getEC2Client();
+            ec2Client = context.fetchEC2Client();
         }
         log.info("Destroying RouteTable...");
 

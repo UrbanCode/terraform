@@ -111,7 +111,7 @@ public class EnvironmentTaskAWS extends EnvironmentTask {
 
     //----------------------------------------------------------------------------------------------
     public List<InstanceTask> getInstances() {
-        return Collections.unmodifiableList(instances);
+        return instances;
     }
 
     //----------------------------------------------------------------------------------------------
@@ -270,9 +270,9 @@ public class EnvironmentTaskAWS extends EnvironmentTask {
     }
 
     //----------------------------------------------------------------------------------------------
-    // TODO - clean this shit up
     private void launchInstances()
     throws Exception {
+        //TODO clean up
         // setup launch groups
         if (instances != null) {
             log.debug("Preparing to launch instances");
@@ -413,7 +413,7 @@ public class EnvironmentTaskAWS extends EnvironmentTask {
     throws EnvironmentCreationException {
         log.debug("Creating EnvironmentAWS");
         if (ec2Client == null) {
-            ec2Client = context.getEC2Client();
+            ec2Client = context.fetchEC2Client();
         }
 
         log.info("Creating Environment");
@@ -464,7 +464,7 @@ public class EnvironmentTaskAWS extends EnvironmentTask {
     public void destroy()
     throws EnvironmentDestructionException {
         if (ec2Client == null) {
-            ec2Client = context.getEC2Client();
+            ec2Client = context.fetchEC2Client();
         }
 
         int threadPoolSize = instances.size();

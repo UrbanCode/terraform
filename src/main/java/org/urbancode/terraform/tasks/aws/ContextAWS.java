@@ -89,7 +89,7 @@ public class ContextAWS implements Context {
      *
      * @return an AmazonEC2 which is an active connection to Amazon EC2
      */
-    protected AmazonEC2 getEC2Client() {
+    public AmazonEC2 fetchEC2Client() {
         if (ec2Client == null) {
             ec2Client = new AmazonEC2Client(getBasicAwsCreds());
         }
@@ -102,7 +102,7 @@ public class ContextAWS implements Context {
      * @return an AmazonElasticLoadBalancing which is an active connection to Amazon Elastic Load
      * Balancing
      */
-    protected AmazonElasticLoadBalancing getELBClient() {
+    public AmazonElasticLoadBalancing fetchELBClient() {
         if (elbClient == null) {
             elbClient = new AmazonElasticLoadBalancingClient(getBasicAwsCreds());
         }

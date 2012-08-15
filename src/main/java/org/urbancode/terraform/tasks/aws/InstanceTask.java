@@ -416,7 +416,7 @@ public class InstanceTask extends Task {
         boolean result = false;
         if (instanceId != null) {
             if (ec2Client == null) {
-                ec2Client = context.getEC2Client();
+                ec2Client = context.fetchEC2Client();
             }
 
             List<String> id = new ArrayList<String>();
@@ -738,10 +738,10 @@ public class InstanceTask extends Task {
 
         // check AWS connections
         if (ec2Client == null) {
-            ec2Client = context.getEC2Client();
+            ec2Client = context.fetchEC2Client();
         }
         if (elbClient == null) {
-            elbClient = context.getELBClient();
+            elbClient = context.fetchELBClient();
         }
 
         updatePlatform();
@@ -818,10 +818,10 @@ public class InstanceTask extends Task {
     public void destroy()
     throws EnvironmentDestructionException {
         if (ec2Client == null) {
-            ec2Client = context.getEC2Client();
+            ec2Client = context.fetchEC2Client();
         }
         if (elbClient == null) {
-            elbClient = context.getELBClient();
+            elbClient = context.fetchELBClient();
         }
         try {
             log.info("Shutting down instance " + getId());

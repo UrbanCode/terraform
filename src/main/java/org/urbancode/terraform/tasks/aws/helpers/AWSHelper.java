@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Urbancode, Inc
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -101,6 +101,8 @@ import com.amazonaws.services.ec2.model.RouteTable;
 import com.amazonaws.services.ec2.model.RunInstancesRequest;
 import com.amazonaws.services.ec2.model.RunInstancesResult;
 import com.amazonaws.services.ec2.model.SecurityGroup;
+import com.amazonaws.services.ec2.model.StartInstancesRequest;
+import com.amazonaws.services.ec2.model.StopInstancesRequest;
 import com.amazonaws.services.ec2.model.Subnet;
 import com.amazonaws.services.ec2.model.Tag;
 import com.amazonaws.services.ec2.model.TerminateInstancesRequest;
@@ -238,13 +240,13 @@ public class AWSHelper {
             Instance instance = getInstanceById(instanceId, ec2Client);
             if (instance != null) {
                 state = instance.getState().getName();
-                if (instance.getStateReason() != null && 
+                if (instance.getStateReason() != null &&
                         "Server.InternalError".equals(instance.getStateReason().getCode())) {
                     throw new RemoteException(instance.getStateReason().getMessage());
                 }
             }
-            // check to see if the instance failed at startup 
-            
+            // check to see if the instance failed at startup
+
             Thread.sleep(pollInterval);
         }
         log.info("Instance " + instanceId + " is now in " + state + " state");
@@ -364,7 +366,7 @@ public class AWSHelper {
 
         return instance;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     /**
      * Launches a single instance with given parameters.
@@ -385,8 +387,8 @@ public class AWSHelper {
      * @param ec2Client
      * @return instanceId
      */
-    public String launchAmi(String amiId, String subnetId, String keyPair, String size, 
-            String userData, List<String> groups, List<BlockDeviceMapping> blockMaps, 
+    public String launchAmi(String amiId, String subnetId, String keyPair, String size,
+            String userData, List<String> groups, List<BlockDeviceMapping> blockMaps,
             String ariId, String akiId, String zone, AmazonEC2 ec2Client) {
         String instanceId = null;
         RunInstancesRequest request =  new RunInstancesRequest()
@@ -511,7 +513,7 @@ public class AWSHelper {
 
     //----------------------------------------------------------------------------------------------
     /**
-     * 
+     *
      * @param ec2Client
      */
     public void waitForPublicAddresses(AmazonEC2 ec2Client) {
@@ -565,14 +567,14 @@ public class AWSHelper {
 
     //----------------------------------------------------------------------------------------------
     /**
-     * 
+     *
      * @param loadBalancerName
      * @param instances
      * @param lbClient
      * @return
      */
      public List<com.amazonaws.services.elasticloadbalancing.model.Instance> deregisterInstancesLB(String loadBalancerName, List<com.amazonaws.services.elasticloadbalancing.model.Instance> instances, AmazonElasticLoadBalancing lbClient) {
-     
+
         DeregisterInstancesFromLoadBalancerRequest request = new DeregisterInstancesFromLoadBalancerRequest()
                                                                   .withInstances(instances)
                                                                   .withLoadBalancerName(loadBalancerName);
@@ -582,7 +584,7 @@ public class AWSHelper {
 
     //----------------------------------------------------------------------------------------------
      /**
-      * 
+      *
       * @param loadBalancerName
       * @param instances
       * @param lbClient
@@ -594,7 +596,7 @@ public class AWSHelper {
             RegisterInstancesWithLoadBalancerRequest request = new RegisterInstancesWithLoadBalancerRequest()
             .withInstances(instances)
             .withLoadBalancerName(loadBalancerName);
-            RegisterInstancesWithLoadBalancerResult result = 
+            RegisterInstancesWithLoadBalancerResult result =
                     lbClient.registerInstancesWithLoadBalancer(request);
             updatedInstances = result.getInstances();
         }
@@ -617,7 +619,7 @@ public class AWSHelper {
      * @throws NullPointerException
      */
     public String launchLoadBalancer(String loadBalancerName, List<String> subnets,
-                                        List<String> secGroups, List<Listener> listeners, 
+                                        List<String> secGroups, List<Listener> listeners,
                                         List<String> zones, AmazonElasticLoadBalancing lbClient)
     throws NullPointerException {
         CreateLoadBalancerRequest request = new CreateLoadBalancerRequest()
@@ -629,7 +631,7 @@ public class AWSHelper {
             request = request.withAvailabilityZones(zones);
         }
         else {
-            throw new NullPointerException("Must specify either zones or subnets for load balancer " 
+            throw new NullPointerException("Must specify either zones or subnets for load balancer "
                                             + loadBalancerName);
         }
 
@@ -706,7 +708,7 @@ public class AWSHelper {
 
     //----------------------------------------------------------------------------------------------
     /**
-     * 
+     *
      * @param volumeId
      * @param ec2Client
      */
@@ -727,7 +729,7 @@ public class AWSHelper {
 
     //----------------------------------------------------------------------------------------------
     /**
-     * 
+     *
      * @param volumeId
      * @param instanceId
      * @param device
@@ -743,7 +745,7 @@ public class AWSHelper {
 
     //----------------------------------------------------------------------------------------------
     /**
-     * 
+     *
      * @param volumeId
      * @param instanceId
      * @param device
@@ -777,7 +779,7 @@ public class AWSHelper {
         }
         catch (AmazonServiceException e) {
             log.error("Failed to delete Route: " +
-                      "\n\tRouteTableId: " + routeTableId + 
+                      "\n\tRouteTableId: " + routeTableId +
                       "\n\tDestination CIDR: " + destCidr, e);
             if (!"InvalidRouteTableID.NotFound".equals(e.getErrorCode())) {
                 throw e;
@@ -791,8 +793,8 @@ public class AWSHelper {
      *  gateway. I f the attachId is an instance (starts with "i-") then the src/destination check
      *  on the instance will be disabled to allow it to act as a NAT.
      *
-     * @param routeTableId the id of the route table to add this route to 
-     * @param destCidr 
+     * @param routeTableId the id of the route table to add this route to
+     * @param destCidr
      * @param attachId of the instance or internet gateway
      * @param ec2Client AmazonEC2 connection
      */
@@ -819,15 +821,15 @@ public class AWSHelper {
             }
         }
     }
-    
+
     //----------------------------------------------------------------------------------------------
-    /** 
+    /**
      * Modifies the instance's "SrcDestCheck" attribute
-     * Sets the source/destination check on an instance. The src/dest check only allows traffic meant 
+     * Sets the source/destination check on an instance. The src/dest check only allows traffic meant
      * for the given instance. When you disable the src/dest check, the instance can then act as a NAT.
-     * 
+     *
      * @param value true/false for the src/dest check
-     * @param attachId the id of the instance 
+     * @param attachId the id of the instance
      * @param ec2Client
      */
     public void setSrcDestCheck(boolean value, String attachId, AmazonEC2 ec2Client) {
@@ -835,18 +837,18 @@ public class AWSHelper {
         String valueString = Boolean.toString(value);
         modifyInstanceAttribute(attachId, attribute, valueString, ec2Client);
     }
-    
+
     //----------------------------------------------------------------------------------------------
     public void modifyInstanceAttribute(String instanceId, String attribute, String value, AmazonEC2 ec2Client) {
         ModifyInstanceAttributeRequest request = new ModifyInstanceAttributeRequest();
-        
+
         if (instanceId != null && !instanceId.isEmpty()) {
             request.withInstanceId(instanceId);
         }
         else {
             // no instance id!
         }
-        
+
         if (attribute != null && !attribute.isEmpty()) {
             if (value != null && !value.isEmpty()) {
                 request = request.withAttribute(attribute);
@@ -859,7 +861,7 @@ public class AWSHelper {
         else {
             // no attribute!
         }
-        
+
         ec2Client.modifyInstanceAttribute(request);
     }
 
@@ -872,10 +874,10 @@ public class AWSHelper {
      */
     public String createInternetGateway(AmazonEC2 ec2Client) {
         String gatewayId = null;
-        
+
         CreateInternetGatewayRequest request = new CreateInternetGatewayRequest();
         CreateInternetGatewayResult result = ec2Client.createInternetGateway(request);
-        
+
         if (result != null && result.getInternetGateway() != null) {
             gatewayId = result.getInternetGateway().getInternetGatewayId();
         }
@@ -892,7 +894,7 @@ public class AWSHelper {
      */
     public void deleteInternetGateway(String gatewayId, AmazonEC2 ec2Client) {
         // TODO check if gateway is attached to anything
-        
+
         try {
             DeleteInternetGatewayRequest request = new DeleteInternetGatewayRequest()
                                                         .withInternetGatewayId(gatewayId);
@@ -1015,13 +1017,13 @@ public class AWSHelper {
             request = request.withRouteTableIds(routeTableIds);
         }
         DescribeRouteTablesResult result = ec2Client.describeRouteTables(request);
-        
+
         return result.getRouteTables();
     }
 
     //----------------------------------------------------------------------------------------------
     /**
-     * 
+     *
      * @param routeTableId
      * @param subnetId
      * @param ec2Client
@@ -1034,7 +1036,7 @@ public class AWSHelper {
                                                        .withRouteTableId(routeTableId)
                                                        .withSubnetId(subnetId);
             AssociateRouteTableResult result = ec2Client.associateRouteTable(request);
-            
+
             if (result != null) {
                 assId = result.getAssociationId();
             }
@@ -1052,7 +1054,7 @@ public class AWSHelper {
 
     //----------------------------------------------------------------------------------------------
     /**
-     * 
+     *
      * @param vpcId
      * @param ec2Client
      * @return
@@ -1078,7 +1080,7 @@ public class AWSHelper {
 
     //----------------------------------------------------------------------------------------------
     /**
-     * 
+     *
      * @param routeTableId
      * @param ec2Client
      */
@@ -1087,10 +1089,10 @@ public class AWSHelper {
             DeleteRouteTableRequest request = new DeleteRouteTableRequest()
                                                    .withRouteTableId(routeTableId);
             ec2Client.deleteRouteTable(request);
-        } 
+        }
         catch (AmazonServiceException e) {
             log.error("Failed to delete subnet", e);
-            if (!"InvalidSubnetID.NotFound".equals(e.getErrorCode()) 
+            if (!"InvalidSubnetID.NotFound".equals(e.getErrorCode())
                 && !"InvalidRouteTableID.NotFound".equals(e.getErrorCode())) {
                 // we're only going to swallow the expcetion if the subnet id was not found
                 throw e;
@@ -1100,7 +1102,7 @@ public class AWSHelper {
 
     //----------------------------------------------------------------------------------------------
     /**
-     * 
+     *
      * @param associationId
      * @param ec2Client
      */
@@ -1121,7 +1123,7 @@ public class AWSHelper {
 
     //----------------------------------------------------------------------------------------------
     /**
-     * 
+     *
      * @param groupId
      * @param protocol
      * @param startPort
@@ -1136,7 +1138,7 @@ public class AWSHelper {
         try {
             // protocol should be lowercase
             protocol = protocol.toLowerCase();
-    
+
             // create container for request
             // we need to use IpPermission object here because the other (old) way
             // is depreciated and no longer works (but it's still in the code?)
@@ -1169,7 +1171,7 @@ public class AWSHelper {
 
     //----------------------------------------------------------------------------------------------
     /**
-     * 
+     *
      * @param groupId
      * @param protocol
      * @param startPort
@@ -1181,7 +1183,7 @@ public class AWSHelper {
     public void deleteRuleForSecurityGroup(String groupId, String protocol, int startPort,
                                                 int endPort, String cidr, boolean inbound,
                                                 AmazonEC2 ec2Client) {
-        
+
         IpPermission perm = new IpPermission().withFromPort(startPort)
                                                .withToPort(endPort)
                                                .withIpProtocol(protocol)
@@ -1211,7 +1213,7 @@ public class AWSHelper {
 
     //----------------------------------------------------------------------------------------------
     /**
-     * 
+     *
      * @param vpcId
      * @param cidr
      * @param zone
@@ -1242,7 +1244,7 @@ public class AWSHelper {
 
     //----------------------------------------------------------------------------------------------
     /**
-     * 
+     *
      * @param subnetId
      * @param ec2Client
      */
@@ -1259,12 +1261,12 @@ public class AWSHelper {
                 throw e;
             }
         }
-        
+
     }
 
     //----------------------------------------------------------------------------------------------
     /**
-     * 
+     *
      * @param subnetIds
      * @param ec2Client
      * @return
@@ -1282,7 +1284,7 @@ public class AWSHelper {
 
     //----------------------------------------------------------------------------------------------
     /**
-     * 
+     *
      * @param groupIds
      * @param ec2Client
      * @return
@@ -1300,7 +1302,7 @@ public class AWSHelper {
 
     //----------------------------------------------------------------------------------------------
     /**
-     * 
+     *
      * @param groupName
      * @param vpcId leave null if you do not want your security group to be associated with a VPC
      * @param descr
@@ -1313,14 +1315,14 @@ public class AWSHelper {
             CreateSecurityGroupRequest request = new CreateSecurityGroupRequest()
                                                       .withGroupName(groupName)
                                                       .withDescription(descr);
-            
+
             if (vpcId != null) {
                 request = request.withVpcId(vpcId);
             }
-            
+
             CreateSecurityGroupResult result = ec2Client.createSecurityGroup(request);
             groupId = result.getGroupId();
-        
+
         }
         catch (AmazonServiceException e) {
             log.error("Failed to create Security Group", e);
@@ -1334,7 +1336,7 @@ public class AWSHelper {
 
     //----------------------------------------------------------------------------------------------
     /**
-     * 
+     *
      * @param groupId
      * @param ec2Client
      */
@@ -1355,7 +1357,7 @@ public class AWSHelper {
 
     //----------------------------------------------------------------------------------------------
     /**
-     * 
+     *
      * @param cidr
      * @param ec2Client
      * @return
@@ -1370,7 +1372,7 @@ public class AWSHelper {
 
     //----------------------------------------------------------------------------------------------
     /**
-     * 
+     *
      * @param vpcId
      * @param ec2Client
      */
@@ -1390,7 +1392,7 @@ public class AWSHelper {
 
     //----------------------------------------------------------------------------------------------
     /**
-     * 
+     *
      * @param gatewayIds
      * @param ec2Client
      * @return
@@ -1408,7 +1410,7 @@ public class AWSHelper {
 
     //----------------------------------------------------------------------------------------------
     /**
-     * 
+     *
      * @param instanceIds
      * @param ec2Client
      * @return
@@ -1437,7 +1439,7 @@ public class AWSHelper {
 
     //----------------------------------------------------------------------------------------------
     /**
-     * 
+     *
      * @param routeIds
      * @param routeTableId
      * @param ec2Client
@@ -1454,7 +1456,7 @@ public class AWSHelper {
 
     //----------------------------------------------------------------------------------------------
     /**
-     * 
+     *
      * @param interfaceIds
      * @param vpcId
      * @param ec2Client
@@ -1478,7 +1480,7 @@ public class AWSHelper {
 
     //----------------------------------------------------------------------------------------------
     /**
-     * 
+     *
      * @param attachIds
      * @param ec2Client
      */
@@ -1494,7 +1496,7 @@ public class AWSHelper {
 
     //----------------------------------------------------------------------------------------------
     /**
-     * 
+     *
      * @param interfaceIds
      * @param ec2Client
      */
@@ -1510,7 +1512,7 @@ public class AWSHelper {
 
     //----------------------------------------------------------------------------------------------
     /**
-     * 
+     *
      * @param instanceId
      * @param tag
      * @param value
@@ -1549,10 +1551,10 @@ public class AWSHelper {
 
         return ownerId;
     }
-    
+
     //----------------------------------------------------------------------------------------------
     /**
-     * 
+     *
      * @param ownerId
      * @param imageIds
      * @param ec2Client
@@ -1561,24 +1563,24 @@ public class AWSHelper {
     public List<Image> getImages(String ownerId, List<String> imageIds, AmazonEC2 ec2Client) {
         List<Image> images = null;
         DescribeImagesRequest request = new DescribeImagesRequest();
-        
+
         if (ownerId != null && !ownerId.isEmpty()) {
             request = request.withOwners(ownerId);
         }
-        
+
         if (imageIds != null && !imageIds.isEmpty()) {
             request = request.withImageIds(imageIds);
         }
-        
+
         DescribeImagesResult result = ec2Client.describeImages(request);
-        
+
         if (result != null) {
             images = result.getImages();
         }
         else {
             log.warn("No images found");
         }
-        
+
         return images;
     }
 
@@ -1600,7 +1602,7 @@ public class AWSHelper {
 
     //----------------------------------------------------------------------------------------------
     /**
-     * 
+     *
      * @param instanceId
      * @param ec2Client
      * @return
@@ -1617,7 +1619,7 @@ public class AWSHelper {
     }
 
     /**
-     * 
+     *
      * @param loadBalancerName
      * @param elbClient
      */
@@ -1637,9 +1639,9 @@ public class AWSHelper {
             }
         }
     }
-    
+
     /**
-     * 
+     *
      * @param name
      * @param elbClient
      * @return
@@ -1650,10 +1652,10 @@ public class AWSHelper {
             DescribeLoadBalancersRequest request = new DescribeLoadBalancersRequest()
                                                          .withLoadBalancerNames(name);
             DescribeLoadBalancersResult result = elbClient.describeLoadBalancers(request);
-            
+
             if (result != null && result.getLoadBalancerDescriptions() != null) {
                 // grab first entry since we only requested 1 LB
-                // Though, maybe this will grab all vpc ELBs with names too? 
+                // Though, maybe this will grab all vpc ELBs with names too?
                 loadBalancer = result.getLoadBalancerDescriptions().get(0);
             }
         }
@@ -1665,9 +1667,9 @@ public class AWSHelper {
         }
         return loadBalancer;
     }
-    
+
     /**
-     * 
+     *
      * @param name
      * @param ec2Client
      * @return
@@ -1678,7 +1680,7 @@ public class AWSHelper {
         DescribeSecurityGroupsRequest request = new DescribeSecurityGroupsRequest()
                                                       .withGroupNames(name);
         DescribeSecurityGroupsResult result = ec2Client.describeSecurityGroups(request);
-        
+
         if (result != null && result.getSecurityGroups() != null) {
             group = result.getSecurityGroups().get(0);
         }
@@ -1689,7 +1691,19 @@ public class AWSHelper {
                 throw e;
             }
         }
-        
+
         return group;
+    }
+
+    //----------------------------------------------------------------------------------------------
+    public void stopInstances(List<String> instanceIds, AmazonEC2 ec2Client) {
+        StopInstancesRequest stopRequest = new StopInstancesRequest(instanceIds);
+        ec2Client.stopInstances(stopRequest);
+    }
+
+    //----------------------------------------------------------------------------------------------
+    public void startInstances(List<String> instanceIds, AmazonEC2 ec2Client) {
+        StartInstancesRequest startRequest = new StartInstancesRequest(instanceIds);
+        ec2Client.startInstances(startRequest);
     }
 }

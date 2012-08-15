@@ -113,7 +113,7 @@ public class SubnetTask extends SubTask {
     //----------------------------------------------------------------------------------------------
     public boolean existsInAws() {
         if (ec2Client == null) {
-            ec2Client = context.getEC2Client();
+            ec2Client = context.fetchEC2Client();
         }
         boolean result = false;
         List<String> id = new ArrayList<String>();
@@ -134,7 +134,7 @@ public class SubnetTask extends SubTask {
         boolean result = false;
         if (subnetId != null) {
             if (ec2Client == null) {
-                ec2Client = context.getEC2Client();
+                ec2Client = context.fetchEC2Client();
             }
 
             List<String> id = new ArrayList<String>();
@@ -161,7 +161,7 @@ public class SubnetTask extends SubTask {
         boolean verified = false;
 
         if (ec2Client == null) {
-            ec2Client = context.getEC2Client();
+            ec2Client = context.fetchEC2Client();
         }
 
         try {
@@ -193,7 +193,7 @@ public class SubnetTask extends SubTask {
     public void destroy()
     throws EnvironmentDestructionException {
         if (ec2Client == null) {
-            ec2Client = context.getEC2Client();
+            ec2Client = context.fetchEC2Client();
         }
 
         try {

@@ -81,7 +81,7 @@ public class InetGwyTask extends SubTask {
     public boolean existsInAws() {
         boolean result = false;
         DescribeInternetGatewaysRequest req = new DescribeInternetGatewaysRequest().withInternetGatewayIds(getId());
-        if (context.getEC2Client().describeInternetGateways(req).getInternetGateways().isEmpty()) {
+        if (context.fetchEC2Client().describeInternetGateways(req).getInternetGateways().isEmpty()) {
             log.error("InternetGateway ( " + getId() + " ) does not exist in AWS!");
         }
         else {
@@ -97,7 +97,7 @@ public class InetGwyTask extends SubTask {
         boolean result = false;
         if (gatewayId != null) {
             if (ec2Client == null) {
-                ec2Client = context.getEC2Client();
+                ec2Client = context.fetchEC2Client();
             }
 
             List<String> id = new ArrayList<String>();
@@ -126,7 +126,7 @@ public class InetGwyTask extends SubTask {
     public void create() {
         boolean verified = false;
         if (ec2Client == null) {
-            ec2Client = context.getEC2Client();
+            ec2Client = context.fetchEC2Client();
         }
 
         try {
@@ -152,7 +152,7 @@ public class InetGwyTask extends SubTask {
     @Override
     public void destroy() {
         if (ec2Client == null) {
-            ec2Client = context.getEC2Client();
+            ec2Client = context.fetchEC2Client();
         }
 
         try {

@@ -123,7 +123,7 @@ public abstract class SecurityGroupTask extends SubTask {
     //----------------------------------------------------------------------------------------------
     public boolean existsInAws() {
         if (ec2Client == null) {
-            ec2Client = context.getEC2Client();
+            ec2Client = context.fetchEC2Client();
         }
         boolean result = false;
         List<String> id = new ArrayList<String>();
@@ -145,7 +145,7 @@ public abstract class SecurityGroupTask extends SubTask {
     public void create()
     throws EnvironmentCreationException {
         if (ec2Client == null) {
-            ec2Client = context.getEC2Client();
+            ec2Client = context.fetchEC2Client();
         }
 
         // give unique name
@@ -188,7 +188,7 @@ public abstract class SecurityGroupTask extends SubTask {
     public void destroy()
     throws EnvironmentDestructionException {
         if (ec2Client == null) {
-            ec2Client = context.getEC2Client();
+            ec2Client = context.fetchEC2Client();
         }
 
         try {

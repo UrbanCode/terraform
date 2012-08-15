@@ -306,7 +306,7 @@ public class LoadBalancerTask extends SubTask {
     throws EnvironmentCreationException {
         if (DNSName == null) {
             if (elbClient == null) {
-                elbClient = context.getELBClient();
+                elbClient = context.fetchELBClient();
             }
 
             // give unique name
@@ -400,7 +400,7 @@ public class LoadBalancerTask extends SubTask {
     public void destroy()
     throws EnvironmentDestructionException {
         if (elbClient == null) {
-            elbClient = context.getELBClient();
+            elbClient = context.fetchELBClient();
         }
         try {
             helper = context.getAWSHelper();

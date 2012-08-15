@@ -276,7 +276,7 @@ public class VpcTask extends Task {
         // since we have an id, check if Vpc exists in AWS
         boolean result = false;
         DescribeVpcsRequest vpcReq = new DescribeVpcsRequest().withVpcIds(vpcId);
-        if (context.getEC2Client().describeVpcs(vpcReq) == null) {
+        if (context.fetchEC2Client().describeVpcs(vpcReq) == null) {
             log.info("Vpc with id " + vpcId + " does NOT exist in AWS!");
         }
         else {
@@ -290,7 +290,7 @@ public class VpcTask extends Task {
     public void create()
     throws EnvironmentCreationException {
         if (ec2Client == null) {
-            ec2Client = context.getEC2Client();
+            ec2Client = context.fetchEC2Client();
         }
 
         log.info("Creating Vpc...");
@@ -316,7 +316,7 @@ public class VpcTask extends Task {
     public void destroy()
     throws EnvironmentDestructionException {
         if (ec2Client == null) {
-            ec2Client = context.getEC2Client();
+            ec2Client = context.fetchEC2Client();
         }
 
         log.info("Destroying Vpc...");

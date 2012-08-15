@@ -46,13 +46,13 @@ Basic Installation
     Windows
     terraform [command] [input-xml-file] [input-credentials-file] [prop1=val1 prop2=val2 ...]
     
-    Allowed commands for all providers: create, destroy
-    Allowed commands for VMware: suspend, resume, snapshot
+    Allowed commands for all providers: create, destroy, suspend, resume
+    Additional allowed commands for VMware: snapshot
 
-  The Amazon Web Services Templates do not require any properties. For more information on the AWS 
-  portion of Terraform, see the AWS section below.
+  Amazon Web Services environments do not require any command line properties. 
+  For more information on the AWS portion of Terraform, see the AWS section below.
 
-  The VMware command line calls require specific properties for creating an environment. 
+  Starting a VMware environment requires specific command line properties. 
   See the VMware section below for more details.
 
 
@@ -360,6 +360,20 @@ snapshot - take a snapshot of all VMs in the environment.
 
 Amazon Web Services 
 ======================================
+
+Allowed commands:
+
+create - create an environment of instances, optional VPCs, load balancers, etc.
+
+destroy - delete a previously created environment
+
+suspend - "stop" all instances in the environment. NOTE - there are many differences between this
+and the "suspend" command for VMware. You won't be billed for instance usage, but you will be billed
+for your EBS volume. Amazon actually will deprovision your VM and save your associated EBS.
+When you restart a stopped instance, it will have a new IP address, DNS name, etc.
+
+resume - start all stopped instances in the environment.
+
 
   -----------
   Credentials

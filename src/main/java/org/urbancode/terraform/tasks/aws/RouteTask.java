@@ -87,7 +87,7 @@ public class RouteTask extends SubTask {
     @Override
     public void create() {
         if (ec2Client == null) {
-            ec2Client = context.getEC2Client();
+            ec2Client = context.fetchEC2Client();
         }
 
         log.info("Creating Route");
@@ -112,7 +112,7 @@ public class RouteTask extends SubTask {
     @Override
     public void destroy() {
         if (ec2Client == null) {
-            ec2Client = context.getEC2Client();
+            ec2Client = context.fetchEC2Client();
         }
 
         try {

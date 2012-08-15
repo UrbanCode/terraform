@@ -171,7 +171,7 @@ public class EbsTask extends SubTask {
      */
     private void createPostLaunch() {
         if (ec2Client == null) {
-            ec2Client = context.getEC2Client();
+            ec2Client = context.fetchEC2Client();
         }
 
         if (!isVerified()) {
@@ -210,7 +210,7 @@ public class EbsTask extends SubTask {
      */
     private void destroyPostLaunch() {
         if (ec2Client == null) {
-            ec2Client = context.getEC2Client();
+            ec2Client = context.fetchEC2Client();
         }
 
         // detach with force
