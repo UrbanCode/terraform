@@ -616,6 +616,13 @@ public class CloneTask extends SubTask implements Cloneable, Comparable<CloneTas
     }
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * Powers off the VM stored in this CloneTask object. This is a "hard" powering off.
+     * @throws InvalidProperty
+     * @throws RuntimeFault
+     * @throws RemoteException
+     * @throws InterruptedException
+     */
     public void powerOffVm()
     throws InvalidProperty, RuntimeFault, RemoteException, InterruptedException {
         VirtualMachineRuntimeInfo vmri = vm.getRuntime();
@@ -644,6 +651,13 @@ public class CloneTask extends SubTask implements Cloneable, Comparable<CloneTas
     }
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * Attempts to suspend the VM stored in this CloneTask object according to its OS's suspend command.
+     * @throws InvalidProperty
+     * @throws RuntimeFault
+     * @throws RemoteException
+     * @throws InterruptedException
+     */
     public void suspendVm()
     throws InvalidProperty, RuntimeFault, RemoteException, InterruptedException {
         VirtualMachineRuntimeInfo vmri = vm.getRuntime();
@@ -655,6 +669,13 @@ public class CloneTask extends SubTask implements Cloneable, Comparable<CloneTas
     }
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * Takes a snapshot of this VM. THe name of the snapshot is the current date and time.
+     * The format of the name is yyyy-mm-dd hh:mm:ss
+     * @throws VimFault
+     * @throws RemoteException
+     * @throws InterruptedException
+     */
     public void takeSnapshotOfVm()
     throws VimFault, RemoteException, InterruptedException {
         DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -668,6 +689,10 @@ public class CloneTask extends SubTask implements Cloneable, Comparable<CloneTas
     }
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * Restores the Virtual Machine object for the vm field for this object.
+     * @throws RemoteException
+     */
     public void restoreVm()
     throws RemoteException {
         // restore by vm name and folder
@@ -677,6 +702,11 @@ public class CloneTask extends SubTask implements Cloneable, Comparable<CloneTas
     }
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * Attempts to delete the VM from disk.
+     * @throws RemoteException
+     * @throws InterruptedException
+     */
     public void removeVm()
     throws RemoteException, InterruptedException {
         try {
@@ -693,6 +723,9 @@ public class CloneTask extends SubTask implements Cloneable, Comparable<CloneTas
     }
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * This is an override of the Java clone() method and has nothing to do with cloning VMs.
+     */
     @Override
     public Object clone()
     throws CloneNotSupportedException {
@@ -804,6 +837,9 @@ public class CloneTask extends SubTask implements Cloneable, Comparable<CloneTas
     }
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * Restores the VM and network reference fields for this CloneTask.
+     */
     @Override
     public void restore() {
         try {

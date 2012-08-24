@@ -31,7 +31,6 @@ import com.vmware.vim25.VirtualDeviceConfigSpecOperation;
 import com.vmware.vim25.VirtualEthernetCard;
 import com.vmware.vim25.VirtualEthernetCardNetworkBackingInfo;
 import com.vmware.vim25.VirtualMachineConfigSpec;
-import com.vmware.vim25.VirtualMachinePowerState;
 import com.vmware.vim25.VirtualMachineToolsStatus;
 import com.vmware.vim25.mo.ComputeResource;
 import com.vmware.vim25.mo.Datacenter;
@@ -53,6 +52,8 @@ public class VirtualHost implements Serializable {
     /**
      * This class contains utility methods for handling VSphere objects.
      * It also stores the vSphere ServiceInstance object for connecting to vCenter.
+     * There is a nonzero chance that some of these methods will be refactored in to
+     * CloneTask, NetworkTask, NetworkRefTask, and other classes.
      */
     final static private Logger log = Logger.getLogger(VirtualHost.class);
     private static final long serialVersionUID = 1L;
@@ -166,46 +167,6 @@ public class VirtualHost implements Serializable {
     }
 
     //----------------------------------------------------------------------------------------------
-    public void powerOnVm(VirtualMachine vm)
-    throws RemoteException, InterruptedException {
-        Task task = vm.powerOnVM_Task(null);
-        String status = task.waitForTask();
-        if (!status.equals("success")) {
-            VirtualMachinePowerState powerState = vm.getRuntime().getPowerState();
-            if (powerState != VirtualMachinePowerState.poweredOn) {
-                String message = task.getTaskInfo().getError().getLocalizedMessage();
-                throw new RemoteException("Failed: " + message);
-            }
-        }
-    }
-
-    //----------------------------------------------------------------------------------------------
-    public void powerOnVm(UUID vmid)
-    throws RemoteException, InterruptedException {
-        powerOnVm(getVm(vmid));
-    }
-
-    //----------------------------------------------------------------------------------------------
-    public void powerOffVm(VirtualMachine vm)
-    throws RemoteException, InterruptedException {
-        Task task = vm.powerOffVM_Task();
-        String status = task.waitForTask();
-        if (!status.equals("success")) {
-            VirtualMachinePowerState powerState = vm.getRuntime().getPowerState();
-            if (powerState != VirtualMachinePowerState.poweredOff) {
-                String message = task.getTaskInfo().getError().getLocalizedMessage();
-                throw new RemoteException("Failed: " + message);
-            }
-        }
-    }
-
-    //----------------------------------------------------------------------------------------------
-    public void powerOffVm(UUID vmid)
-    throws RemoteException, InterruptedException {
-        powerOffVm(getVm(vmid));
-    }
-
-    //----------------------------------------------------------------------------------------------
     public void removeSwitch(Path path)
     throws RemoteException {
         ComputeResource res = getComputeResource(path.getParent());
@@ -227,25 +188,6 @@ public class VirtualHost implements Serializable {
         HostNetworkSystem networkSystem = host.getHostNetworkSystem();
         try {
             networkSystem.removePortGroup(path.getName());
-        }
-        catch (NotFound swallow) {
-        }
-    }
-
-    //----------------------------------------------------------------------------------------------
-    public void removeVm(UUID vmid)
-    throws RemoteException, InterruptedException {
-        try {
-            VirtualMachine vm = getVm(vmid);
-            Task task = vm.destroy_Task();
-            String status = task.waitForTask();
-            if (!status.equals("success")) {
-                // throw NotFound if vm no longer exists
-                getVm(vmid);
-
-                String message = task.getTaskInfo().getError().getLocalizedMessage();
-                throw new RemoteException("Failed: " + message);
-            }
         }
         catch (NotFound swallow) {
         }
@@ -293,6 +235,13 @@ public class VirtualHost implements Serializable {
     }
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * This method will wait for VM Tools to be running. For example, the machine might
+     * still be booting and thus VM Tools would not be running.
+     * @param vm
+     * @throws RemoteException
+     * @throws InterruptedException
+     */
     public void waitForVmtools(VirtualMachine vm)
     throws RemoteException, InterruptedException {
         long pollInterval = 3000L;
@@ -318,6 +267,12 @@ public class VirtualHost implements Serializable {
     }
 
     //----------------------------------------------------------------------------------------------
+    /**
+     *
+     * @param path
+     * @return the ComputerResource associated with the datacenter and host.
+     * @throws RemoteException
+     */
     public ComputeResource getComputeResource(Path path)
     throws RemoteException {
         ComputeResource result = null;

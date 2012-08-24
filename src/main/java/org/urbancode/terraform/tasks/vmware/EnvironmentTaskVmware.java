@@ -481,6 +481,9 @@ public class EnvironmentTaskVmware extends EnvironmentTask {
     }
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * Calls the restore() method on the folderTask, cloneTasks, and networkTasks in this environment.
+     */
     @Override
     public void restore() {
         //vm clone tasks

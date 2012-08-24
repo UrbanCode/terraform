@@ -31,6 +31,10 @@ public class TakeSnapshotCommand implements Command {
     }
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * Attempts to take a snapshot of every VM in the specified environment.
+     * @throws CommandException
+     */
     @Override
     public void execute()
     throws CommandException {
@@ -53,7 +57,7 @@ public class TakeSnapshotCommand implements Command {
     }
 
     //----------------------------------------------------------------------------------------------
-    public List<CloneTask> fetchCloneTaskList() {
+    private List<CloneTask> fetchCloneTaskList() {
         return ((EnvironmentTaskVmware) context.getEnvironment()).getCloneTasks();
     }
 

@@ -39,6 +39,9 @@ public class ResumeCommand implements Command {
 
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * This will attempt to start all stopped instances in the environment.
+     */
     @Override
     public void execute()
     throws CommandException {

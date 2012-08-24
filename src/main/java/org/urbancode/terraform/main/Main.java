@@ -67,6 +67,17 @@ public class Main {
     static private final Logger log = Logger.getLogger(Main.class);
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * This method initializes Terraform from the command line.
+     * The static main method verifies the command line arguments and terminates if they are incorrect.
+     * @param args
+     * @throws IOException
+     * @throws XmlParsingException
+     * @throws CredentialsException
+     * @throws EnvironmentCreationException
+     * @throws EnvironmentDestructionException
+     * @throws EnvironmentRestorationException
+     */
     static public void main(String[] args)
     throws IOException, XmlParsingException, CredentialsException, EnvironmentCreationException,
     EnvironmentDestructionException, EnvironmentRestorationException {
@@ -188,6 +199,20 @@ public class Main {
     }
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * Initializes Terraform so it can execute the given commands.
+     * Here is the order of operations:
+     * Parses the credentials file and verifies the given credentials.
+     * Generates a random string for this environment, which is appended to the output xml file.
+     * Parses the xml file.
+     * Runs the specified command (create, destroy, etc).
+     * @throws XmlParsingException
+     * @throws IOException
+     * @throws CredentialsException
+     * @throws EnvironmentCreationException
+     * @throws EnvironmentDestructionException
+     * @throws EnvironmentRestorationException
+     */
     public void execute()
     throws XmlParsingException, IOException, CredentialsException, EnvironmentCreationException,
     EnvironmentDestructionException, EnvironmentRestorationException {

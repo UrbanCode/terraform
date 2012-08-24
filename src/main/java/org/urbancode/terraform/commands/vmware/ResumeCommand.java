@@ -33,6 +33,10 @@ public class ResumeCommand implements Command {
 
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * Attempts to power on all powered off and suspended VMs in the environment.
+     * This will be done in the order the VMs were created.
+     */
     @Override
     public void execute()
     throws CommandException {
@@ -58,7 +62,7 @@ public class ResumeCommand implements Command {
     }
 
     //----------------------------------------------------------------------------------------------
-    public List<CloneTask> fetchCloneTaskList() {
+    private List<CloneTask> fetchCloneTaskList() {
         return ((EnvironmentTaskVmware) context.getEnvironment()).getCloneTasks();
     }
 

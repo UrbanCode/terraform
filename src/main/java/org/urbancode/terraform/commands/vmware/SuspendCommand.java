@@ -33,6 +33,10 @@ public class SuspendCommand implements Command {
 
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * Attempts to suspend power (yellow pause icon) on all VMs in the environment.
+     * This will be executed in reverse from the order the VMs were created.
+     */
     @Override
     public void execute()
     throws CommandException {
@@ -58,13 +62,13 @@ public class SuspendCommand implements Command {
     }
 
     //----------------------------------------------------------------------------------------------
-    public void reverseOrderCloneList(List<CloneTask> cloneTasks) {
+    private void reverseOrderCloneList(List<CloneTask> cloneTasks) {
         Collections.sort(cloneTasks);
         Collections.reverse(cloneTasks);
     }
 
     //----------------------------------------------------------------------------------------------
-    public List<CloneTask> fetchCloneTaskList() {
+    private List<CloneTask> fetchCloneTaskList() {
         return ((EnvironmentTaskVmware) context.getEnvironment()).getCloneTasks();
     }
 

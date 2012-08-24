@@ -83,6 +83,13 @@ public class RouterConfigPostCreateTask extends PostCreateTask {
     }
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * Configures a Debian-based router after it has been created.
+     * Copies over the isc-dhcp-server, iptables, dhcpd, and interfaces configuration files.
+     * The host machine running Terraform must have VMRun installed.
+     * This method ends when the router successfully broadcasts its IP address.
+     * If it does not broadcast an IP address this method will time out after 10 minutes.
+     */
     @Override
     public void create() {
         //set VM now that the VM has been created

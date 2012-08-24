@@ -39,6 +39,9 @@ public class SuspendCommand implements Command {
 
 
     //----------------------------------------------------------------------------------------------
+    /**
+     * This will attempt to stop all running instances in the environment.
+     */
     @Override
     public void execute()
     throws CommandException {
