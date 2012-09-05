@@ -171,7 +171,7 @@ snapshot - take a snapshot of all VMs in the environment.
   These specify the VM user name and password (which may need to be root, 
   depending on what configurations you are doing). The user and password
   attributes are required on any router clone, any clone with a command element,
-  and any clone with a uDeploy post-create-task element.
+  and any basically any clone with a post-create-task element.
   
   User and password should be a valid login on the VM.
   
@@ -317,7 +317,93 @@ snapshot - take a snapshot of all VMs in the environment.
           
       </environment>
   </context>
-
+  
+  ----------------------
+  Chef Post-Create Tasks
+  ----------------------
+  Terraform now supports a post create task for running a Chef cookbook with Chef Solo.
+  The name of the element is: <chef:post-create-task>. It goes inside a clone element.
+  You must have this namespace in your context element:
+  
+    xmlns:chef="org.urbancode.terraform.tasks.vmware.chef"
+    
+  So for example, your opening context tag might look like this:
+    
+    <context
+    xmlns="org.urbancode.terraform.tasks.vmware"
+    xmlns:chef="org.urbancode.terraform.tasks.vmware.chef">
+  
+  This task will:
+    1. check if Chef is installed, and if not, install it
+    2. attempt to create the directories /etc/chef, /var/chef, /var/chef/data_bags if they do
+      not exist yet
+    3. Copy the configuration files solo.rb, node.json, and the json configuration file to the VM
+    4. run a cookbook located at an Internet repository via URL, or one pre-baked on your VM's
+      file system
+    5. the output of the process is logged to /var/chef/chef.out on the guest VM
+    
+    There are several relevant configuration files needed to run this post-create task. All of them
+    should be placed in your conf directory.
+    
+    chef-install.sh - this is the install script for Chef that gets copied over. It is not
+    recommended that you mess with this. It's straight from Opscode.
+    
+    The following files will be specified by name on your xml template and can be renamed so you can
+    store many different versions of them:
+    
+    solo.rb - the chef-solo configuration file
+    node.json - the chef configuration file if the VM is a node
+    chef.json - the json configuration file which gets passed in via the -j argument to chef-solo
+    
+    This is what the task element should look like in your xml file (with appropriate file names):
+    
+     <chef:post-create-task cookbook-url="http://example-repo.com/cookbooks/mybook.tar.gz"
+     solo-rb-file="solo.rb" node-json-file="node.json" json-conf-file="chef.json"/>
+     
+  The cookbook-url attribute is required, but it could be a file path instead.
+  The file attributes are not required, but if they are not specified, they will default to
+  "solo.rb", "node.json", and "chef.json" respectively.
+  
+  So for example, say you want a node named foo with the configuration file node-foo.json.
+  And you also want a node named bar on a different VM that has the conf file node-bar.json.
+  Say they also had different run lists, specified on their conf files, foo.json and bar.json.
+  But you might want the same solo.rb file because that is standard across your system.
+  
+  Your xml might look like this:
+  
+    <clone instance-name="vm1"
+                  order="1"
+                  image-path="/datacenter/images/ubuntu-image"
+                  snapshot-name="initial-snapshot"
+                  poweredOn="true"
+                  user="root"
+                  password="password">
+            <command cmd="/usr/bin/apt-get update"/>
+            <chef:post-create-task cookbook-url="http://repo.com/cookbook1.tar.gz" 
+            solo-rb-file="solo.rb" node-json-file="node-foo.json" json-conf-file="foo.json"/>
+    </clone>
+    <clone instance-name="vm2"
+                  order="2"
+                  image-path="/datacenter/images/ubuntu-image"
+                  snapshot-name="initial-snapshot"
+                  poweredOn="true"
+                  user="root"
+                  password="password">
+            <command cmd="/usr/bin/apt-get update"/>
+            <chef:post-create-task cookbook-url="http://repo.com/cookbook2.tar.gz" 
+            solo-rb-file="solo.rb" node-json-file="node-bar.json" json-conf-file="bar.json"/>
+    </clone>
+  
+  A few caveats:
+  
+  For now, this must be run as root.
+  
+  It is recommended that you run a command to update your package manager repos beforehand.
+  If your cookbook calls apt-get, often you will get an error message saying that
+  "apt-get exited with code 100" if you did not update apt-get recently.
+  For example, for a Ubuntu VM, inside your clone element and before your chef task, put this:
+  
+    <command cmd="/usr/bin/apt-get update"/>
 
   -----------
   Credentials
@@ -355,7 +441,6 @@ snapshot - take a snapshot of all VMs in the environment.
   These correspond to the vSphere datacenter name, the name of the host the VMs 
   will be created on, the destination folder for the environment folder, and 
   the datastore for the VMs.
-
 
 
 Amazon Web Services 
