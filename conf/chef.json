@@ -1,0 +1,5 @@
+{
+"chef_server": {
+    "server_url": "http://localhost:4000"
+    },"run_list": [ "recipe[tomcat]", "recipe[tomcat::users]" ]
+}

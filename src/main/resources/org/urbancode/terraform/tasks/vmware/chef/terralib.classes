@@ -1,0 +1,1 @@
+post-create-task=org.urbancode.terraform.tasks.vmware.chef.ChefSoloPostCreateTask

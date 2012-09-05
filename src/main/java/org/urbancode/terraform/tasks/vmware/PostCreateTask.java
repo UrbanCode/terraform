@@ -120,6 +120,19 @@ public class PostCreateTask extends ExtensionTask {
         commandLine.add(vmRunCommand);
         commandLine.add(vmx);
         commandLine.addAll(args);
+
+        String cmd = "";
+        for(String s : commandLine) {
+            if(s.equals(vmPassword) || s.equals(virtualHostPassword)) {
+                cmd = cmd + "**** ";
+            }
+            else {
+                cmd = cmd + s + " ";
+            }
+        }
+        cmd = cmd.trim();
+        log.info("command line: " + cmd);
+
         log.debug("running command " + vmRunCommand + " " + args.get(0));
         ProcessBuilder builder = new ProcessBuilder(commandLine);
         builder.redirectErrorStream(true);
