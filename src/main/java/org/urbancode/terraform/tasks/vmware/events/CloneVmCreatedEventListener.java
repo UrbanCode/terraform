@@ -32,6 +32,8 @@ import org.urbancode.terraform.tasks.util.IOUtil;
 import org.urbancode.terraform.tasks.vmware.CloneTask;
 import org.urbancode.terraform.tasks.vmware.EnvironmentTaskVmware;
 import org.urbancode.terraform.tasks.vmware.PortRangeTask;
+import org.urbancode.terraform.tasks.vmware.PostCreateTask;
+import org.urbancode.terraform.tasks.vmware.RouterConfigPostCreateTask;
 import org.urbancode.terraform.tasks.vmware.SecurityGroupRefTask;
 import org.urbancode.terraform.tasks.vmware.SecurityGroupTask;
 import org.urbancode.terraform.tasks.vmware.util.GlobalIpAddressPool;
@@ -68,6 +70,7 @@ public class CloneVmCreatedEventListener extends ExtensionTask implements TaskEv
     private String privateIp;
 
     int virtualInterfaceNum = 0;
+    private int portOffset = 10000;
 
     //----------------------------------------------------------------------------------------------
     public CloneVmCreatedEventListener() {
@@ -117,7 +120,7 @@ public class CloneVmCreatedEventListener extends ExtensionTask implements TaskEv
                    log.warn("Exception while powering on VM " + cloneTask.getInstanceName(), e);
                 }
 
-                if (cloneTask.getAssignHostIp()) {
+                if (cloneTask.getAssignHostIp() || cloneTask.getAssignPrivateIpOnly()) {
                     try {
                         //update VMs and security group
                         this.instanceTask = cloneTask;
@@ -131,11 +134,28 @@ public class CloneVmCreatedEventListener extends ExtensionTask implements TaskEv
                         VirtualHost host = environment.fetchVirtualHost();
                         host.waitForIp(instance);
                         privateIp = instance.getGuest().getIpAddress();
-                        //get host ip
-                        Ip4 ip = GlobalIpAddressPool.getInstance().allocateIp();
-                        this.hostNetworkIp = ip.toString();
 
-                        configure();
+                        log.info("configuring private networking for VM " + cloneTask.getInstanceName());
+                        if (cloneTask.getAssignPrivateIpOnly()) {
+                            try {
+                                //update the iptables in the router
+                                addInstanceToIpTables(null, privateIp);
+                                runCommand(routerUser, routerPassword, "runProgramInGuest", "/usr/sbin/service", "networking", "stop");
+                                runCommand(routerUser, routerPassword, "runProgramInGuest", "/usr/sbin/service", "networking", "start");
+                            }
+                            catch (IOException e) {
+                                log.warn("IOException while configuring networking (probably invalid file path)", e);
+                            }
+                            catch (InterruptedException e) {
+                                log.warn("InterruptedException while configuring networking", e);
+                            }
+                        }
+                        else {
+                            //get host ip
+                            Ip4 ip = GlobalIpAddressPool.getInstance().allocateIp();
+                            this.hostNetworkIp = ip.toString();
+                            configureNetworking();
+                        }
                     }
                     catch (RemoteException e) {
                         log.warn("RemoteException while waiting for IP address", e);
@@ -149,7 +169,7 @@ public class CloneVmCreatedEventListener extends ExtensionTask implements TaskEv
     }
 
   //----------------------------------------------------------------------------------------------
-    public void configure() {
+    public void configureNetworking() {
         try {
             //update interfaces, then bring interface down and up
             addNewEntryToInterfaces("" + virtualInterfaceNum);
@@ -177,20 +197,34 @@ public class CloneVmCreatedEventListener extends ExtensionTask implements TaskEv
         String iptables = FileUtils.readFileToString(new File(hostIpTablesPath));
         String commentString = "#Instance Prerouting Tables";
 
-        if (this.securityGroups.isEmpty()) {
-            String ipTablesString = commentString + "\n" + createDefaultIpTablesStringForVm(networkIp, privateIp);
-            result = iptables.replace(commentString, ipTablesString);
-        }
-        else {
+        //no public IP will be assigned
+        if(networkIp == null) {
             String ipTablesString = commentString;
             for (SecurityGroupTask securityGroup : this.securityGroups) {
                 for (PortRangeTask prt : securityGroup.getPortRanges()) {
                     ipTablesString = ipTablesString + "\n" +
-                    createIpTablesStringForVm(networkIp, privateIp, prt.getFirstPort(), prt.getLastPort());
+                    createIpTablesStringForVm(privateIp, prt.getFirstPort(), prt.getLastPort());
                 }
             }
             result = iptables.replace(commentString, ipTablesString);
         }
+        else {
+            if (this.securityGroups.isEmpty()) {
+                String ipTablesString = commentString + "\n" + createDefaultIpTablesStringForVm(networkIp, privateIp);
+                result = iptables.replace(commentString, ipTablesString);
+            }
+            else {
+                String ipTablesString = commentString;
+                for (SecurityGroupTask securityGroup : this.securityGroups) {
+                    for (PortRangeTask prt : securityGroup.getPortRanges()) {
+                        ipTablesString = ipTablesString + "\n" +
+                        createIpTablesStringForVm(networkIp, privateIp, prt.getFirstPort(), prt.getLastPort());
+                    }
+                }
+                result = iptables.replace(commentString, ipTablesString);
+            }
+        }
+
         //trailing newline is necessary for iptables (commons-io removes it when file is read)
         iptables = iptables + "\n";
 
@@ -237,7 +271,32 @@ public class CloneVmCreatedEventListener extends ExtensionTask implements TaskEv
     }
 
     //----------------------------------------------------------------------------------------------
-    private String createIpTablesStringForVm (String networkIp, String privateIp, int beginPort, int endPort) {
+    private String createIpTablesStringForVm(String privateIp, int beginPort, int endPort) {
+        String routerIp = fetchRouterIp();
+        //example string
+        //-A PREROUTING -d 10.15.50.1/32 -p tcp -m tcp --dport 10022 -j DNAT --to-destination 192.168.0.2:22
+        String result = "";
+
+        //dport command has colon delimiter while to-destination command has hyphen delimiter
+        String dPorts;
+        String ports;
+        int beginWithOffset = beginPort + portOffset;
+        int endWithOffset = endPort + portOffset;
+        if (beginPort == endPort) {
+            dPorts = "" + beginWithOffset;
+            ports = "" + beginPort;
+        }
+        else {
+            dPorts = "" + beginWithOffset + ":" + endWithOffset;
+            ports = "" + beginPort + "-" + endPort;
+        }
+        result = result + "-A PREROUTING -d " + routerIp +
+                "/32 -p tcp -m tcp --dport " + dPorts + " -j DNAT --to-destination " + privateIp + ":" + ports;
+        return result;
+    }
+
+    //----------------------------------------------------------------------------------------------
+    private String createIpTablesStringForVm(String networkIp, String privateIp, int beginPort, int endPort) {
         //example string
         //-A PREROUTING -d 10.15.50.2/32 -p tcp -m tcp --dport 22 -j DNAT --to-destination 192.168.0.2:22
         String result = "";
@@ -284,6 +343,19 @@ public class CloneVmCreatedEventListener extends ExtensionTask implements TaskEv
         result = result + "gateway " + gateway + "\n";
         result = result + "netmask 255.255.0.0" + "\n\n";
 
+        return result;
+    }
+
+    //----------------------------------------------------------------------------------------------
+    private String fetchRouterIp() {
+        String result = null;
+        List<PostCreateTask> pcTasks = routerTask.getPostCreateTaskList();
+        for(PostCreateTask pcTask : pcTasks) {
+            if (pcTask instanceof RouterConfigPostCreateTask) {
+                result = ((RouterConfigPostCreateTask) pcTask).fetchRouterIp();
+                break;
+            }
+        }
         return result;
     }
 
@@ -335,7 +407,7 @@ public class CloneVmCreatedEventListener extends ExtensionTask implements TaskEv
         if (exitCode != 0) {
             throw new IOException("Command failed with code " + exitCode);
         }
-        log.debug("ran command " + vmRunCommand + " " + args.get(0));
+        log.info("ran command " + vmRunCommand + " " + args.get(0));
     }
 
     //----------------------------------------------------------------------------------------------

@@ -79,6 +79,7 @@ public class CloneTask extends SubTask implements Cloneable, Comparable<CloneTas
 
     private boolean poweredOn = false;
     private boolean assignHostIp = false;
+    private boolean assignPrivateIpOnly = false;
     private boolean sentPowerDown = false;
 
     private EnvironmentTaskVmware environment;
@@ -146,6 +147,11 @@ public class CloneTask extends SubTask implements Cloneable, Comparable<CloneTas
     //----------------------------------------------------------------------------------------------
     public boolean getAssignHostIp() {
         return this.assignHostIp;
+    }
+
+    //----------------------------------------------------------------------------------------------
+    public boolean getAssignPrivateIpOnly() {
+        return this.assignPrivateIpOnly;
     }
 
     //----------------------------------------------------------------------------------------------
@@ -228,6 +234,11 @@ public class CloneTask extends SubTask implements Cloneable, Comparable<CloneTas
     }
 
     //----------------------------------------------------------------------------------------------
+    public void setAssignPrivateIpOnly(boolean assignPrivateIpOnly) {
+        this.assignPrivateIpOnly = assignPrivateIpOnly;
+    }
+
+    //----------------------------------------------------------------------------------------------
     public void setOrder(int order) {
         this.order = order;
     }
@@ -235,7 +246,7 @@ public class CloneTask extends SubTask implements Cloneable, Comparable<CloneTas
     //----------------------------------------------------------------------------------------------
     /**
      * Sets the IP stored IP list and allocates the IPs in the Global IP Pool.
-     * @param ipListAsString
+     * @param ipListAsString comma separated list of IP addresses
      */
     public void setIpList(String ipListAsString) {
         ipList.clear();

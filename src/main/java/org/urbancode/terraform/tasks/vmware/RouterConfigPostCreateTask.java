@@ -51,6 +51,7 @@ public class RouterConfigPostCreateTask extends PostCreateTask {
     //**********************************************************************************************
     private String gateway;
     private String dns;
+    private String routerIp = null;
 
     //----------------------------------------------------------------------------------------------
     public RouterConfigPostCreateTask() {
@@ -70,6 +71,11 @@ public class RouterConfigPostCreateTask extends PostCreateTask {
     //----------------------------------------------------------------------------------------------
     public String getDns() {
         return dns;
+    }
+
+    //----------------------------------------------------------------------------------------------
+    public String fetchRouterIp() {
+        return routerIp;
     }
 
     //----------------------------------------------------------------------------------------------
@@ -194,7 +200,7 @@ public class RouterConfigPostCreateTask extends PostCreateTask {
     public void addFirstInterface(String inFileName, String outFileName)
     throws IOException {
         GlobalIpAddressPool ipPool = GlobalIpAddressPool.getInstance();
-        String routerIp = ipPool.allocateIp().toString();
+        routerIp = ipPool.allocateIp().toString();
 
         String ifaces = FileUtils.readFileToString(new File(inFileName));
         ifaces = ifaces + "\n\nauto eth0\n"
@@ -202,7 +208,7 @@ public class RouterConfigPostCreateTask extends PostCreateTask {
                         + "iface eth0 inet static\n"
                         + "  address " + routerIp + "\n"
                         + "  gateway " + gateway + "\n"
-                        + "  netmask 255.255.255.0\n"
+                        + "  netmask 255.255.0.0\n"
                         + "#Insert New Interfaces\n";
         writeToFile(outFileName, ifaces, false);
     }
@@ -378,10 +384,10 @@ public class RouterConfigPostCreateTask extends PostCreateTask {
         String eth = "eth" + nicIndex;
         String ifaces = FileUtils.readFileToString(new File(inFileName));
         ifaces = ifaces + "\nauto " + eth + "\n"
-        		+ "allow-hotplug " + eth + "\n"
-        		+ "iface " + eth + " inet static\n"
-        		+ "  address 192.168." + subnetNum + ".1\n"
-        		+ "  netmask 255.255.255.0";
+                + "allow-hotplug " + eth + "\n"
+                + "iface " + eth + " inet static\n"
+                + "  address 192.168." + subnetNum + ".1\n"
+                + "  netmask 255.255.255.0\n";
         writeToFile(outFileName, ifaces, false);
     }
 
