@@ -18,6 +18,7 @@ public class EnvironmentTaskMicrosoft extends EnvironmentTask {
     // INSTANCE
     //**********************************************************************************************
     private List<VMTask> vmTasks = new ArrayList<VMTask>();
+    private List<CloudServiceTask> csTasks = new ArrayList<CloudServiceTask>();
     //----------------------------------------------------------------------------------------------
     public EnvironmentTaskMicrosoft(Context context) {
         super(context);
@@ -34,10 +35,23 @@ public class EnvironmentTaskMicrosoft extends EnvironmentTask {
     }
 
     //----------------------------------------------------------------------------------------------
+    public List<CloudServiceTask> getCloudServiceTasks(){
+        return csTasks;
+    }
+
+    //----------------------------------------------------------------------------------------------
     public VMTask createVm() {
-        VMTask vmTask = new VMTask(this);
+        VMTask vmTask = new VMTask();
         vmTasks.add(vmTask);
+        vmTask.setUuid(uuid);
         return vmTask;
+    }
+
+    //----------------------------------------------------------------------------------------------
+    public CloudServiceTask createCloudService() {
+        CloudServiceTask csTask = new CloudServiceTask();
+        csTasks.add(csTask);
+        return csTask;
     }
 
     //----------------------------------------------------------------------------------------------
@@ -46,6 +60,8 @@ public class EnvironmentTaskMicrosoft extends EnvironmentTask {
         for(VMTask vmTask : vmTasks) {
             try {
                 vmTask.create();
+                //CloudServiceTask csTask = createCloudService();
+                //csTask.setName(vmTask.getDnsName());
             } catch (Exception e) {
                 log.warn("Exception while creating Azure VM", e);
             }

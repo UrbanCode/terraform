@@ -17,14 +17,20 @@ public class VMTask extends SubTask {
     //**********************************************************************************************
     // INSTANCE
     //**********************************************************************************************
-    private EnvironmentTaskMicrosoft env;
-    private String dnsName;
+    private String vmName;
+    private boolean addUuid = false;
+    private String uuid;
     private String imageName;
     private String location;
+    private String size = "small";
     private String user;
     private String password = "";
     private String roleFileName = "";
     private List<EndpointTask> endpointTasks = new ArrayList<EndpointTask>();
+    private boolean ssh = false;
+    private boolean rdp = false;
+    private String virtualNetworkName = "";
+    private String subnetNames = "";
 
     //----------------------------------------------------------------------------------------------
     public VMTask() {
@@ -32,14 +38,8 @@ public class VMTask extends SubTask {
     }
 
     //----------------------------------------------------------------------------------------------
-    public VMTask(EnvironmentTaskMicrosoft env) {
-        super();
-        this.env = env;
-    }
-
-    //----------------------------------------------------------------------------------------------
-    public String getDnsName() {
-        return dnsName;
+    public String getVmName() {
+        return vmName;
     }
 
     //----------------------------------------------------------------------------------------------
@@ -50,6 +50,11 @@ public class VMTask extends SubTask {
     //----------------------------------------------------------------------------------------------
     public String getLocation() {
         return location;
+    }
+
+    //----------------------------------------------------------------------------------------------
+    public String getSize() {
+        return size;
     }
 
     //----------------------------------------------------------------------------------------------
@@ -68,13 +73,43 @@ public class VMTask extends SubTask {
     }
 
     //----------------------------------------------------------------------------------------------
+    public String getVirtualNetworkName() {
+        return virtualNetworkName;
+    }
+
+    //----------------------------------------------------------------------------------------------
+    public String getSubnetNames() {
+        return subnetNames;
+    }
+
+    //----------------------------------------------------------------------------------------------
+    public boolean getSsh() {
+        return ssh;
+    }
+
+    //----------------------------------------------------------------------------------------------
+    public boolean getRdp() {
+        return rdp;
+    }
+
+    //----------------------------------------------------------------------------------------------
     public List<EndpointTask> getEndpointTasks() {
         return endpointTasks;
     }
 
     //----------------------------------------------------------------------------------------------
-    public void setDnsName(String dnsName) {
-        this.dnsName = dnsName;
+    public void setVmName(String vmName) {
+        this.vmName = vmName;
+    }
+
+    //----------------------------------------------------------------------------------------------
+    public void setAddUuid(boolean addUuid) {
+        this.addUuid = addUuid;
+    }
+
+    //----------------------------------------------------------------------------------------------
+    public void setUuid(String uuid) {
+        this.uuid = uuid;
     }
 
     //----------------------------------------------------------------------------------------------
@@ -85,6 +120,17 @@ public class VMTask extends SubTask {
     //----------------------------------------------------------------------------------------------
     public void setLocation(String location) {
         this.location = location;
+    }
+
+    //----------------------------------------------------------------------------------------------
+    public void setSize(String size) {
+        this.size = size;
+    }
+
+    //----------------------------------------------------------------------------------------------
+    public void setVmSize(String size) {
+        //alias for size
+        this.size = size;
     }
 
     //----------------------------------------------------------------------------------------------
@@ -103,23 +149,82 @@ public class VMTask extends SubTask {
     }
 
     //----------------------------------------------------------------------------------------------
+    public void setVirtualNetworkName(String virtualNetworkName) {
+        this.virtualNetworkName = virtualNetworkName;
+    }
+
+    //----------------------------------------------------------------------------------------------
+    public void setSubnetNames(String subnetNames) {
+        this.subnetNames = subnetNames;
+    }
+
+    //----------------------------------------------------------------------------------------------
+    public void setSsh(boolean ssh) {
+        this.ssh = ssh;
+    }
+
+    //----------------------------------------------------------------------------------------------
+    public void setRdp(boolean rdp) {
+        this.rdp = rdp;
+    }
+
+    //----------------------------------------------------------------------------------------------
     public EndpointTask createEndpointTask() {
         EndpointTask task = new EndpointTask();
-        task.setDnsName(dnsName);
+        task.setDnsName(vmName);
         endpointTasks.add(task);
         return task;
+    }
+
+    //----------------------------------------------------------------------------------------------
+    private boolean isValidString(String s) {
+        return !(s == null || "".equals(s));
+    }
+
+    //----------------------------------------------------------------------------------------------
+    public List<String> makeCommandList() {
+        List<String> result = new ArrayList<String>();
+        result.add("vm");
+        if(isValidString(roleFileName)) {
+            result.add("create-from");
+            result.add(addUuid ? vmName + "-" + uuid : vmName);
+            result.add(roleFileName);
+        }
+        else {
+            result.add("create");
+            result.add(addUuid ? vmName + "-" + uuid : vmName);
+            result.add(imageName);
+            result.add(user);
+            result.add(password);
+            result.add("--size");
+            result.add(size);
+            if(isValidString(subnetNames)) {
+                result.add("--subnet-names");
+                result.add(subnetNames);
+            }
+            if (ssh) {
+                result.add("--ssh");
+            }
+            if (rdp) {
+                result.add("--rdp");
+            }
+        }
+        result.add("--location");
+        result.add(location);
+
+        if(isValidString(virtualNetworkName)) {
+            result.add("--virtual-network-name");
+            result.add(virtualNetworkName);
+        }
+
+        return result;
     }
 
     //----------------------------------------------------------------------------------------------
     @Override
     public void create() throws Exception {
         AzureCmdRunner runner = new AzureCmdRunner();
-        if(roleFileName == null || "".equals(roleFileName)) {
-            runner.runCommand("vm", "create", dnsName, imageName, user, password, "--location", location);
-        }
-        else {
-            runner.runCommand("vm", "create", dnsName, roleFileName, "--location", location);
-        }
+        runner.runCommand(makeCommandList());
 
         for(EndpointTask task : endpointTasks) {
             task.create();
@@ -137,7 +242,7 @@ public class VMTask extends SubTask {
     @Override
     public void destroy() throws Exception {
         AzureCmdRunner runner = new AzureCmdRunner();
-        runner.runCommand("vm", "delete", dnsName);
+        runner.runCommand("vm", "delete", vmName);
     }
 
 }
