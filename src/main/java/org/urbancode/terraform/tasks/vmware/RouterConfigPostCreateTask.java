@@ -155,24 +155,22 @@ public class RouterConfigPostCreateTask extends PostCreateTask {
 
     //----------------------------------------------------------------------------------------------
     private void copyTempFiles() throws IOException {
+        copyTempFile("iptables.conf.temp");
+        copyTempFile("dhcpd.conf.temp");
+        copyTempFile("interfaces.temp");
+        copyTempFile("isc-dhcp-server.temp");
+    }
+
+    //----------------------------------------------------------------------------------------------
+    private void copyTempFile(String fileName) throws IOException {
         ClassLoader loader = Thread.currentThread().getContextClassLoader();
         String cpDir = "org/urbancode/terraform/conf" + File.separator;
-        InputStream iptablesStream = loader.getResourceAsStream(cpDir + "iptables.conf.temp");
-        InputStream dhcpdStream = loader.getResourceAsStream(cpDir + "dhcpd.conf.temp");
-        InputStream interfacesStream = loader.getResourceAsStream(cpDir + "interfaces.temp");
-        InputStream iscStream = loader.getResourceAsStream(cpDir + "isc-dhcp-server.temp");
-
+        InputStream inputStream = loader.getResourceAsStream(cpDir + fileName);
         try {
-            writeInputStreamToFile(iptablesStream, tempConfDir + "iptables.conf.temp");
-            writeInputStreamToFile(iptablesStream, tempConfDir + "dhcpd.conf.temp");
-            writeInputStreamToFile(iptablesStream, tempConfDir + "interfaces.temp");
-            writeInputStreamToFile(iptablesStream, tempConfDir + "isc-dhcp-server.temp");
+            writeInputStreamToFile(inputStream, tempConfDir + fileName);
         }
         catch(IOException e) {
-            iptablesStream.close();
-            dhcpdStream.close();
-            interfacesStream.close();
-            iscStream.close();
+            inputStream.close();
         }
     }
 
@@ -373,6 +371,7 @@ public class RouterConfigPostCreateTask extends PostCreateTask {
         //create isc-dhcp-server file string
         String ifacesFileAsString = FileUtils.readFileToString(new File(oldFileName));
         String result = ifacesFileAsString.replace("INTERFACES=\"\"", ifacesString);
+        result = result + "\n";
 
         writeToFile(newFileName, result, false);
     }
