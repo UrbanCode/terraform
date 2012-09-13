@@ -27,6 +27,7 @@ import org.urbancode.terraform.tasks.EnvironmentRestorationException;
 import org.urbancode.terraform.tasks.common.Context;
 import org.urbancode.terraform.tasks.common.EnvironmentTask;
 import org.urbancode.terraform.tasks.util.PropertyResolver;
+import org.urbancode.terraform.tasks.vmware.util.GlobalIpAddressPool;
 import org.urbancode.terraform.tasks.vmware.util.VirtualHost;
 
 
@@ -47,6 +48,11 @@ public class ContextVmware implements Context {
     //----------------------------------------------------------------------------------------------
     public ContextVmware() {
 
+    }
+
+    //----------------------------------------------------------------------------------------------
+    public PropertyResolver fetchResolver() {
+        return resolver;
     }
 
     //----------------------------------------------------------------------------------------------
@@ -143,6 +149,8 @@ public class ContextVmware implements Context {
 
         VirtualHost host = null;
         try {
+            GlobalIpAddressPool.getInstance().setPropertyResolver(resolver);
+            GlobalIpAddressPool.getInstance().createIpPoolFromUserProps();
             setVcenterPaths();
             host = createVirtualHost();
 
@@ -170,6 +178,8 @@ public class ContextVmware implements Context {
     public void destroy() {
         VirtualHost host = null;
         try {
+            GlobalIpAddressPool.getInstance().setPropertyResolver(resolver);
+            GlobalIpAddressPool.getInstance().createIpPoolFromUserProps();
             host = createVirtualHost();
         }
         catch (IOException e) {
@@ -185,6 +195,8 @@ public class ContextVmware implements Context {
     public void restore() throws EnvironmentRestorationException {
         VirtualHost host = null;
         try {
+            GlobalIpAddressPool.getInstance().setPropertyResolver(resolver);
+            GlobalIpAddressPool.getInstance().createIpPoolFromUserProps();
             host = createVirtualHost();
         }
         catch (IOException e) {

@@ -22,6 +22,7 @@ import java.util.Properties;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
+import org.urbancode.terraform.tasks.util.PropertyResolver;
 
 public class GlobalIpAddressPool {
 
@@ -40,11 +41,36 @@ public class GlobalIpAddressPool {
     // INSTANCE
     //**********************************************************************************************
     private IpAddressPool addressPool = null;
+    private PropertyResolver resolver = null;
 
     //----------------------------------------------------------------------------------------------
     private GlobalIpAddressPool() {
         Properties poolConfig = parseIpPoolFile();
         addressPool = createIpPoolFromProps(poolConfig);
+    }
+
+    //----------------------------------------------------------------------------------------------
+    public void createIpPoolFromUserProps() {
+        if(resolver != null) {
+            String start = resolver.resolve("${ip.pool.start}");
+            String end = resolver.resolve("${ip.pool.end}");
+            if (!(start == null || "".equals(start) || "null".equalsIgnoreCase(start) ||
+                    end == null || "".equals(end) || "null".equalsIgnoreCase(end))) {
+                addressPool = new IpAddressPool(start, end);
+                log.info("Reformatted IP address pool with start: " + start + " and end: " + end);
+            }
+            else {
+                log.debug("IP pool properties were not found; IP pool is unchanged.");
+            }
+        }
+        else {
+            log.info("The global IP pool property resolver was not set properly.");
+        }
+    }
+
+    //----------------------------------------------------------------------------------------------
+    public void setPropertyResolver(PropertyResolver resolver) {
+        this.resolver = resolver;
     }
 
     //----------------------------------------------------------------------------------------------
