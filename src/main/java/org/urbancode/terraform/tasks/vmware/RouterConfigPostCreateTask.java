@@ -33,9 +33,12 @@ import com.vmware.vim25.VirtualDeviceConfigSpec;
 import com.vmware.vim25.VirtualDeviceConfigSpecOperation;
 import com.vmware.vim25.VirtualDeviceConnectInfo;
 import com.vmware.vim25.VirtualE1000;
+import com.vmware.vim25.VirtualE1000e;
 import com.vmware.vim25.VirtualEthernetCard;
 import com.vmware.vim25.VirtualEthernetCardNetworkBackingInfo;
 import com.vmware.vim25.VirtualMachineConfigSpec;
+import com.vmware.vim25.VirtualPCNet32;
+import com.vmware.vim25.VirtualVmxnet;
 import com.vmware.vim25.mo.Task;
 import com.vmware.vim25.mo.VirtualMachine;
 
@@ -227,7 +230,7 @@ public class RouterConfigPostCreateTask extends PostCreateTask {
             int nicIndex = netRef.getNicIndex();
             int netAdapterNum = nicIndex + 1;
             String nicName = "Network adapter " + netAdapterNum;
-            addNewNetworkCard(vmToConfig, netName, nicName);
+            addNewNetworkCard(vmToConfig, netName, nicName, netRef.getNicType());
             netRef.attachNic();
             //add new interface/subnet/network to iptables, interfaces, and dhcpd
             String iptablesIn;
@@ -265,11 +268,11 @@ public class RouterConfigPostCreateTask extends PostCreateTask {
     }
 
     //----------------------------------------------------------------------------------------------
-    public void addNewNetworkCard(VirtualMachine vm, String netName, String nicName)
+    public void addNewNetworkCard(VirtualMachine vm, String netName, String nicName, String nicType)
     throws NetworkConfigurationException {
         try {
             VirtualMachineConfigSpec vmSpec = new VirtualMachineConfigSpec();
-            VirtualDeviceConfigSpec nicSpec = createNicSpec(netName, nicName);
+            VirtualDeviceConfigSpec nicSpec = createNicSpec(netName, nicName, nicType);
             vmSpec.setDeviceChange(new VirtualDeviceConfigSpec[] {nicSpec});
             Task task = vm.reconfigVM_Task(vmSpec);
             @SuppressWarnings("unused")
@@ -283,12 +286,23 @@ public class RouterConfigPostCreateTask extends PostCreateTask {
     }
 
     //----------------------------------------------------------------------------------------------
-    public VirtualDeviceConfigSpec createNicSpec(String netName, String nicName) {
+    public VirtualDeviceConfigSpec createNicSpec(String netName, String nicName, String nicType) {
         //create the specs for the new virtual ethernet card
         VirtualDeviceConfigSpec nicSpec = new VirtualDeviceConfigSpec();
         nicSpec.setOperation(VirtualDeviceConfigSpecOperation.add);
-
-        VirtualEthernetCard nic =  new VirtualE1000();
+        VirtualEthernetCard nic = null;
+        if(nicType.equalsIgnoreCase("E1000")) {
+            nic =  new VirtualE1000();
+        }
+        else if (nicType.equalsIgnoreCase("E1000e")) {
+            nic =  new VirtualE1000e();
+        }
+        else if (nicType.equalsIgnoreCase("vmxnet")) {
+            nic =  new VirtualVmxnet();
+        }
+        else if (nicType.equalsIgnoreCase("pcnet32") || nicType.equalsIgnoreCase("vlance")) {
+            nic =  new VirtualPCNet32();
+        }
 
         VirtualEthernetCardNetworkBackingInfo nicBacking =
         new VirtualEthernetCardNetworkBackingInfo();

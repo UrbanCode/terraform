@@ -39,6 +39,7 @@ public class NetworkRefTask extends SubTask {
 
     private int nicIndex;
     private String networkName;
+    private String nicType = "E1000";
     private VirtualMachine vm = null;
     private VirtualHost host = null;
     private SwitchResult vSwitch = null;
@@ -59,6 +60,11 @@ public class NetworkRefTask extends SubTask {
     }
 
     //----------------------------------------------------------------------------------------------
+    public String getNicType() {
+        return nicType;
+    }
+
+    //----------------------------------------------------------------------------------------------
     public SwitchResult fetchSwitch() {
         return this.vSwitch;
     }
@@ -76,6 +82,11 @@ public class NetworkRefTask extends SubTask {
     //----------------------------------------------------------------------------------------------
     public void setNicIndex(int nicIndex) {
         this.nicIndex = nicIndex;
+    }
+
+    //----------------------------------------------------------------------------------------------
+    public void setNicType(String nicType) {
+        this.nicType = nicType;
     }
 
     //----------------------------------------------------------------------------------------------
