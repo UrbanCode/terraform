@@ -81,6 +81,8 @@ public class CloneTask extends SubTask implements Cloneable, Comparable<CloneTas
     private boolean assignHostIp = false;
     private boolean assignPrivateIpOnly = false;
     private boolean sentPowerDown = false;
+    private String publicIp = "";
+    private String privateIp = "";
 
     private EnvironmentTaskVmware environment;
 
@@ -152,6 +154,16 @@ public class CloneTask extends SubTask implements Cloneable, Comparable<CloneTas
     //----------------------------------------------------------------------------------------------
     public boolean getAssignPrivateIpOnly() {
         return this.assignPrivateIpOnly;
+    }
+
+    //----------------------------------------------------------------------------------------------
+    public String getPublicIp() {
+        return publicIp;
+    }
+
+    //----------------------------------------------------------------------------------------------
+    public String getPrivateIp() {
+        return privateIp;
     }
 
     //----------------------------------------------------------------------------------------------
@@ -236,6 +248,16 @@ public class CloneTask extends SubTask implements Cloneable, Comparable<CloneTas
     //----------------------------------------------------------------------------------------------
     public void setAssignPrivateIpOnly(boolean assignPrivateIpOnly) {
         this.assignPrivateIpOnly = assignPrivateIpOnly;
+    }
+
+    //----------------------------------------------------------------------------------------------
+    public void setPublicIp(String publicIp) {
+        this.publicIp = publicIp;
+    }
+
+    //----------------------------------------------------------------------------------------------
+    public void setPrivateIp(String privateIp) {
+        this.privateIp = privateIp;
     }
 
     //----------------------------------------------------------------------------------------------

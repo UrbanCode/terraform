@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.urbancode.terraform.tasks.common.ExtensionTask;
 import org.urbancode.terraform.tasks.util.IOUtil;
@@ -204,12 +203,6 @@ public class PostCreateTask extends ExtensionTask {
     //----------------------------------------------------------------------------------------------
     @Override
     public void destroy() {
-        File configDir = new File(tempConfDirNoSeparator);
-        try {
-            FileUtils.deleteDirectory(configDir);
-        } catch (IOException e) {
-            log.warn("Unable to delete conf directory", e);
-        }
     }
 
     //----------------------------------------------------------------------------------------------

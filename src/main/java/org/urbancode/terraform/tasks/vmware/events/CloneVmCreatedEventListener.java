@@ -142,6 +142,7 @@ public class CloneVmCreatedEventListener extends ExtensionTask implements TaskEv
                                 addInstanceToIpTables(null, privateIp);
                                 runCommand(routerUser, routerPassword, "runProgramInGuest", "/usr/sbin/service", "networking", "stop");
                                 runCommand(routerUser, routerPassword, "runProgramInGuest", "/usr/sbin/service", "networking", "start");
+                                cloneTask.setPrivateIp(privateIp);
                             }
                             catch (IOException e) {
                                 log.warn("IOException while configuring networking (probably invalid file path)", e);
@@ -177,6 +178,8 @@ public class CloneVmCreatedEventListener extends ExtensionTask implements TaskEv
             //update the iptables in the router
             addInstanceToIpTables(hostNetworkIp, privateIp);
             virtualInterfaceNum++;
+            instanceTask.setPublicIp(hostNetworkIp);
+            instanceTask.setPrivateIp(privateIp);
         }
         catch (IOException e) {
             log.warn("IOException while configuring networking (probably invalid file path)", e);
