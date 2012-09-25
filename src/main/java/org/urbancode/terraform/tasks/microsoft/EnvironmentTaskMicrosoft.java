@@ -43,7 +43,6 @@ public class EnvironmentTaskMicrosoft extends EnvironmentTask {
     public VMTask createVm() {
         VMTask vmTask = new VMTask();
         vmTasks.add(vmTask);
-        vmTask.setUuid(uuid);
         return vmTask;
     }
 
@@ -59,6 +58,7 @@ public class EnvironmentTaskMicrosoft extends EnvironmentTask {
     public void create() {
         for(VMTask vmTask : vmTasks) {
             try {
+                vmTask.setUuid(uuid);
                 vmTask.create();
                 //CloudServiceTask csTask = createCloudService();
                 //csTask.setName(vmTask.getDnsName());

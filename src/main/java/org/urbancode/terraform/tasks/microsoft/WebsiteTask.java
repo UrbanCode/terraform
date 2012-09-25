@@ -76,7 +76,7 @@ public class WebsiteTask extends SubTask {
     //----------------------------------------------------------------------------------------------
     @Override
     public void destroy() throws Exception {
-        // TODO not supported at the moment
+        log.info("Websites cannot currently be deleted by Terraform. Please delete from web portal.");
 
     }
 

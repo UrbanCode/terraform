@@ -18,19 +18,21 @@ public class VMTask extends SubTask {
     // INSTANCE
     //**********************************************************************************************
     private String vmName;
+    private String roleFileName = "";
     private boolean addUuid = false;
-    private String uuid;
+    private String uuid = "";
     private String imageName;
     private String location;
+    private String affinityGroup;
     private String size = "small";
     private String user;
     private String password = "";
-    private String roleFileName = "";
     private List<EndpointTask> endpointTasks = new ArrayList<EndpointTask>();
     private boolean ssh = false;
     private boolean rdp = false;
     private String virtualNetworkName = "";
     private String subnetNames = "";
+    private String blobUrl = "";
 
     //----------------------------------------------------------------------------------------------
     public VMTask() {
@@ -50,6 +52,11 @@ public class VMTask extends SubTask {
     //----------------------------------------------------------------------------------------------
     public String getLocation() {
         return location;
+    }
+
+    //----------------------------------------------------------------------------------------------
+    public String getAffinityGroup() {
+        return affinityGroup;
     }
 
     //----------------------------------------------------------------------------------------------
@@ -93,6 +100,11 @@ public class VMTask extends SubTask {
     }
 
     //----------------------------------------------------------------------------------------------
+    public String getBlobUrl() {
+        return blobUrl;
+    }
+
+    //----------------------------------------------------------------------------------------------
     public List<EndpointTask> getEndpointTasks() {
         return endpointTasks;
     }
@@ -120,6 +132,11 @@ public class VMTask extends SubTask {
     //----------------------------------------------------------------------------------------------
     public void setLocation(String location) {
         this.location = location;
+    }
+
+    //----------------------------------------------------------------------------------------------
+    public void setAffinityGroup(String affinityGroup) {
+        this.affinityGroup = affinityGroup;
     }
 
     //----------------------------------------------------------------------------------------------
@@ -169,6 +186,11 @@ public class VMTask extends SubTask {
     }
 
     //----------------------------------------------------------------------------------------------
+    public void setBlobUrl(String blobUrl) {
+        this.blobUrl = blobUrl;
+    }
+
+    //----------------------------------------------------------------------------------------------
     public EndpointTask createEndpointTask() {
         EndpointTask task = new EndpointTask();
         task.setDnsName(vmName);
@@ -178,7 +200,7 @@ public class VMTask extends SubTask {
 
     //----------------------------------------------------------------------------------------------
     private boolean isValidString(String s) {
-        return !(s == null || "".equals(s));
+        return !(s == null || "".equals(s) || "null".equals(s));
     }
 
     //----------------------------------------------------------------------------------------------
@@ -187,16 +209,16 @@ public class VMTask extends SubTask {
         result.add("vm");
         if(isValidString(roleFileName)) {
             result.add("create-from");
-            result.add(addUuid ? vmName + "-" + uuid : vmName);
+            result.add(vmName);
             result.add(roleFileName);
         }
         else {
             result.add("create");
-            result.add(addUuid ? vmName + "-" + uuid : vmName);
+            result.add(vmName);
             result.add(imageName);
             result.add(user);
             result.add(password);
-            result.add("--size");
+            result.add("--vm-size");
             result.add(size);
             if(isValidString(subnetNames)) {
                 result.add("--subnet-names");
@@ -209,12 +231,29 @@ public class VMTask extends SubTask {
                 result.add("--rdp");
             }
         }
-        result.add("--location");
-        result.add(location);
+
+        if (isValidString(affinityGroup)) {
+            result.add("--affinity-group");
+            result.add(affinityGroup);
+        }
+        else if (isValidString(location)) {
+            result.add("--location");
+            result.add(location);
+        }
+        else {
+            throw new IllegalArgumentException("no affinity group or location was specified. " +
+            		"Please specify one or the other in your template.");
+        }
+
 
         if(isValidString(virtualNetworkName)) {
             result.add("--virtual-network-name");
             result.add(virtualNetworkName);
+        }
+
+        if(isValidString(blobUrl)) {
+            result.add("--blob-url");
+            result.add(blobUrl);
         }
 
         return result;
@@ -223,6 +262,7 @@ public class VMTask extends SubTask {
     //----------------------------------------------------------------------------------------------
     @Override
     public void create() throws Exception {
+        vmName = addUuid ? vmName + "-" + uuid : vmName;
         AzureCmdRunner runner = new AzureCmdRunner();
         runner.runCommand(makeCommandList());
 
