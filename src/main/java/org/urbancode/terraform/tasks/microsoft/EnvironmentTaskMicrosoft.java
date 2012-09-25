@@ -18,6 +18,7 @@ public class EnvironmentTaskMicrosoft extends EnvironmentTask {
     // INSTANCE
     //**********************************************************************************************
     private List<VMTask> vmTasks = new ArrayList<VMTask>();
+    private List<WebsiteTask> websiteTasks = new ArrayList<WebsiteTask>();
     private List<CloudServiceTask> csTasks = new ArrayList<CloudServiceTask>();
     //----------------------------------------------------------------------------------------------
     public EnvironmentTaskMicrosoft(Context context) {
@@ -35,6 +36,11 @@ public class EnvironmentTaskMicrosoft extends EnvironmentTask {
     }
 
     //----------------------------------------------------------------------------------------------
+    public List<WebsiteTask> getWebsiteTasks(){
+        return websiteTasks;
+    }
+
+    //----------------------------------------------------------------------------------------------
     public List<CloudServiceTask> getCloudServiceTasks(){
         return csTasks;
     }
@@ -44,6 +50,13 @@ public class EnvironmentTaskMicrosoft extends EnvironmentTask {
         VMTask vmTask = new VMTask();
         vmTasks.add(vmTask);
         return vmTask;
+    }
+
+    //----------------------------------------------------------------------------------------------
+    public WebsiteTask createWebsite() {
+        WebsiteTask websiteTask = new WebsiteTask();
+        websiteTasks.add(websiteTask);
+        return websiteTask;
     }
 
     //----------------------------------------------------------------------------------------------
@@ -66,6 +79,15 @@ public class EnvironmentTaskMicrosoft extends EnvironmentTask {
                 log.warn("Exception while creating Azure VM", e);
             }
         }
+
+        for(WebsiteTask site : websiteTasks) {
+            try {
+                site.create();
+            }
+            catch (Exception e) {
+                log.warn("Exception while creating Azure website", e);
+            }
+        }
     }
 
     //----------------------------------------------------------------------------------------------
@@ -82,6 +104,15 @@ public class EnvironmentTaskMicrosoft extends EnvironmentTask {
                 vmTask.destroy();
             } catch (Exception e) {
                 log.warn("Exception while deleting Azure VM", e);
+            }
+        }
+
+        for(WebsiteTask site : websiteTasks) {
+            try {
+                site.destroy();
+            }
+            catch (Exception e) {
+                log.warn("Exception while creating Azure website", e);
             }
         }
     }

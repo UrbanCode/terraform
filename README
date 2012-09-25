@@ -25,6 +25,15 @@ Installation Instructions
   for limitations.
       (to get an AWS account: https://console.aws.amazon.com/console/home )
 
+    Windows Azure with Terraform, is a wrapper around the Azure Node.js-based command line tool. 
+    That tool depends on Node.js and npm, Node's package manager.
+    Follow the installation instructions here:
+    
+    https://www.windowsazure.com/en-us/manage/linux/other-resources/command-line-tools/
+    
+    Since that command line tool is only available on Unix systems, Terraform with Azure cannot
+    currently be run on Windows. Support for a wrapper around the Window's based Powershell
+    commandlets may come in the future.
 
 
 Building Terraform
@@ -51,6 +60,9 @@ Basic Installation
 
   Amazon Web Services environments do not require any command line properties. 
   For more information on the AWS portion of Terraform, see the AWS section below.
+  
+  Windows Azure environments do not require any command line properties. 
+  For more information on the Azure portion of Terraform, see the Microsoft section below.
 
   Starting a VMware environment requires specific command line properties. 
   See the VMware section below for more details.
@@ -75,7 +87,7 @@ Environment Templates
       <param value="${uDeploy.host}"/> <param value="${uDeploy.host}"/>
 
   Some properties are defined by the provider. See each provider's section 
-  below (VMware / AWS).
+  below (VMware / AWS / Microsoft).
 
 
 VMware
@@ -345,8 +357,8 @@ snapshot - take a snapshot of all VMs in the environment.
     There are several relevant configuration files needed to run this post-create task. All of them
     should be placed in your conf directory.
     
-    chef-install.sh - this is the install script for Chef that gets copied over. It is not
-    recommended that you mess with this. It's straight from Opscode.
+    chef-install.sh - this is the install script for Chef that gets copied over. It's not
+    recommended that you mess with this as it comes straight from Opscode.
     
     The following files will be specified by name on your xml template and can be renamed so you can
     store many different versions of them:
@@ -702,6 +714,72 @@ documentation at: http://aws.amazon.com/documentation/ec2/
     user has not subscribed, the instance launch will fail.
 
 
+Microsoft (Windows Azure)
+======================================
+
+Allowed commands:
+
+create - creates an environment of VMs, websites, cloud services, storage, etc.
+
+destroy - deletes a previously created environment
+
+  -----------
+  Credentials
+  -----------
+  Because your Azure credentials are handled by the Azure for Node command line tool, inputting real
+  credentials is unnecessary. However, to satisfy the Terraform parser, you must have a credentials
+  file with dummy contents. A credentials file has 4 components: type, name, username, and password.
+  Your credentials file must have this format, but the property values for name, username, and
+  password can be anything.
+  
+  type=org.urbancode.terraform.credentials.microsoft.CredentialsMicrosoft
+  name=my.azure.creds
+  username=asdf
+  password=jkl
+
+  -----------
+  Templates
+  -----------
+  The general layout of an Azure Environment Template is the following:
+  The number in the parenthesis is the number of those elements allowed.
+      context(1)
+        └── environment(1)
+            ├── vm(n)
+            │  └──endpoint(n)
+            │   └──attach-disk(n)
+            └── website(n)
+            
+        The following is a list of elements available in the xml:
+    
+    [ The hierarchy represents which elements go under which in the xml ]
+
+    o context: The context holds the whole environment. It has one or more 
+      xmlns attributes, which specify map an xml namespace to a package. The 
+      packages it points to should contain a properties file named:
+        terralib.classes 
+          for Azure use: xmlns="com.urbancode.uprovision.tasks.microsoft"
+
+      o environment: The environment contains VMs and websites.
+
+        o vm: This is an Azure virtual machine. Required attributes: vm-name, image, username,
+        password, location or affinity-group. Type "azure vm" for more help.
+        
+        Lots of optional attributes are available, and they roughly correspond to the optional
+        flags for creating VMs, which you can find by typing "azure vm create -h".
+        
+        List of optional attributes: blob-url, vm-size (default small), ssh (boolean),
+        rdp(boolean), virtual-network-name (Windows VMs only right now), subnet-names,
+        add-uuid (makes VM name unique)
+        
+          o endpoint: adds an endpoint to a VM. Required attributes: public-port, private-port
+          
+          o disk-attach: attaches a disk to a VM. Required attribute: disk-name
+        
+        o website: This is an Azure website. Required attributes: host-name, location
+        Optional attribute: git(boolean) - will create a git repo on the site if true
+        
+  For more information, simply type "azure" in your command line (if you have azure installed).
+
 
 Conf File Information
 ======================================
@@ -733,6 +811,7 @@ Conf File Information
  * .temp files - these are the beginning forms of the conf files listed below. 
    Content is added to them and placed in the appropriate conf file.
  
+ The following files are packaged with Terraform for use with VMWare.
  
  * dhcpd.conf
  This is the standard DHCPD configuration file for dhcpd, the Internet Systems 

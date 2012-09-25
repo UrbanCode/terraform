@@ -16,7 +16,7 @@ public class WebsiteTask extends SubTask {
     //**********************************************************************************************
     String hostName;
     String location;
-    boolean git;
+    boolean git = false;
 
     //----------------------------------------------------------------------------------------------
     public WebsiteTask() {
