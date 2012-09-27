@@ -113,7 +113,18 @@ public class UDAgentPostCreateTask extends PostCreateTask {
     //----------------------------------------------------------------------------------------------
     @Override
     public void destroy() {
-
+        this.context = (ContextVmware) environment.fetchContext();
+        this.vmToConfig = cloneTask.fetchVm();
+        try {
+            runCommand(vmUser, vmPassword, "runProgramInGuest", "/bin/sh",
+                    agentPath + "/bin/" + "udagent", "stop");
+        } catch (IOException e) {
+            log.info("Stopping the agent failed. This might cause an orphaned agent to appear in" +
+            		"uDeploy. You will have to manually delete it.", e);
+        } catch (InterruptedException e) {
+            log.info("Stopping the agent failed. This might cause an orphaned agent to appear in" +
+                    "uDeploy. You will have to manually delete it.", e);
+        }
     }
 
     //----------------------------------------------------------------------------------------------

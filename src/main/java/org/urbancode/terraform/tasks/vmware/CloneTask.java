@@ -850,15 +850,21 @@ public class CloneTask extends SubTask implements Cloneable, Comparable<CloneTas
     public void destroy() {
         try {
             restoreVm();
+            try {
+                for(PostCreateTask pct : postCreateTaskList) {
+                    pct.destroy();
+                }
+            }
+            catch (Exception e) {
+                log.warn("exception while destroying post create tasks", e);
+            }
+
             GlobalIpAddressPool globalIpPool = GlobalIpAddressPool.getInstance();
             for (Ip4 ip : ipList) {
                 globalIpPool.releaseIp(ip);
             }
             powerOffVm();
             removeVm();
-            for(PostCreateTask pct : postCreateTaskList) {
-                pct.destroy();
-            }
         }
         catch (RemoteException e) {
             log.warn("remote exception when deleting clone task", e);
