@@ -49,7 +49,7 @@ public class EnvironmentTask extends Task {
     //----------------------------------------------------------------------------------------------
     /**
      *
-     * @param context - The Context that the enivonment is in
+     * @param context - The Context that the environment is in
      */
     public EnvironmentTask(Context context) {
         super(context);
@@ -103,6 +103,15 @@ public class EnvironmentTask extends Task {
 
     //----------------------------------------------------------------------------------------------
     /**
+     * this is sort of a temporary solution right now to ensure deletion of temporary folders
+     * @param uuid - a unique string (we usually expect this to be 4 hexadecimal characters, eg. 8fe0)
+     */
+    public void setUUID(String uuid) {
+        this.uuid = uuid;
+    }
+
+    //----------------------------------------------------------------------------------------------
+    /**
      * Appends a unique string to the environment name so there are not file name conflicts
      * @param uuid
      */
@@ -111,11 +120,10 @@ public class EnvironmentTask extends Task {
         log.debug("Set environment (" + name + ") uuid to " + this.uuid);
 
         if (name != null) {
-            log.debug("Environment prefix: " + prefix);
             prefix = this.name;
         }
 
-        if(uuid != null) {
+        if (uuid != null) {
             name = (name + "-" + this.uuid);
         }
         log.debug("Environment full name: " + name);

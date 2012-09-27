@@ -103,11 +103,15 @@ public class RouterConfigPostCreateTask extends PostCreateTask {
     public void create() {
         //set VM now that the VM has been created
         this.vmToConfig = this.cloneTask.fetchVm();
+        this.tempConfDirNoSeparator = System.getenv("TERRAFORM_HOME") +
+                File.separator + "temp" + "-" + environment.fetchUUID();
+        this.tempConfDir = tempConfDirNoSeparator + File.separator;
         try {
-            File configDir = new File(tempConfDirNoSeparator);
+            log.info(this.tempConfDirNoSeparator);
+            File configDir = new File(this.tempConfDirNoSeparator);
             configDir.mkdirs();
             copyTempFiles();
-            addFirstInterface(tempConfDir + "interfaces.temp", tempConfDir + "interfaces");
+            addFirstInterface(this.tempConfDir + "interfaces.temp", this.tempConfDir + "interfaces");
             handleNetworkRefs();
 
             //power on vm
@@ -118,10 +122,10 @@ public class RouterConfigPostCreateTask extends PostCreateTask {
             "stop");
 
             //copy networking files to router
-            copyFileFromHostToGuest(tempConfDir + "isc-dhcp-server", "/etc/default/isc-dhcp-server");
-            copyFileFromHostToGuest(tempConfDir + "iptables.conf", "/etc/iptables.conf");
-            copyFileFromHostToGuest(tempConfDir + "dhcpd.conf", "/etc/dhcp/dhcpd.conf");
-            copyFileFromHostToGuest(tempConfDir + "interfaces", "/etc/network/interfaces");
+            copyFileFromHostToGuest(this.tempConfDir + "isc-dhcp-server", "/etc/default/isc-dhcp-server");
+            copyFileFromHostToGuest(this.tempConfDir + "iptables.conf", "/etc/iptables.conf");
+            copyFileFromHostToGuest(this.tempConfDir + "dhcpd.conf", "/etc/dhcp/dhcpd.conf");
+            copyFileFromHostToGuest(this.tempConfDir + "interfaces", "/etc/network/interfaces");
 
             //start networking and dhcp service
             runCommand(vmUser, vmPassword, "runProgramInGuest", "/usr/sbin/service", "networking",
@@ -147,9 +151,12 @@ public class RouterConfigPostCreateTask extends PostCreateTask {
     //----------------------------------------------------------------------------------------------
     @Override
     public void destroy() {
-        File configDir = new File(tempConfDirNoSeparator);
+        this.tempConfDirNoSeparator = System.getenv("TERRAFORM_HOME") +
+                File.separator + "temp" + "-" + environment.fetchUUID();
+        this.tempConfDir = tempConfDirNoSeparator + File.separator;
+        File configDir = new File(this.tempConfDirNoSeparator);
         try {
-            log.debug("deleting conf directory");
+            log.info("deleting environment-specific conf directory: " + this.tempConfDirNoSeparator);
             FileUtils.deleteDirectory(configDir);
         } catch (IOException e) {
             log.warn("Unable to delete conf directory", e);
@@ -170,7 +177,7 @@ public class RouterConfigPostCreateTask extends PostCreateTask {
         String cpDir = "org/urbancode/terraform/conf" + File.separator;
         InputStream inputStream = loader.getResourceAsStream(cpDir + fileName);
         try {
-            writeInputStreamToFile(inputStream, tempConfDir + fileName);
+            writeInputStreamToFile(inputStream, this.tempConfDir + fileName);
         }
         catch(IOException e) {
             inputStream.close();
@@ -237,19 +244,19 @@ public class RouterConfigPostCreateTask extends PostCreateTask {
             String interfacesIn;
             String dhcpdIn;
             if (first) {
-                iptablesIn = tempConfDir + "iptables.conf.temp";
-                interfacesIn = tempConfDir + "interfaces";
-                dhcpdIn = tempConfDir + "dhcpd.conf.temp";
+                iptablesIn = this.tempConfDir + "iptables.conf.temp";
+                interfacesIn = this.tempConfDir + "interfaces";
+                dhcpdIn = this.tempConfDir + "dhcpd.conf.temp";
                 first = false;
             }
             else {
-                iptablesIn = tempConfDir + "iptables.conf";
-                interfacesIn = tempConfDir + "interfaces";
-                dhcpdIn = tempConfDir + "dhcpd.conf";
+                iptablesIn = this.tempConfDir + "iptables.conf";
+                interfacesIn = this.tempConfDir + "interfaces";
+                dhcpdIn = this.tempConfDir + "dhcpd.conf";
             }
-            String iptablesOut = tempConfDir + "iptables.conf";
-            String interfacesOut = tempConfDir + "interfaces";
-            String dhcpdOut = tempConfDir + "dhcpd.conf";
+            String iptablesOut = this.tempConfDir + "iptables.conf";
+            String interfacesOut = this.tempConfDir + "interfaces";
+            String dhcpdOut = this.tempConfDir + "dhcpd.conf";
 
             nicIndexes.remove(new Integer(nicIndex));
 
@@ -262,8 +269,8 @@ public class RouterConfigPostCreateTask extends PostCreateTask {
 
         //edit default dhcp interfaces file
         String ifacesString = createDhcpInterfacesString(nicIndexes);
-        String inFileName = tempConfDir + "isc-dhcp-server.temp";
-        String outFileName = tempConfDir + "isc-dhcp-server";
+        String inFileName = this.tempConfDir + "isc-dhcp-server.temp";
+        String outFileName = this.tempConfDir + "isc-dhcp-server";
         createDhcpInterfacesFile(ifacesString, inFileName, outFileName);
     }
 

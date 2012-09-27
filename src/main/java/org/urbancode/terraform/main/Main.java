@@ -244,6 +244,9 @@ public class Main {
                 context.create();
             }
             else if (AllowedCommands.DESTROY.getCommandName().equalsIgnoreCase(command)) {
+                String uuid = parseUUID(context.getEnvironment().getName());
+                context.getEnvironment().setUUID(uuid);
+                log.info("found UUID " + uuid);
                 // we want to write out the environments whether we succeed in destroying them
                 // or fail (then it will write out whatever is left)
                 outputXmlFile = inputXmlFile;
@@ -428,12 +431,10 @@ public class Main {
     //----------------------------------------------------------------------------------------------
     private Property parseProperty(String arg)
     throws IOException {
-        log.debug("Parsing: " + arg);
         String[] args;
         Property result = null;
         if (arg != null && arg.contains("=") && (args = arg.split("=")).length == 2) {
             result = new Property(args[0], args[1]);
-            log.info("Property: " + result.getName() + "=" + result.getValue());
         }
         else {
             log.error("bad property! Check your format. \nFound: " + arg);
@@ -464,6 +465,27 @@ public class Main {
         CredentialsParserRegistry.getInstance().register(CredentialsAWS.class.getName(), CredentialsParserAWS.class);
         CredentialsParserRegistry.getInstance().register(CredentialsVmware.class.getName(), CredentialsParserVmware.class);
         CredentialsParserRegistry.getInstance().register(CredentialsMicrosoft.class.getName(), CredentialsParserMicrosoft.class);
+    }
+
+    //----------------------------------------------------------------------------------------------
+    private String parseUUID(String envName) {
+        String result = null;
+        try {
+            String uuid = envName.substring(envName.length()-4);
+            if (matchesHex(uuid)) {
+                result = uuid;
+            }
+        }
+        catch (IndexOutOfBoundsException e) {
+            //swallow
+        }
+
+        return result;
+    }
+
+    //----------------------------------------------------------------------------------------------
+    private boolean matchesHex(String s) {
+        return s.matches("\\A\\b[0-9a-fA-F]+\\b\\Z");
     }
 }
 

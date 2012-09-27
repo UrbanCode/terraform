@@ -48,8 +48,6 @@ public class CloneVmCreatedEventListener extends ExtensionTask implements TaskEv
     // CLASS
     //**********************************************************************************************
     static private final Logger log = Logger.getLogger(CloneVmCreatedEventListener.class);
-    static protected final String tempConfDir = System.getenv("TERRAFORM_HOME") +
-                                               File.separator + "temp" + File.separator;
 
     //**********************************************************************************************
     // INSTANCE
@@ -72,6 +70,8 @@ public class CloneVmCreatedEventListener extends ExtensionTask implements TaskEv
     int virtualInterfaceNum = 0;
     private int portOffset = 10000;
 
+    String tempConfDir;
+
     //----------------------------------------------------------------------------------------------
     public CloneVmCreatedEventListener() {
     }
@@ -80,6 +80,8 @@ public class CloneVmCreatedEventListener extends ExtensionTask implements TaskEv
     public CloneVmCreatedEventListener(CloneTask routerTask) {
         this.environment = routerTask.fetchEnvironment();
         this.routerTask = routerTask;
+        this.tempConfDir = System.getenv("TERRAFORM_HOME") +
+                File.separator + "temp" + "-" + environment.fetchUUID() + File.separator;
     }
 
     //----------------------------------------------------------------------------------------------
@@ -99,11 +101,16 @@ public class CloneVmCreatedEventListener extends ExtensionTask implements TaskEv
         this.routerTask = cloneTask;
         this.routerUser = routerTask.getUser();
         this.routerPassword = routerTask.getPassword();
+        this.tempConfDir = System.getenv("TERRAFORM_HOME") +
+                File.separator + "temp" + "-" + environment.fetchUUID() + File.separator;
     }
 
     //----------------------------------------------------------------------------------------------
     @Override
     public void handleEvent(TaskEvent event) {
+        this.tempConfDir = System.getenv("TERRAFORM_HOME") +
+                File.separator + "temp" + "-" + environment.fetchUUID() + File.separator;
+
         SubTask subTask = event.getSubTask();
         CloneTask cloneTask = null;
 
@@ -193,7 +200,7 @@ public class CloneVmCreatedEventListener extends ExtensionTask implements TaskEv
     private void addInstanceToIpTables(String networkIp, String privateIp)
     throws IOException, InterruptedException {
         String result = null;
-        String hostIpTablesPath = tempConfDir + "iptables.conf";
+        String hostIpTablesPath = this.tempConfDir + "iptables.conf";
         String guestIpTablesPath = "/etc/iptables.conf";
 
         copyFileFromGuestToHost(guestIpTablesPath, hostIpTablesPath);
@@ -249,7 +256,7 @@ public class CloneVmCreatedEventListener extends ExtensionTask implements TaskEv
     private void addNewEntryToInterfaces(String ifaceName)
     throws IOException, InterruptedException {
         String result = null;
-        String hostInterfacesPath = tempConfDir + "interfaces";
+        String hostInterfacesPath = this.tempConfDir + "interfaces";
         String guestInterfacesPath = "/etc/network/interfaces";
         log.debug("host interfaces path: " + hostInterfacesPath);
         copyFileFromGuestToHost(guestInterfacesPath, hostInterfacesPath);

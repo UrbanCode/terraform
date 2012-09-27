@@ -36,9 +36,6 @@ public class PostCreateTask extends ExtensionTask {
     // CLASS
     //**********************************************************************************************
     static private final Logger log = Logger.getLogger(PostCreateTask.class);
-    static protected final String tempConfDirNoSeparator = System.getenv("TERRAFORM_HOME") +
-            File.separator + "temp";
-    static protected final String tempConfDir = tempConfDirNoSeparator + File.separator;
 
     //**********************************************************************************************
     // INSTANCE
@@ -51,25 +48,31 @@ public class PostCreateTask extends ExtensionTask {
     protected String vmUser = "root";
     protected String vmPassword = "password";
 
+    protected String tempConfDir;
+    protected String tempConfDirNoSeparator;
+
     //----------------------------------------------------------------------------------------------
     public PostCreateTask() {
-
     }
 
     //----------------------------------------------------------------------------------------------
     public PostCreateTask(CloneTask cloneTask) {
         this.cloneTask = cloneTask;
         this.environment = cloneTask.fetchEnvironment();
-
         this.vmToConfig = cloneTask.fetchVm();
+        this.tempConfDirNoSeparator = System.getenv("TERRAFORM_HOME") +
+                File.separator + "temp" + "-" + environment.fetchUUID();
+        this.tempConfDir = tempConfDirNoSeparator + File.separator;
     }
 
     //----------------------------------------------------------------------------------------------
     public void setValues(CloneTask cloneTask) {
         this.cloneTask = cloneTask;
         this.environment = cloneTask.fetchEnvironment();
-
         this.vmToConfig = cloneTask.fetchVm();
+        this.tempConfDirNoSeparator = System.getenv("TERRAFORM_HOME") +
+                File.separator + "temp" + "-" + environment.fetchUUID();
+        this.tempConfDir = tempConfDirNoSeparator + File.separator;
     }
 
     //----------------------------------------------------------------------------------------------
@@ -196,7 +199,7 @@ public class PostCreateTask extends ExtensionTask {
     //----------------------------------------------------------------------------------------------
     @Override
     public void create() {
-        File configDir = new File(tempConfDirNoSeparator);
+        File configDir = new File(this.tempConfDirNoSeparator);
         configDir.mkdirs();
     }
 
