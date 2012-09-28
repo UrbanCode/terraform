@@ -726,11 +726,12 @@ destroy - deletes a previously created environment
   -----------
   Credentials
   -----------
-  Because your Azure credentials are handled by the Azure for Node command line tool, inputting real
-  credentials is unnecessary. However, to satisfy the Terraform parser, you must have a credentials
-  file with dummy contents. A credentials file has 4 components: type, name, username, and password.
-  Your credentials file must have this format, but the property values for name, username, and
-  password can be anything.
+  Because your Azure credentials are handled by the Azure for Node command line
+  tool, inputting real credentials is unnecessary. However, to satisfy the 
+  Terraform parser, you must have a credentials file with dummy contents. 
+  A credentials file has 4 components: type, name, username, and password.
+  Your credentials file must have this format, but the property values for
+  name, username, and password can be anything.
   
   type=org.urbancode.terraform.credentials.microsoft.CredentialsMicrosoft
   name=my.azure.creds
@@ -761,24 +762,29 @@ destroy - deletes a previously created environment
 
       o environment: The environment contains VMs and websites.
 
-        o vm: This is an Azure virtual machine. Required attributes: vm-name, image, username,
-        password, location or affinity-group. Type "azure vm" for more help.
+        o vm: This is an Azure virtual machine. Required attributes: vm-name,
+         image, username, password, location or affinity-group.
+         Type "azure vm" for more help.
         
-        Lots of optional attributes are available, and they roughly correspond to the optional
-        flags for creating VMs, which you can find by typing "azure vm create -h".
+        Lots of optional attributes are available, and they roughly correspond
+        to the optional flags for creating VMs, which you can find by 
+        typing "azure vm create -h".
         
-        List of optional attributes: blob-url, vm-size (default small), ssh (boolean),
-        rdp(boolean), virtual-network-name (Windows VMs only right now), subnet-names,
+        List of optional attributes: blob-url, vm-size (default small), 
+        ssh (boolean), rdp(boolean), virtual-network-name, subnet-names,
         add-uuid (makes VM name unique)
         
-          o endpoint: adds an endpoint to a VM. Required attributes: public-port, private-port
+          o endpoint: adds an endpoint to a VM. 
+          Required attributes: public-port, private-port
           
           o disk-attach: attaches a disk to a VM. Required attribute: disk-name
         
-        o website: This is an Azure website. Required attributes: host-name, location
-        Optional attribute: git(boolean) - will create a git repo on the site if true
+        o website: This is an Azure website. 
+        Required attributes: host-name, location
+        Optional attribute: git(bool)- will create git repo on the site if true
         
-  For more information, simply type "azure" in your command line (if you have azure installed).
+  For more information, simply type "azure" in your command line 
+  (if you have azure installed).
 
 
 Conf File Information
@@ -805,8 +811,8 @@ Conf File Information
    start=192.168.2.1
    end=192.168.2.250
    
-  The files below are created in the $TERRAFORM_HOME/temp folder and deleted 
-  when the environment is deleted.
+  The files below are created in an environment-specific $TERRAFORM_HOME/temp 
+  folder and deleted when the environment is deleted.
  
  * .temp files - these are the beginning forms of the conf files listed below. 
    Content is added to them and placed in the appropriate conf file.
