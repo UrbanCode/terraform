@@ -47,10 +47,36 @@
       <version>1.2.16</version>
       <scope>compile</scope>
     </dependency>
+    <!--  There are dependency issues with AWS's Jackson dependency, this is a workaround  -->
     <dependency>
       <groupId>com.amazonaws</groupId>
       <artifactId>aws-java-sdk</artifactId>
       <version>1.3.7</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.codehaus.jackson</groupId>
+          <artifactId>jackson-core-asl</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.codehaus.jackson</groupId>
+          <artifactId>jackson-mapper-asl</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <!-- Temporary jackson imports until aws 1.3.x pom dependencies corrected -->
+    <dependency>
+      <groupId>org.codehaus.jackson</groupId>
+      <artifactId>jackson-core-asl</artifactId>
+      <version>1.7.3</version>
+      <type>jar</type>
+      <scope>compile</scope>
+    </dependency>
+    <!-- Temporary jackson imports until aws 1.3.x pom dependencies corrected -->
+    <dependency>
+      <groupId>org.codehaus.jackson</groupId>
+      <artifactId>jackson-mapper-asl</artifactId>
+      <version>1.7.3</version>
+      <type>jar</type>
       <scope>compile</scope>
     </dependency>
     <dependency>
