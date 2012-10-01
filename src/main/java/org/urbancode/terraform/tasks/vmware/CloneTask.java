@@ -123,6 +123,11 @@ public class CloneTask extends SubTask implements Cloneable, Comparable<CloneTas
 
     //----------------------------------------------------------------------------------------------
     public String getPassword() {
+        return "${" + instanceName + ".password}";
+    }
+
+    //----------------------------------------------------------------------------------------------
+    public String fetchPassword() {
         return password;
     }
 
@@ -639,6 +644,7 @@ public class CloneTask extends SubTask implements Cloneable, Comparable<CloneTas
                 result = "Shut Down";
             }
             else {
+                log.warn("An exception was reached while retrieving VM status. Status set to Unknown.", e);
                 result = "Unknown";
             }
         }

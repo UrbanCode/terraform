@@ -100,7 +100,7 @@ public class CloneVmCreatedEventListener extends ExtensionTask implements TaskEv
         this.environment = cloneTask.fetchEnvironment();
         this.routerTask = cloneTask;
         this.routerUser = routerTask.getUser();
-        this.routerPassword = routerTask.getPassword();
+        this.routerPassword = routerTask.fetchPassword();
         this.tempConfDir = System.getenv("TERRAFORM_HOME") +
                 File.separator + "temp" + "-" + environment.fetchUUID() + File.separator;
     }
@@ -119,7 +119,7 @@ public class CloneVmCreatedEventListener extends ExtensionTask implements TaskEv
             cloneTask = (CloneTask) subTask;
             if (!subTask.equals(routerTask)) {
                 routerUser = routerTask.getUser();
-                routerPassword = routerTask.getPassword();
+                routerPassword = routerTask.fetchPassword();
                 try {
                     cloneTask.powerOnVm();
                 }

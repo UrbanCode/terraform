@@ -45,9 +45,6 @@ public class PropertyResolver {
         for (Property p : properties) {
             setProperty(p.getName(), p.getValue());
         }
-        if (log.isDebugEnabled()) {
-            log.debug("Initializing properties: " + properties);
-        }
     }
 
     //----------------------------------------------------------------------------------------------
@@ -92,7 +89,11 @@ public class PropertyResolver {
         builder.append(text.substring(start));
         result = builder.toString();
         if (log.isDebugEnabled()) {
-            log.debug("Resolved " + text + " to " + result);
+            if (!text.contains("password")) {
+                if (!text.equals(result)) {
+                    log.debug("Resolved " + text + " to " + result);
+                }
+            }
         }
         return result;
     }

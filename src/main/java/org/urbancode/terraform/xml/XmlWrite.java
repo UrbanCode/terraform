@@ -130,7 +130,8 @@ public class XmlWrite {
                 if (methodResult == null  || "null".equals(methodResult)) {
                     methodResult = "";
                 }
-                element.setAttribute(attrName, methodResult.toString());
+                String resultString = methodResult.toString();
+                element.setAttribute(attrName, resultString);
             }
         }
     }

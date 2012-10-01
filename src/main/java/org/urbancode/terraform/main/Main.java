@@ -189,7 +189,6 @@ public class Main {
         if (unparsed != null) {
             for (String prop : unparsed) {
                 try {
-                    log.debug("Parsing property: " + prop);
                     props.add(parseProperty(prop));
                 }
                 catch (IOException e) {
@@ -420,10 +419,8 @@ public class Main {
         rootElement.normalize();
 
         XmlModelParser parser = new XmlModelParser();
+        parser.setPropertyResolver(createResolver());
         result = parser.parse(rootElement);
-        if (result != null) {
-            result.setResolver(createResolver());
-        }
 
         return result;
     }

@@ -21,6 +21,7 @@ import java.lang.reflect.Method;
 import org.apache.log4j.Logger;
 import org.urbancode.terraform.tasks.common.Context;
 import org.urbancode.terraform.tasks.common.ExtensionTask;
+import org.urbancode.terraform.tasks.util.PropertyResolver;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
@@ -38,6 +39,7 @@ public class XmlModelParser {
     //**********************************************************************************************
     private Context context;
     private NamespaceConfiguration persistConf;
+    private PropertyResolver resolver;
 
     //----------------------------------------------------------------------------------------------
     public XmlModelParser() {
@@ -50,12 +52,17 @@ public class XmlModelParser {
     }
 
     //----------------------------------------------------------------------------------------------
+    public void setPropertyResolver(PropertyResolver resolver) {
+        this.resolver = resolver;
+    }
+
+    //----------------------------------------------------------------------------------------------
     public Context parse(Element element)
     throws XmlParsingException {
         Context result = null;
 
         parse(element, this);
-
+        this.context.setResolver(resolver);
         result = this.context;
         return result;
     }
@@ -195,7 +202,17 @@ public class XmlModelParser {
             log.debug("null attribute: " + aName);
             return;
         }
-        log.debug("[" + instance.toString() + "] Setting attribute: " + aName + " to value: " + aValue);
+        boolean secure = aName.contains("password") || aName.contains("secure") ||
+                aValue.contains("password") || aValue.contains("secure") ? true : false;
+
+        String resolvedValue = resolver.resolve(aValue);
+        if(!(resolvedValue == null || "".equals(resolvedValue) || "null".equalsIgnoreCase(resolvedValue))) {
+            aValue = resolvedValue;
+        }
+
+        if (!secure) {
+            log.debug("[" + instance.toString() + "] Setting attribute: " + aName + " to value: " + aValue);
+        }
         String methodName = "set" + convertToCamelCase(aName);
         Method method = getMethodForName(methodName, instance.getClass());
         Class<?>[] paramTypes = method.getParameterTypes();
