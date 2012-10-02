@@ -20,3 +20,6 @@
 /META-INF
 /dev-scripts
 /temp
+/bin
+!/bin/terraform
+!/bin/terraform.cmd
