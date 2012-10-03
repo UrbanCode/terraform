@@ -112,7 +112,7 @@ public class NamespaceConfiguration {
     }
 
     //----------------------------------------------------------------------------------------------
-    private void loadNameSpaceFromClassPath(String nameSpace) {
+    public void loadNameSpaceFromClassPath(String nameSpace) {
         BidiMap biMap = new DualHashBidiMap();
         String filePath = nameSpace.replaceAll("\\.", Matcher.quoteReplacement("/"));
         String resourceName = filePath + "/" + NAMESPACE_FILE;

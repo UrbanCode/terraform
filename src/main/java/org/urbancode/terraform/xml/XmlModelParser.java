@@ -70,98 +70,98 @@ public class XmlModelParser {
     //----------------------------------------------------------------------------------------------
     public void parse(Element element, Object context)
     throws XmlParsingException {
-            Node child;
-            String prefix = element.getPrefix();
-            if(prefix == null) {
-                //dom thinks default namespace (empty prefix) is null
-                prefix = "";
+        Node child;
+        String prefix = element.getPrefix();
+        if(prefix == null) {
+            //dom thinks default namespace (empty prefix) is null
+            prefix = "";
+        }
+        String nodeName = element.getNodeName();
+        String uri = element.getNamespaceURI();
+
+        // ensure that we have a NameSpace
+        if (uri == null || uri.length() == 0) {
+            log.error("uri is null or empty!");
+            throw new XmlParsingException("No NameSpace found for element: "+nodeName);
+        }
+
+        if(context == null) {
+            log.error("Context is null!");
+            throw new XmlParsingException("Context of element " + element.getNodeName() + " is null");
+        }
+
+        Object nContext = null;
+        String noPrefixNodeName = nodeName.substring(nodeName.indexOf(':')+1, nodeName.length());
+        String className = persistConf.getClassNameForElement(noPrefixNodeName, uri);
+        Class clazz;
+        try {
+
+            log.debug("Instantiating class: " + className);
+            clazz = Class.forName(className);
+
+            // check whether we should call a create method or
+            // create the instance ourselves and call a setter
+            if (ExtensionTask.class.isAssignableFrom(clazz)) {
+                // create our own instance and pass it to a setter
+                Object obj = clazz.newInstance();
+
+                String methodToFind = "add" + convertToCamelCase(element.getLocalName());
+                Method method = getMethodForName(methodToFind, context.getClass());
+                nContext = method.invoke(context, obj);
             }
-            String nodeName = element.getNodeName();
-            String uri = element.getNamespaceURI();
-
-            // ensure that we have a NameSpace
-            if (uri == null || uri.length() == 0) {
-                log.error("uri is null or empty!");
-                throw new XmlParsingException("No NameSpace found for element: "+nodeName);
+            else if (Context.class.isAssignableFrom(clazz)) {
+                Object newContext = clazz.newInstance();
+                log.debug("Trying to run setContext( " + context + " ) on " + newContext);
+                String methodToFind = "setContext";
+                Method method = getMethodForName(methodToFind, context.getClass());
+                method.invoke(context, newContext);
+                nContext = newContext;
             }
-
-            if(context == null) {
-                log.error("Context is null!");
-                throw new XmlParsingException("Context of element " + element.getNodeName() + " is null");
-            }
-
-            Object nContext = null;
-            String noPrefixNodeName = nodeName.substring(nodeName.indexOf(':')+1, nodeName.length());
-            String className = persistConf.getClassNameForElement(noPrefixNodeName, uri);
-            Class clazz;
-            try {
-
-                log.debug("Instantiating class: " + className);
-                clazz = Class.forName(className);
-
-                // check whether we should call a create method or
-                // create the instance ourselves and call a setter
-                if (ExtensionTask.class.isAssignableFrom(clazz)) {
-                    // create our own instance and pass it to a setter
-                    Object obj = clazz.newInstance();
-
-                    String methodToFind = "add" + convertToCamelCase(element.getLocalName());
-                    Method method = getMethodForName(methodToFind, context.getClass());
-                    nContext = method.invoke(context, obj);
-                }
-                else if (Context.class.isAssignableFrom(clazz)) {
-                    Object newContext = clazz.newInstance();
-                    log.debug("Trying to run setContext( " + context + " ) on " + newContext);
-                    String methodToFind = "setContext";
-                    Method method = getMethodForName(methodToFind, context.getClass());
-                    method.invoke(context, newContext);
-                    nContext = newContext;
+            else {
+                // call a create method
+                String methodToFind = "create" + convertToCamelCase(element.getLocalName());
+                log.debug("Lookin for method: " + methodToFind);
+                Method method = getMethodForName(methodToFind, context.getClass());
+                if (method != null) {
+                    log.debug("Found method: " + method.getName());
+                    nContext = method.invoke(context);
                 }
                 else {
-                    // call a create method
-                    String methodToFind = "create" + convertToCamelCase(element.getLocalName());
-                    log.debug("Lookin for method: " + methodToFind);
-                    Method method = getMethodForName(methodToFind, context.getClass());
-                    if (method != null) {
-                        log.debug("Found method: " + method.getName());
-                        nContext = method.invoke(context);
-                    }
-                    else {
-                        throw new NullPointerException("Unable to find method " + methodToFind);
-                    }
-                }
-
-            }
-            catch (ClassNotFoundException e) {
-                throw new XmlParsingException("Error parsing element: "+element.getLocalName()
-                        +". error with class: "+className, e);
-            }
-            catch (InstantiationException e) {
-                throw new XmlParsingException("Error parsing element: "+element.getLocalName()
-                        +". error with class: "+className, e);
-            }
-            catch (IllegalAccessException e) {
-                throw new XmlParsingException("Error parsing element: "+element.getLocalName()
-                        +". error with class: "+className, e);
-            }
-            catch (IllegalArgumentException e) {
-                throw new XmlParsingException("Error parsing element: "+element.getLocalName()
-                        +". error with class: "+className, e);
-            }
-            catch (InvocationTargetException e) {
-                throw new XmlParsingException("Error invoking constructor involving element: "
-                        +element.getLocalName() +". error with class: "+className, e);
-            }
-
-            setAllAttributes(element, nContext);
-
-            // recurse into child elements
-            int i = 0;
-            while ((child = element.getChildNodes().item(i++)) != null) {
-                if (!child.getNodeName().contains("#")) {
-                    parse((Element)child, nContext);
+                    throw new NullPointerException("Unable to find method " + methodToFind);
                 }
             }
+
+        }
+        catch (ClassNotFoundException e) {
+            throw new XmlParsingException("Error parsing element: "+element.getLocalName()
+                    +". error with class: "+className, e);
+        }
+        catch (InstantiationException e) {
+            throw new XmlParsingException("Error parsing element: "+element.getLocalName()
+                    +". error with class: "+className, e);
+        }
+        catch (IllegalAccessException e) {
+            throw new XmlParsingException("Error parsing element: "+element.getLocalName()
+                    +". error with class: "+className, e);
+        }
+        catch (IllegalArgumentException e) {
+            throw new XmlParsingException("Error parsing element: "+element.getLocalName()
+                    +". error with class: "+className, e);
+        }
+        catch (InvocationTargetException e) {
+            throw new XmlParsingException("Error invoking constructor involving element: "
+                    +element.getLocalName() +". error with class: "+className, e);
+        }
+
+        setAllAttributes(element, nContext);
+
+        // recurse into child elements
+        int i = 0;
+        while ((child = element.getChildNodes().item(i++)) != null) {
+            if (!child.getNodeName().contains("#")) {
+                parse((Element)child, nContext);
+            }
+        }
     }
 
     //----------------------------------------------------------------------------------------------
