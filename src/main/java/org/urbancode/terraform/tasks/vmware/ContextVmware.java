@@ -25,7 +25,6 @@ import org.urbancode.terraform.credentials.vmware.CredentialsVmware;
 import org.urbancode.terraform.tasks.EnvironmentCreationException;
 import org.urbancode.terraform.tasks.EnvironmentRestorationException;
 import org.urbancode.terraform.tasks.common.Context;
-import org.urbancode.terraform.tasks.common.EnvironmentTask;
 import org.urbancode.terraform.tasks.util.PropertyResolver;
 import org.urbancode.terraform.tasks.vmware.util.GlobalIpAddressPool;
 import org.urbancode.terraform.tasks.vmware.util.VirtualHost;
@@ -75,7 +74,7 @@ public class ContextVmware implements Context {
 
     //----------------------------------------------------------------------------------------------
     @Override
-    public EnvironmentTask getEnvironment() {
+    public EnvironmentTaskVmware getEnvironment() {
         return env;
     }
 
