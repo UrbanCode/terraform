@@ -17,6 +17,7 @@ package org.urbancode.terraform.tasks.vmware;
 
 import java.rmi.RemoteException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.PriorityQueue;
@@ -270,7 +271,7 @@ public class EnvironmentTaskVmware extends EnvironmentTask {
     private void handleCloneCreation(List<CloneTask> cloneTaskList)
     throws RemoteException, InterruptedException, Exception {
         long pollInterval = 3000L;
-        long timeoutInterval = 10L * 60L * 1000L;
+        long timeoutInterval = 25L * 60L * 1000L;
         long start;
         if (cloneTaskList != null && !cloneTaskList.isEmpty()) {
             int threadPoolSize = cloneTaskList.size();
@@ -425,18 +426,21 @@ public class EnvironmentTaskVmware extends EnvironmentTask {
         //vm clone tasks
         addNewClonesToTaskList();
 
-        try {
-            createClonesInOrder();
-        } catch (Exception e1) {
-            log.warn("exception while creating clones", e1);
+        if (cloneTasks.size() > 0) {
+            try {
+                createClonesInOrder();
+            } catch (Exception e1) {
+                log.warn("exception while creating clones", e1);
+            }
+            try {
+                //wait for new IPs to get updated
+                log.info("Sleeping until new IPs are allocated.");
+                Thread.sleep(20000);
+            } catch (InterruptedException e1) {
+                log.warn("interrupted exception while waiting for new IPs", e1);
+            }
         }
-        try {
-            //wait for new IPs to get updated
-            log.info("Sleeping until new IPs are allocated.");
-            Thread.sleep(20000);
-        } catch (InterruptedException e1) {
-            log.warn("interrupted exception while waiting for new IPs", e1);
-        }
+
         for (CloneTask cloneTask : cloneTasks) {
             try {
                 cloneTask.setIpListFromVmInfo();
@@ -463,6 +467,8 @@ public class EnvironmentTaskVmware extends EnvironmentTask {
             folderTask.setFolderName(folderName);
             folderTask.restore();
 
+            Collections.sort(cloneTasks);
+            Collections.reverse(cloneTasks);
             for (CloneTask cloneTask : cloneTasks) {
                 cloneTask.destroy();
             }

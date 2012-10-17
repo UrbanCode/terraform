@@ -120,7 +120,7 @@ public class XmlModelParser {
             else {
                 // call a create method
                 String methodToFind = "create" + convertToCamelCase(element.getLocalName());
-                log.debug("Lookin for method: " + methodToFind);
+                log.debug("Looking for method: " + methodToFind);
                 Method method = getMethodForName(methodToFind, context.getClass());
                 if (method != null) {
                     log.debug("Found method: " + method.getName());
@@ -211,6 +211,9 @@ public class XmlModelParser {
         }
 
         if (!secure) {
+            log.debug("[" + instance.toString() + "] Setting attribute: " + aName + " to value: " + aValue);
+        }
+        else {
             log.debug("[" + instance.toString() + "] Setting attribute: " + aName + " to value: " + aValue);
         }
         String methodName = "set" + convertToCamelCase(aName);

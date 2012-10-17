@@ -89,8 +89,11 @@ public class PropertyResolver {
         builder.append(text.substring(start));
         result = builder.toString();
         if (log.isDebugEnabled()) {
-            if (!text.contains("password")) {
-                if (!text.equals(result)) {
+            if (!text.equals(result)) {
+                if (text.contains("password")) {
+                    log.debug("Resolved secure property " + text);
+                }
+                else {
                     log.debug("Resolved " + text + " to " + result);
                 }
             }

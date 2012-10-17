@@ -118,11 +118,12 @@ public class UDAgentPostCreateTask extends PostCreateTask {
         try {
             runCommand(vmUser, vmPassword, "runProgramInGuest", "/bin/sh",
                     agentPath + "/bin/" + "udagent", "stop");
+            Thread.sleep(3000);
         } catch (IOException e) {
-            log.info("Stopping the agent failed. This might cause an orphaned agent to appear in" +
+            log.info("Stopping the agent failed. This might cause an orphaned agent to appear in " +
             		"uDeploy. You will have to manually delete it.", e);
         } catch (InterruptedException e) {
-            log.info("Stopping the agent failed. This might cause an orphaned agent to appear in" +
+            log.info("Stopping the agent failed. This might cause an orphaned agent to appear in " +
                     "uDeploy. You will have to manually delete it.", e);
         }
     }
@@ -135,15 +136,8 @@ public class UDAgentPostCreateTask extends PostCreateTask {
             //linux agents only
             udDir = agentPath + "/bin/";
 
-            //if not set in xml, check properties
-            if (udHost == null) {
-                udHost = context.resolve("${ud.host}");
-            }
-            if (udPort == null) {
-                udPort = context.resolve("${ud.port}");
-            }
+            //if not set in xml, generate agent name based on environment name and instance name
             if (agentName == null) {
-                agentName = context.resolve("${ud.agent.name}");
                 if (agentName == null || "null".equals(agentName)) {
                     //generate name based on environment name and instance name (should be unique)
                     agentName = environment.getName() + "-" + cloneTask.getInstanceName();
@@ -154,9 +148,9 @@ public class UDAgentPostCreateTask extends PostCreateTask {
             log.info("configuring agent with name " + agentName);
             //stop agent, rename agent, restart agent
             runCommand(vmUser, vmPassword, "runProgramInGuest", "/bin/sh", udDir + "udagent", "stop");
-            runCommand(vmUser, vmPassword, "runProgramInGuest", "/bin/sleep", "5");
+            Thread.sleep(3000);
             runCommand(vmUser, vmPassword, "runProgramInGuest", "/bin/sh", udDir + "configure-agent", udHost, udPort, agentName);
-            runCommand(vmUser, vmPassword, "runProgramInGuest", "/bin/sleep", "5");
+            Thread.sleep(3000);
             runCommand(vmUser, vmPassword, "runProgramInGuest", "/bin/sh", udDir + "udagent", "start");
         }
         else {

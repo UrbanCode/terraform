@@ -245,7 +245,7 @@ public class Main {
             else if (AllowedCommands.DESTROY.getCommandName().equalsIgnoreCase(command)) {
                 String uuid = parseUUID(context.getEnvironment().getName());
                 context.getEnvironment().setUUID(uuid);
-                log.info("found UUID " + uuid);
+                log.debug("found UUID " + uuid);
                 // we want to write out the environments whether we succeed in destroying them
                 // or fail (then it will write out whatever is left)
                 outputXmlFile = inputXmlFile;

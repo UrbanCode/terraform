@@ -306,7 +306,7 @@ public class VirtualHost implements Serializable {
             }
         }
         if (result == null) {
-            log.debug("could not find datacenter on path " + path.toString());
+            log.warn("could not find datacenter on path " + path.toString());
             throw new NotFound();
         }
         return result;

@@ -135,7 +135,6 @@ public class PostCreateTask extends ExtensionTask {
         cmd = cmd.trim();
         log.info("command line: " + cmd);
 
-        log.debug("running command " + vmRunCommand + " " + args.get(0));
         ProcessBuilder builder = new ProcessBuilder(commandLine);
         builder.redirectErrorStream(true);
         Process process = builder.start();
@@ -211,7 +210,7 @@ public class PostCreateTask extends ExtensionTask {
     //----------------------------------------------------------------------------------------------
     @Override
     public void restore() {
-        //nothing to restore since VM is restored in constructor
+        //nothing to restore since VM is restored in setValues
     }
 
 }

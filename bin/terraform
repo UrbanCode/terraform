@@ -99,7 +99,7 @@ elif [ "$FNCT" = "destroy" ] ; then
 
   command_line="\"$javacmd\" $JAVA_OPTS 
     -cp \"$CP\" \
-    $destroy_class destroy \"$INPUT_FILE\" \"$CREDS\""
+    $destroy_class destroy \"$INPUT_FILE\" \"$CREDS\" $PROPS"
   echo $command_line
   eval $command_line
   if [ "$?" -eq 0 ]
@@ -112,7 +112,7 @@ elif [ "$FNCT" = "suspend" ] ; then
 
   command_line="\"$javacmd\" $JAVA_OPTS 
     -cp \"$CP\" \
-    $restore_class suspend \"$INPUT_FILE\" \"$CREDS\""
+    $restore_class suspend \"$INPUT_FILE\" \"$CREDS\" $PROPS"
   echo $command_line
   eval $command_line
   
@@ -121,7 +121,7 @@ elif [ "$FNCT" = "resume" ] ; then
 
   command_line="\"$javacmd\" $JAVA_OPTS 
     -cp \"$CP\" \
-    $restore_class resume \"$INPUT_FILE\" \"$CREDS\""
+    $restore_class resume \"$INPUT_FILE\" \"$CREDS\" $PROPS"
   echo $command_line
   eval $command_line
 # -- Suspend ----------------------------------------------------------------------
@@ -129,7 +129,7 @@ elif [ "$FNCT" = "snapshot" ] ; then
 
   command_line="\"$javacmd\" $JAVA_OPTS 
     -cp \"$CP\" \
-    $restore_class snapshot \"$INPUT_FILE\" \"$CREDS\""
+    $restore_class snapshot \"$INPUT_FILE\" \"$CREDS\" $PROPS"
   echo $command_line
   eval $command_line
 # -- Usage ---------------------------------------------------------------------
