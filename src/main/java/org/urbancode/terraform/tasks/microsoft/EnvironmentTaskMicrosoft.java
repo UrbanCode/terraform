@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.urbancode.terraform.tasks.common.Context;
+import org.urbancode.terraform.tasks.common.TerraformContext;
 import org.urbancode.terraform.tasks.common.EnvironmentTask;
 
 public class EnvironmentTaskMicrosoft extends EnvironmentTask {
@@ -21,13 +21,13 @@ public class EnvironmentTaskMicrosoft extends EnvironmentTask {
     private List<WebsiteTask> websiteTasks = new ArrayList<WebsiteTask>();
     private List<CloudServiceTask> csTasks = new ArrayList<CloudServiceTask>();
     //----------------------------------------------------------------------------------------------
-    public EnvironmentTaskMicrosoft(Context context) {
+    public EnvironmentTaskMicrosoft(TerraformContext context) {
         super(context);
     }
 
     //----------------------------------------------------------------------------------------------
-    public Context fetchContext() {
-        return this.context;
+    public TerraformContext fetchContext() {
+        return (TerraformContext) this.context;
     }
 
     //----------------------------------------------------------------------------------------------

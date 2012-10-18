@@ -26,9 +26,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import org.apache.log4j.Logger;
-import org.urbancode.terraform.tasks.common.Context;
+import org.urbancode.terraform.tasks.common.TerraformContext;
 import org.urbancode.terraform.tasks.common.EnvironmentTask;
-import org.urbancode.terraform.tasks.common.MultiThreadTask;
+import com.urbancode.x2o.tasks.MultiThreadTask;
 import org.urbancode.terraform.tasks.vmware.events.TaskEventService;
 import org.urbancode.terraform.tasks.vmware.util.GlobalIpAddressPool;
 import org.urbancode.terraform.tasks.vmware.util.IpAddressPool;
@@ -63,15 +63,15 @@ public class EnvironmentTaskVmware extends EnvironmentTask {
     private TaskEventService eventService;
 
     //----------------------------------------------------------------------------------------------
-    public EnvironmentTaskVmware(Context context) {
+    public EnvironmentTaskVmware(TerraformContext context) {
         super(context);
         eventService = new TaskEventService();
         ipPool = GlobalIpAddressPool.getInstance().getIpAddressPool();
     }
 
     //----------------------------------------------------------------------------------------------
-    public Context fetchContext() {
-        return this.context;
+    public TerraformContext fetchContext() {
+        return (TerraformContext) this.context;
     }
 
     //----------------------------------------------------------------------------------------------

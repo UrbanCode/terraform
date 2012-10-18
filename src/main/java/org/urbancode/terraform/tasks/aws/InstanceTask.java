@@ -26,7 +26,6 @@ import org.urbancode.terraform.tasks.EnvironmentCreationException;
 import org.urbancode.terraform.tasks.EnvironmentDestructionException;
 import org.urbancode.terraform.tasks.PostCreateException;
 import org.urbancode.terraform.tasks.aws.helpers.AWSHelper;
-import org.urbancode.terraform.tasks.common.Task;
 
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.ec2.AmazonEC2;
@@ -35,6 +34,7 @@ import com.amazonaws.services.ec2.model.GroupIdentifier;
 import com.amazonaws.services.ec2.model.Image;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancing;
+import com.urbancode.x2o.tasks.Task;
 
 public class InstanceTask extends Task {
 

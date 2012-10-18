@@ -24,11 +24,11 @@ import org.apache.log4j.Logger;
 import org.urbancode.terraform.tasks.EnvironmentCreationException;
 import org.urbancode.terraform.tasks.EnvironmentDestructionException;
 import org.urbancode.terraform.tasks.aws.helpers.AWSHelper;
-import org.urbancode.terraform.tasks.common.Context;
-import org.urbancode.terraform.tasks.common.SubTask;
+import org.urbancode.terraform.tasks.common.TerraformContext;
 
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.model.SecurityGroup;
+import com.urbancode.x2o.tasks.SubTask;
 
 
 public abstract class SecurityGroupTask extends SubTask {
@@ -60,7 +60,7 @@ public abstract class SecurityGroupTask extends SubTask {
     protected List<RuleTask> rules = new ArrayList<RuleTask>();
 
     //----------------------------------------------------------------------------------------------
-    public SecurityGroupTask(Context context) {
+    public SecurityGroupTask(TerraformContext context) {
         super(context);
         if (context instanceof ContextAWS) {
             this.context = (ContextAWS) context;

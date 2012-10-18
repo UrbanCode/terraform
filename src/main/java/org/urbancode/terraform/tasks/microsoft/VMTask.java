@@ -4,8 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.urbancode.terraform.tasks.common.SubTask;
 import org.urbancode.terraform.tasks.microsoft.util.AzureCmdRunner;
+
+import com.urbancode.x2o.tasks.SubTask;
 
 public class VMTask extends SubTask {
 

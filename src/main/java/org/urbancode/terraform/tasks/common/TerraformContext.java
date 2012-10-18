@@ -13,37 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.urbancode.terraform.tasks;
+package org.urbancode.terraform.tasks.common;
 
-import com.urbancode.x2o.tasks.DestructionException;
+import org.urbancode.terraform.credentials.Credentials;
+import org.urbancode.terraform.credentials.CredentialsException;
 
-public class EnvironmentDestructionException extends DestructionException {
+import com.urbancode.x2o.tasks.Context;
+import com.urbancode.x2o.util.PropertyResolver;
 
-    //**********************************************************************************************
-    // CLASS
-    //**********************************************************************************************
-    private static final long serialVersionUID = 1L;
 
-    //**********************************************************************************************
-    // INSTANCE
-    //**********************************************************************************************
+public interface TerraformContext extends Context{
 
     //----------------------------------------------------------------------------------------------
-    public EnvironmentDestructionException() {
-    }
+    @Override
+    public void setResolver(PropertyResolver resolver);
 
     //----------------------------------------------------------------------------------------------
-    public EnvironmentDestructionException(String message, Throwable cause) {
-        super(message, cause);
-    }
+    public void setCredentials(Credentials credentials)
+    throws CredentialsException;
 
     //----------------------------------------------------------------------------------------------
-    public EnvironmentDestructionException(String message) {
-        super(message);
-    }
+    public EnvironmentTask getEnvironment();
 
     //----------------------------------------------------------------------------------------------
-    public EnvironmentDestructionException(Throwable cause) {
-        super(cause);
-    }
+    public Credentials fetchCredentials();
+
 }

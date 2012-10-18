@@ -30,11 +30,11 @@ import org.urbancode.terraform.tasks.EnvironmentDestructionException;
 import org.urbancode.terraform.tasks.EnvironmentRestorationException;
 import org.urbancode.terraform.tasks.aws.helpers.AWSHelper;
 import org.urbancode.terraform.tasks.common.EnvironmentTask;
-import org.urbancode.terraform.tasks.common.MultiThreadTask;
 import org.urbancode.terraform.tasks.util.InstancePriorityComparator;
 
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.model.NetworkInterface;
+import com.urbancode.x2o.tasks.MultiThreadTask;
 
 public class EnvironmentTaskAWS extends EnvironmentTask {
 

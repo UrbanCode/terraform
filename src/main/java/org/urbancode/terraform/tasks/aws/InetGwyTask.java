@@ -20,12 +20,12 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.urbancode.terraform.tasks.aws.helpers.AWSHelper;
-import org.urbancode.terraform.tasks.common.SubTask;
 
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.model.DescribeInternetGatewaysRequest;
 import com.amazonaws.services.ec2.model.InternetGateway;
 import com.amazonaws.services.ec2.model.InternetGatewayAttachment;
+import com.urbancode.x2o.tasks.SubTask;
 
 public class InetGwyTask extends SubTask {
 

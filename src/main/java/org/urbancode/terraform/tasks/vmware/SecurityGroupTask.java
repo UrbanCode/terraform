@@ -18,8 +18,7 @@ package org.urbancode.terraform.tasks.vmware;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.urbancode.terraform.tasks.common.SubTask;
-
+import com.urbancode.x2o.tasks.SubTask;
 
 public class SecurityGroupTask extends SubTask {
 

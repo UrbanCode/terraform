@@ -23,7 +23,6 @@ import java.util.Date;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.urbancode.terraform.tasks.common.SubTask;
 import org.urbancode.terraform.tasks.vmware.events.CloneVmCreatedEvent;
 import org.urbancode.terraform.tasks.vmware.events.TaskEventListener;
 import org.urbancode.terraform.tasks.vmware.events.TaskEventService;
@@ -58,7 +57,7 @@ import com.vmware.vim25.mo.ResourcePool;
 import com.vmware.vim25.mo.Task;
 import com.vmware.vim25.mo.VirtualMachine;
 
-public class CloneTask extends SubTask implements Cloneable, Comparable<CloneTask> {
+public class CloneTask extends com.urbancode.x2o.tasks.SubTask implements Cloneable, Comparable<CloneTask> {
 
     // **********************************************************************************************
     // CLASS

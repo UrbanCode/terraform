@@ -19,10 +19,10 @@ import java.rmi.RemoteException;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.urbancode.terraform.tasks.common.SubTask;
 import org.urbancode.terraform.tasks.vmware.util.Path;
 import org.urbancode.terraform.tasks.vmware.util.VirtualHost;
 
+import com.urbancode.x2o.tasks.SubTask;
 import com.vmware.vim25.DuplicateName;
 import com.vmware.vim25.InvalidName;
 import com.vmware.vim25.NotFound;

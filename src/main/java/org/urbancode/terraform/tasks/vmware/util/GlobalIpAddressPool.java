@@ -22,7 +22,7 @@ import java.util.Properties;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
-import org.urbancode.terraform.tasks.util.PropertyResolver;
+import com.urbancode.x2o.util.PropertyResolver;
 
 public class GlobalIpAddressPool {
 

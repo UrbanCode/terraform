@@ -20,7 +20,8 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.urbancode.terraform.tasks.common.SubTask;
+
+import com.urbancode.x2o.tasks.SubTask;
 
 
 public class BootActionsTask extends SubTask {

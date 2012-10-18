@@ -24,10 +24,10 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.urbancode.terraform.tasks.common.ExtensionTask;
 import org.urbancode.terraform.tasks.util.IOUtil;
 import org.urbancode.terraform.tasks.vmware.util.VirtualHost;
 
+import com.urbancode.x2o.tasks.ExtensionTask;
 import com.vmware.vim25.mo.VirtualMachine;
 
 public class PostCreateTask extends ExtensionTask {

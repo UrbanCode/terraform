@@ -15,7 +15,8 @@
  ******************************************************************************/
 package org.urbancode.terraform.tasks.vmware;
 
-import org.urbancode.terraform.tasks.common.SubTask;
+import com.urbancode.x2o.tasks.SubTask;
+
 
 public class PortRangeTask extends SubTask {
 

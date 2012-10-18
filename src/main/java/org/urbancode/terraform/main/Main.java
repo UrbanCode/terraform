@@ -48,13 +48,15 @@ import org.urbancode.terraform.tasks.EnvironmentCreationException;
 import org.urbancode.terraform.tasks.EnvironmentDestructionException;
 import org.urbancode.terraform.tasks.EnvironmentRestorationException;
 import org.urbancode.terraform.tasks.aws.ContextAWS;
-import org.urbancode.terraform.tasks.common.Context;
-import org.urbancode.terraform.tasks.util.Property;
-import org.urbancode.terraform.tasks.util.PropertyResolver;
+import org.urbancode.terraform.tasks.common.TerraformContext;
+
+import com.urbancode.x2o.tasks.CreationException;
+import com.urbancode.x2o.tasks.DestructionException;
+import com.urbancode.x2o.tasks.RestorationException;
+import com.urbancode.x2o.util.Property;
+import com.urbancode.x2o.util.PropertyResolver;
 import org.urbancode.terraform.tasks.vmware.ContextVmware;
-import org.urbancode.terraform.xml.XmlModelParser;
-import org.urbancode.terraform.xml.XmlParsingException;
-import org.urbancode.terraform.xml.XmlWrite;
+import com.urbancode.x2o.xml.*;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
@@ -75,13 +77,12 @@ public class Main {
      * @throws IOException
      * @throws XmlParsingException
      * @throws CredentialsException
-     * @throws EnvironmentCreationException
-     * @throws EnvironmentDestructionException
-     * @throws EnvironmentRestorationException
+     * @throws RestorationException
+     * @throws DestructionException
+     * @throws CreationException
      */
     static public void main(String[] args)
-    throws IOException, XmlParsingException, CredentialsException, EnvironmentCreationException,
-    EnvironmentDestructionException, EnvironmentRestorationException {
+    throws IOException, XmlParsingException, CredentialsException, CreationException, DestructionException, RestorationException {
         File inputXmlFile = null;
         File creds = null;
         List<String> unparsedArgs = new ArrayList<String>();
@@ -209,14 +210,13 @@ public class Main {
      * @throws XmlParsingException
      * @throws IOException
      * @throws CredentialsException
-     * @throws EnvironmentCreationException
-     * @throws EnvironmentDestructionException
-     * @throws EnvironmentRestorationException
+     * @throws CreationException
+     * @throws DestructionException
+     * @throws RestorationException
      */
     public void execute()
-    throws XmlParsingException, IOException, CredentialsException, EnvironmentCreationException,
-    EnvironmentDestructionException, EnvironmentRestorationException {
-        Context context = null;
+    throws XmlParsingException, IOException, CredentialsException, CreationException, DestructionException, RestorationException {
+        TerraformContext context = null;
         try {
             // parse xml and set context
             context = parseContext(inputXmlFile);
@@ -407,9 +407,9 @@ public class Main {
     }
 
     //----------------------------------------------------------------------------------------------
-    private Context parseContext(File xmlFileToRead)
+    private TerraformContext parseContext(File xmlFileToRead)
     throws ParserConfigurationException, XmlParsingException, SAXException, IOException {
-        Context result = null;
+        TerraformContext result = null;
 
         DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
         dbFactory.setNamespaceAware(true);
@@ -420,7 +420,7 @@ public class Main {
 
         XmlModelParser parser = new XmlModelParser();
         parser.setPropertyResolver(createResolver());
-        result = parser.parse(rootElement);
+        result = (TerraformContext) parser.parse(rootElement);
 
         return result;
     }
@@ -441,7 +441,7 @@ public class Main {
     }
 
     //----------------------------------------------------------------------------------------------
-    public void writeEnvToXml(File file, Context context)
+    public void writeEnvToXml(File file, TerraformContext context)
     throws XmlParsingException {
         try {
             XmlWrite write = new XmlWrite();

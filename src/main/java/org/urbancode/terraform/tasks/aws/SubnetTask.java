@@ -22,10 +22,10 @@ import org.apache.log4j.Logger;
 import org.urbancode.terraform.tasks.EnvironmentCreationException;
 import org.urbancode.terraform.tasks.EnvironmentDestructionException;
 import org.urbancode.terraform.tasks.aws.helpers.AWSHelper;
-import org.urbancode.terraform.tasks.common.SubTask;
 
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.model.Subnet;
+import com.urbancode.x2o.tasks.SubTask;
 
 public class SubnetTask extends SubTask {
 

@@ -26,8 +26,6 @@ import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
-import org.urbancode.terraform.tasks.common.ExtensionTask;
-import org.urbancode.terraform.tasks.common.SubTask;
 import org.urbancode.terraform.tasks.util.IOUtil;
 import org.urbancode.terraform.tasks.vmware.CloneTask;
 import org.urbancode.terraform.tasks.vmware.EnvironmentTaskVmware;
@@ -40,6 +38,8 @@ import org.urbancode.terraform.tasks.vmware.util.GlobalIpAddressPool;
 import org.urbancode.terraform.tasks.vmware.util.Ip4;
 import org.urbancode.terraform.tasks.vmware.util.VirtualHost;
 
+import com.urbancode.x2o.tasks.ExtensionTask;
+import com.urbancode.x2o.tasks.SubTask;
 import com.vmware.vim25.mo.VirtualMachine;
 
 public class CloneVmCreatedEventListener extends ExtensionTask implements TaskEventListener {

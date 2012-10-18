@@ -21,8 +21,9 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.urbancode.terraform.tasks.PostCreateException;
-import org.urbancode.terraform.tasks.common.Context;
-import org.urbancode.terraform.tasks.common.SubTask;
+import org.urbancode.terraform.tasks.common.TerraformContext;
+
+import com.urbancode.x2o.tasks.SubTask;
 
 
 public class PostCreateActionsTask extends SubTask {
@@ -41,7 +42,7 @@ public class PostCreateActionsTask extends SubTask {
     private String idFilePath;
 
     //----------------------------------------------------------------------------------------------
-    public PostCreateActionsTask(Context context) {
+    public PostCreateActionsTask(TerraformContext context) {
         super(context);
     }
 
@@ -62,7 +63,7 @@ public class PostCreateActionsTask extends SubTask {
 
     //----------------------------------------------------------------------------------------------
     public SshTask createSsh() {
-        SshTask tmp = new SshTask(context);
+        SshTask tmp = new SshTask((TerraformContext) context);
         actions.add(tmp);
         return tmp;
     }

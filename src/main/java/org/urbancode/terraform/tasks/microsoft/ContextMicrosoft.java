@@ -7,11 +7,12 @@ import org.urbancode.terraform.credentials.microsoft.CredentialsMicrosoft;
 import org.urbancode.terraform.tasks.EnvironmentCreationException;
 import org.urbancode.terraform.tasks.EnvironmentDestructionException;
 import org.urbancode.terraform.tasks.EnvironmentRestorationException;
-import org.urbancode.terraform.tasks.common.Context;
+import org.urbancode.terraform.tasks.common.TerraformContext;
 import org.urbancode.terraform.tasks.common.EnvironmentTask;
-import org.urbancode.terraform.tasks.util.PropertyResolver;
 
-public class ContextMicrosoft implements Context {
+import com.urbancode.x2o.util.PropertyResolver;
+
+public class ContextMicrosoft implements TerraformContext {
 
     //**********************************************************************************************
     // CLASS

@@ -23,10 +23,10 @@ import org.apache.log4j.Logger;
 import org.urbancode.terraform.tasks.EnvironmentCreationException;
 import org.urbancode.terraform.tasks.EnvironmentDestructionException;
 import org.urbancode.terraform.tasks.aws.helpers.AWSHelper;
-import org.urbancode.terraform.tasks.common.SubTask;
 
 import com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancing;
 import com.amazonaws.services.elasticloadbalancing.model.Listener;
+import com.urbancode.x2o.tasks.SubTask;
 
 public class LoadBalancerTask extends SubTask {
 

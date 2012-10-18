@@ -19,11 +19,11 @@ import java.rmi.RemoteException;
 import java.util.UUID;
 
 import org.apache.log4j.Logger;
-import org.urbancode.terraform.tasks.common.SubTask;
 import org.urbancode.terraform.tasks.vmware.util.Path;
 import org.urbancode.terraform.tasks.vmware.util.SwitchResult;
 import org.urbancode.terraform.tasks.vmware.util.VirtualHost;
 
+import com.urbancode.x2o.tasks.SubTask;
 import com.vmware.vim25.HostNetworkPolicy;
 import com.vmware.vim25.HostPortGroupSpec;
 import com.vmware.vim25.HostVirtualSwitchSpec;

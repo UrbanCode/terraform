@@ -1,8 +1,9 @@
 package org.urbancode.terraform.tasks.microsoft;
 
 import org.apache.log4j.Logger;
-import org.urbancode.terraform.tasks.common.SubTask;
 import org.urbancode.terraform.tasks.microsoft.util.AzureCmdRunner;
+
+import com.urbancode.x2o.tasks.SubTask;
 
 public class CloudServiceTask extends SubTask {
 

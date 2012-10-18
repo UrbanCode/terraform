@@ -1,6 +1,8 @@
 package org.urbancode.terraform.tasks;
 
-public class EnvironmentRestorationException extends Exception {
+import com.urbancode.x2o.tasks.RestorationException;
+
+public class EnvironmentRestorationException extends RestorationException {
 
     //**********************************************************************************************
     // CLASS

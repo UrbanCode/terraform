@@ -23,17 +23,18 @@ import org.urbancode.terraform.tasks.EnvironmentCreationException;
 import org.urbancode.terraform.tasks.EnvironmentDestructionException;
 import org.urbancode.terraform.tasks.EnvironmentRestorationException;
 import org.urbancode.terraform.tasks.aws.helpers.AWSHelper;
-import org.urbancode.terraform.tasks.common.Context;
 import org.urbancode.terraform.tasks.common.EnvironmentTask;
-import org.urbancode.terraform.tasks.util.PropertyResolver;
+import org.urbancode.terraform.tasks.common.TerraformContext;
 
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.AmazonEC2Client;
 import com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancing;
 import com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClient;
+import com.urbancode.x2o.tasks.CreationException;
+import com.urbancode.x2o.util.PropertyResolver;
 
-public class ContextAWS implements Context {
+public class ContextAWS implements TerraformContext {
 
     //**********************************************************************************************
     // CLASS
@@ -193,7 +194,7 @@ public class ContextAWS implements Context {
      */
     @Override
     public void create()
-    throws EnvironmentCreationException {
+    throws CreationException {
         log.debug("ContextAWS: create()");
         try {
             if (environment != null) {

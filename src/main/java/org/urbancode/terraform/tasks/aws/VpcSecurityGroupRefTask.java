@@ -16,7 +16,7 @@
 package org.urbancode.terraform.tasks.aws;
 
 import org.apache.log4j.Logger;
-import org.urbancode.terraform.tasks.common.Context;
+import org.urbancode.terraform.tasks.common.TerraformContext;
 
 
 public class VpcSecurityGroupRefTask extends SecurityGroupRefTask {
@@ -31,7 +31,7 @@ public class VpcSecurityGroupRefTask extends SecurityGroupRefTask {
     //**********************************************************************************************
 
     //----------------------------------------------------------------------------------------------
-    public VpcSecurityGroupRefTask(Context context) {
+    public VpcSecurityGroupRefTask(TerraformContext context) {
         super(context);
     }
 
