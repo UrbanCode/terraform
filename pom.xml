@@ -4,7 +4,7 @@
 
   <groupId>org.urbancode</groupId>
   <artifactId>terraform</artifactId>
-  <version>0.5</version>
+  <version>0.6</version>
   <packaging>jar</packaging>
 
   <name>terraform</name>
@@ -109,7 +109,15 @@
       <version>1.2.0</version>
       <scope>compile</scope>
     </dependency>
+    <dependency>
+      <groupId>com.urbancode</groupId>
+      <artifactId>x2o-0.1.jar</artifactId>
+      <version>0.1</version>
+      <scope>compile</scope>
+  </dependency>
   </dependencies>
+  
+
 
   <repositories>
     <repository>
@@ -128,5 +136,10 @@
       <url>http://repo1.maven.org/maven2</url>
       <layout>default</layout>
     </repository>
+    
+  <repository>
+    <id>local</id>
+    <url>file://${basedir}/lib</url>
+  </repository>
   </repositories>
 </project>
