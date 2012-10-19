@@ -111,7 +111,7 @@
     </dependency>
     <dependency>
       <groupId>com.urbancode</groupId>
-      <artifactId>x2o-0.1.jar</artifactId>
+      <artifactId>x2o</artifactId>
       <version>0.1</version>
       <scope>compile</scope>
   </dependency>
@@ -137,9 +137,22 @@
       <layout>default</layout>
     </repository>
     
-  <repository>
-    <id>local</id>
-    <url>file://${basedir}/lib</url>
-  </repository>
+    <repository>
+      <releases>
+        <enabled>true</enabled>
+        <updatePolicy>always</updatePolicy>
+        <checksumPolicy>warn</checksumPolicy>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+        <updatePolicy>never</updatePolicy>
+        <checksumPolicy>fail</checksumPolicy>
+      </snapshots>
+      <id>urbancode-mvn-repo</id>
+      <name>urbancode-mvn-repo</name>
+      <url>https://raw.github.com/UrbanCode/mvn-repo/master/releases</url>
+      <layout>default</layout>
+    </repository>
+    
   </repositories>
 </project>
