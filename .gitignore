@@ -19,7 +19,7 @@
 /bin/stdout
 /META-INF
 /dev-scripts
-/temp
+/temp*
 /bin
 !/bin/terraform
 !/bin/terraform.cmd
