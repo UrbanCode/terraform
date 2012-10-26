@@ -3,6 +3,7 @@ package org.urbancode.terraform.tasks.rackspace;
 import java.io.IOException;
 
 import org.apache.commons.httpclient.HttpStatus;
+import org.apache.commons.httpclient.methods.DeleteMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.RequestEntity;
 import org.apache.commons.httpclient.methods.StringRequestEntity;
@@ -105,23 +106,53 @@ public class ServerTask extends SubTask {
         JSONObject server = new JSONObject();
 
         server.put("name", name);
-        server.put("image", image);
-        server.put("flavor", Flavor.lookupFlavorID(flavor));
+        server.put("imageRef", image);
+        server.put("flavorRef", Flavor.lookupFlavorID(flavor));
         data.put("server", server);
-
+        log.debug("Sending body " + data.toString());
         PostMethod method = new PostMethod(uri);
         RequestEntity entity = new StringRequestEntity(data.toString(), "application/json", null);
         method.setRequestEntity(entity);
+        method.setRequestHeader("X-Auth-Token", client.getAuthToken());
 
         int status = client.invokeMethod(method);
         if (200 <= status && status <= 202) {
-            log.info("Server request succeeded.");
+            log.info("Server creation request succeeded.");
+            String body = client.getBody(method);
+            JSONObject resultJSON = new JSONObject(body);
+            id = resultJSON.getJSONObject("server").getString("id");
         }
         else {
-            log.debug("Exception when authenticating.");
-            throw new IOException(String.format("%d %s",
+            log.debug("Exception when creating server.");
+            String body = client.getBody(method);
+            throw new IOException(String.format("%d %s %s",
                 status,
-                HttpStatus.getStatusText(status)));
+                HttpStatus.getStatusText(status),
+                body));
+        }
+    }
+
+    //----------------------------------------------------------------------------------------------
+    private void deleteServerRestCall()
+    throws JSONException, IOException {
+        RestClient client = env.fetchContext().client;
+        String uri = "https://" + client.encodePath(region) + ".servers.api.rackspacecloud.com/v2/" +
+        client.encodePath(client.getTenantID()) + "/servers/" + client.encodePath(id);
+        log.debug("deletion uri: " + uri);
+        DeleteMethod method = new DeleteMethod(uri);
+        method.setRequestHeader("X-Auth-Token", client.getAuthToken());
+
+        int status = client.invokeMethod(method);
+        if (202 <= status && status <= 204) {
+            log.info("Server deletion request succeeded.");
+        }
+        else {
+            log.debug("Exception when deleting server.");
+            String body = client.getBody(method);
+            throw new IOException(String.format("%d %s %s",
+                status,
+                HttpStatus.getStatusText(status),
+                body));
         }
     }
 
@@ -135,7 +166,8 @@ public class ServerTask extends SubTask {
     //----------------------------------------------------------------------------------------------
     @Override
     public void destroy() throws Exception {
-        log.info("I pretended to destroy a server with name " + name + "!");
+        log.info("deleting server with name " + name);
+        deleteServerRestCall();
     }
 
     //----------------------------------------------------------------------------------------------

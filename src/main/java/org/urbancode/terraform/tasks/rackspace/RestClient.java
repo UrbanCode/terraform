@@ -42,6 +42,11 @@ public class RestClient {
     }
 
     //----------------------------------------------------------------------------------------------
+    protected String getAuthToken() {
+        return authToken;
+    }
+
+    //----------------------------------------------------------------------------------------------
     protected String getTenantID() {
         return tenantID;
     }
@@ -93,7 +98,7 @@ public class RestClient {
     }
 
     //----------------------------------------------------------------------------------------------
-    private String getBody(HttpMethodBase method)
+    protected String getBody(HttpMethodBase method)
     throws IOException {
         StringBuilder builder = new StringBuilder();
         InputStream body = method.getResponseBodyAsStream();
@@ -110,7 +115,7 @@ public class RestClient {
     }
 
     //----------------------------------------------------------------------------------------------
-    private void discardBody(HttpMethodBase method)
+    protected void discardBody(HttpMethodBase method)
     throws IOException {
         InputStream body = method.getResponseBodyAsStream();
         if (body != null) {

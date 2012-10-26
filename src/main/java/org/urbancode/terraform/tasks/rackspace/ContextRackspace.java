@@ -42,7 +42,14 @@ public class ContextRackspace implements TerraformContext {
     //----------------------------------------------------------------------------------------------
     @Override
     public void destroy() throws DestructionException {
-        env.destroy();
+        client = new RestClient();
+        try {
+            client.authenticate(creds.getUser(), creds.getApiKey());
+            env.destroy();
+        } catch (AuthenticationException e) {
+            log.error("Authentication failed. Cannot destroy environment.");
+            throw new DestructionException(e);
+        }
     }
 
     //----------------------------------------------------------------------------------------------
