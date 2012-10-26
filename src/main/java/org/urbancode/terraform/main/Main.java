@@ -42,6 +42,8 @@ import org.urbancode.terraform.credentials.aws.CredentialsAWS;
 import org.urbancode.terraform.credentials.aws.CredentialsParserAWS;
 import org.urbancode.terraform.credentials.microsoft.CredentialsMicrosoft;
 import org.urbancode.terraform.credentials.microsoft.CredentialsParserMicrosoft;
+import org.urbancode.terraform.credentials.rackspace.CredentialsParserRackspace;
+import org.urbancode.terraform.credentials.rackspace.CredentialsRackspace;
 import org.urbancode.terraform.credentials.vmware.CredentialsParserVmware;
 import org.urbancode.terraform.credentials.vmware.CredentialsVmware;
 import org.urbancode.terraform.tasks.EnvironmentCreationException;
@@ -462,6 +464,7 @@ public class Main {
         CredentialsParserRegistry.getInstance().register(CredentialsAWS.class.getName(), CredentialsParserAWS.class);
         CredentialsParserRegistry.getInstance().register(CredentialsVmware.class.getName(), CredentialsParserVmware.class);
         CredentialsParserRegistry.getInstance().register(CredentialsMicrosoft.class.getName(), CredentialsParserMicrosoft.class);
+        CredentialsParserRegistry.getInstance().register(CredentialsRackspace.class.getName(), CredentialsParserRackspace.class);
     }
 
     //----------------------------------------------------------------------------------------------
