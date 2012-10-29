@@ -57,7 +57,7 @@ public class EnvironmentTaskRackspace extends EnvironmentTask {
     private void createOrDestroyServersInParallel(List<ServerTask> serverTaskList, boolean doCreate)
     throws RemoteException, InterruptedException, Exception {
         long pollInterval = 3000L;
-        long timeoutInterval = 25L * 60L * 1000L;
+        long timeoutInterval = 10L * 60L * 1000L;
         long start;
         if (serverTaskList != null && !serverTaskList.isEmpty()) {
             int threadPoolSize = serverTaskList.size();

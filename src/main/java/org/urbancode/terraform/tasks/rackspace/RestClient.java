@@ -13,6 +13,7 @@ import java.nio.CharBuffer;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethodBase;
 import org.apache.commons.httpclient.HttpStatus;
+import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.RequestEntity;
 import org.apache.commons.httpclient.methods.StringRequestEntity;
@@ -38,7 +39,9 @@ public class RestClient {
 
     //----------------------------------------------------------------------------------------------
     protected RestClient() {
-        httpClient = new HttpClient();
+        MultiThreadedHttpConnectionManager connectionManager =
+                new MultiThreadedHttpConnectionManager();
+        httpClient = new HttpClient(connectionManager);
     }
 
     //----------------------------------------------------------------------------------------------
