@@ -104,7 +104,7 @@ public class RouterConfigPostCreateTask extends PostCreateTask {
         //set VM now that the VM has been created
         this.vmToConfig = this.cloneTask.fetchVm();
         this.tempConfDirNoSeparator = System.getenv("TERRAFORM_HOME") +
-                File.separator + "temp" + "-" + environment.fetchUUID();
+                File.separator + "temp" + "-" + environment.fetchSuffix();
         this.tempConfDir = tempConfDirNoSeparator + File.separator;
         try {
             log.info(this.tempConfDirNoSeparator);
@@ -152,7 +152,7 @@ public class RouterConfigPostCreateTask extends PostCreateTask {
     @Override
     public void destroy() {
         this.tempConfDirNoSeparator = System.getenv("TERRAFORM_HOME") +
-                File.separator + "temp" + "-" + environment.fetchUUID();
+                File.separator + "temp" + "-" + environment.fetchSuffix();
         this.tempConfDir = tempConfDirNoSeparator + File.separator;
         File configDir = new File(this.tempConfDirNoSeparator);
         try {

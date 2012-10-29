@@ -81,7 +81,7 @@ public class CloneVmCreatedEventListener extends ExtensionTask implements TaskEv
         this.environment = routerTask.fetchEnvironment();
         this.routerTask = routerTask;
         this.tempConfDir = System.getenv("TERRAFORM_HOME") +
-                File.separator + "temp" + "-" + environment.fetchUUID() + File.separator;
+                File.separator + "temp" + "-" + environment.fetchSuffix() + File.separator;
     }
 
     //----------------------------------------------------------------------------------------------
@@ -102,14 +102,14 @@ public class CloneVmCreatedEventListener extends ExtensionTask implements TaskEv
         this.routerUser = routerTask.getUser();
         this.routerPassword = routerTask.fetchPassword();
         this.tempConfDir = System.getenv("TERRAFORM_HOME") +
-                File.separator + "temp" + "-" + environment.fetchUUID() + File.separator;
+                File.separator + "temp" + "-" + environment.fetchSuffix() + File.separator;
     }
 
     //----------------------------------------------------------------------------------------------
     @Override
     public void handleEvent(TaskEvent event) {
         this.tempConfDir = System.getenv("TERRAFORM_HOME") +
-                File.separator + "temp" + "-" + environment.fetchUUID() + File.separator;
+                File.separator + "temp" + "-" + environment.fetchSuffix() + File.separator;
 
         SubTask subTask = event.getSubTask();
         CloneTask cloneTask = null;

@@ -37,7 +37,7 @@ public class EnvironmentTask extends Task {
 
     protected String name;
     protected String prefix;
-    protected String uuid = null;
+    protected String suffix = null;
     protected long startTime;
 
     //----------------------------------------------------------------------------------------------
@@ -72,8 +72,8 @@ public class EnvironmentTask extends Task {
     }
 
     //----------------------------------------------------------------------------------------------
-    public String fetchUUID() {
-        return uuid;
+    public String fetchSuffix() {
+        return suffix;
     }
 
     //----------------------------------------------------------------------------------------------
@@ -106,27 +106,27 @@ public class EnvironmentTask extends Task {
     //----------------------------------------------------------------------------------------------
     /**
      * this is sort of a temporary solution right now to ensure deletion of temporary folders
-     * @param uuid - a unique string (we usually expect this to be 4 hexadecimal characters, eg. 8fe0)
+     * @param suffix - a unique string (we expect this to be 4 base 62 characters, eg. 8ZeJ)
      */
-    public void setUUID(String uuid) {
-        this.uuid = uuid;
+    public void setSuffix(String suffix) {
+        this.suffix = suffix;
     }
 
     //----------------------------------------------------------------------------------------------
     /**
      * Appends a unique string to the environment name so there are not file name conflicts
-     * @param uuid
+     * @param suffix
      */
-    public void addUUIDToEnvName(String uuid) {
-        this.uuid = uuid;
-        log.debug("Set environment (" + name + ") uuid to " + this.uuid);
+    public void addSuffixToEnvName(String suffix) {
+        this.suffix = suffix;
+        log.debug("Set environment (" + name + ") uuid to " + this.suffix);
 
         if (name != null) {
             prefix = this.name;
         }
 
-        if (uuid != null) {
-            name = (name + "-" + this.uuid);
+        if (suffix != null) {
+            name = (name + "-" + this.suffix);
         }
         log.debug("Environment full name: " + name);
     }

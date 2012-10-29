@@ -139,7 +139,7 @@ public class EnvironmentTaskVmware extends EnvironmentTask {
      * Gives the folder a unique name based on the environment's UUID suffix.
      */
     public void addUUIDToFolderName() {
-        folderName = folderName + "-" + fetchUUID();
+        folderName = folderName + "-" + fetchSuffix();
     }
 
     //----------------------------------------------------------------------------------------------

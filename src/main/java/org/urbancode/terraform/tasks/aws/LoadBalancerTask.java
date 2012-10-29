@@ -311,7 +311,7 @@ public class LoadBalancerTask extends SubTask {
             }
 
             // give unique name
-            String uuid = context.getEnvironment().fetchUUID();
+            String uuid = context.getEnvironment().fetchSuffix();
             fullName = loadBalancerName + ("-" + uuid);
             log.debug("Security Group " + loadBalancerName + " has fullname " + fullName);
 

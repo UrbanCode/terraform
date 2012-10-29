@@ -20,6 +20,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -30,6 +31,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
 import org.urbancode.terraform.commands.vmware.ResumeCommand;
 import org.urbancode.terraform.commands.vmware.SuspendCommand;
@@ -228,10 +230,18 @@ public class Main {
             context.setCredentials(credentials);
             if (AllowedCommands.CREATE.getCommandName().equalsIgnoreCase(command)) {
                 // create new file if creating a new environment
-                String uuid = UUID.randomUUID().toString().substring(0,4);
+                UUID uuid = UUID.randomUUID();
+                //convert uuid to base 64
+                ByteBuffer bb = ByteBuffer.wrap(new byte[16]);
+                bb.putLong(uuid.getMostSignificantBits());
+                bb.putLong(uuid.getLeastSignificantBits());
+                String suffix = Base64.encodeBase64URLSafeString(bb.array());
+                suffix = suffix.replaceAll("-", "Y");
+                suffix = suffix.replaceAll("_", "Z");
+                suffix = suffix.substring(0, 4);
                 if (context.getEnvironment() != null) {
-                    context.getEnvironment().addUUIDToEnvName(uuid);
-                    log.debug("UUID for env " + context.getEnvironment().getName() + " is " + uuid);
+                    context.getEnvironment().addSuffixToEnvName(suffix);
+                    log.debug("UUID for env " + context.getEnvironment().getName() + " is " + suffix);
                 }
                 else {
                     throw new NullPointerException("No environment on context!");
@@ -245,9 +255,9 @@ public class Main {
                 context.create();
             }
             else if (AllowedCommands.DESTROY.getCommandName().equalsIgnoreCase(command)) {
-                String uuid = parseUUID(context.getEnvironment().getName());
-                context.getEnvironment().setUUID(uuid);
-                log.debug("found UUID " + uuid);
+                String suffix = parseSuffix(context.getEnvironment().getName());
+                context.getEnvironment().setSuffix(suffix);
+                log.debug("found suffix " + suffix);
                 // we want to write out the environments whether we succeed in destroying them
                 // or fail (then it will write out whatever is left)
                 outputXmlFile = inputXmlFile;
@@ -468,12 +478,12 @@ public class Main {
     }
 
     //----------------------------------------------------------------------------------------------
-    private String parseUUID(String envName) {
+    private String parseSuffix(String envName) {
         String result = null;
         try {
-            String uuid = envName.substring(envName.length()-4);
-            if (matchesHex(uuid)) {
-                result = uuid;
+            String suffix = envName.substring(envName.length()-4);
+            if (matchesBase62(suffix)) {
+                result = suffix;
             }
         }
         catch (IndexOutOfBoundsException e) {
@@ -484,8 +494,8 @@ public class Main {
     }
 
     //----------------------------------------------------------------------------------------------
-    private boolean matchesHex(String s) {
-        return s.matches("\\A\\b[0-9a-fA-F]+\\b\\Z");
+    private boolean matchesBase62(String s) {
+        return s.matches("\\A\\b[0-9a-zA-Z]+\\b\\Z");
     }
 }
 

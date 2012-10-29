@@ -61,7 +61,7 @@ public class PostCreateTask extends ExtensionTask {
         this.environment = cloneTask.fetchEnvironment();
         this.vmToConfig = cloneTask.fetchVm();
         this.tempConfDirNoSeparator = System.getenv("TERRAFORM_HOME") +
-                File.separator + "temp" + "-" + environment.fetchUUID();
+                File.separator + "temp" + "-" + environment.fetchSuffix();
         this.tempConfDir = tempConfDirNoSeparator + File.separator;
     }
 
@@ -71,7 +71,7 @@ public class PostCreateTask extends ExtensionTask {
         this.environment = cloneTask.fetchEnvironment();
         this.vmToConfig = cloneTask.fetchVm();
         this.tempConfDirNoSeparator = System.getenv("TERRAFORM_HOME") +
-                File.separator + "temp" + "-" + environment.fetchUUID();
+                File.separator + "temp" + "-" + environment.fetchSuffix();
         this.tempConfDir = tempConfDirNoSeparator + File.separator;
     }
 
