@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.httpclient.HttpStatus;
+import org.apache.commons.httpclient.methods.DeleteMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.RequestEntity;
 import org.apache.commons.httpclient.methods.StringRequestEntity;
@@ -78,6 +79,11 @@ public class LoadBalancerTask extends SubTask {
     }
 
     //----------------------------------------------------------------------------------------------
+    public List<LoadBalancerNodeTask> getNodeTasks(){
+        return nodes;
+    }
+
+    //----------------------------------------------------------------------------------------------
     public void setId(String id) {
         this.id = id;
     }
@@ -121,10 +127,17 @@ public class LoadBalancerTask extends SubTask {
     }
 
     //----------------------------------------------------------------------------------------------
+    public LoadBalancerNodeTask createNode() {
+        LoadBalancerNodeTask node = new LoadBalancerNodeTask(env, ipType);
+        nodes.add(node);
+        return node;
+    }
+
+    //----------------------------------------------------------------------------------------------
     private void createLBRestCall()
     throws JSONException, IOException {
         RestClient client = env.fetchContext().client;
-        String uri = "https://" + client.encodePath(region) + ".servers.api.rackspacecloud.com/v1.0/" +
+        String uri = "https://" + client.encodePath(region) + ".loadbalancers.api.rackspacecloud.com/v1.0/" +
         client.encodePath(client.getTenantID()) + "/loadbalancers";
         JSONObject data = new JSONObject();
         JSONObject loadBalancer = new JSONObject();
@@ -152,6 +165,7 @@ public class LoadBalancerTask extends SubTask {
         RequestEntity entity = new StringRequestEntity(data.toString(), "application/json", null);
         method.setRequestEntity(entity);
         method.setRequestHeader("X-Auth-Token", client.getAuthToken());
+        method.setRequestHeader("Content-Type", "application/json");
 
         int status = client.invokeMethod(method);
         String body = client.getBody(method);
@@ -160,6 +174,30 @@ public class LoadBalancerTask extends SubTask {
             log.info("Load balancer creation request succeeded.");
             JSONObject resultJSON = new JSONObject(body);
             id = resultJSON.getJSONObject("loadBalancer").getString("id");
+        }
+        else {
+            log.warn("Exception when creating load balancer.");
+            throw new IOException(String.format("%d %s %s",
+                status,
+                HttpStatus.getStatusText(status),
+                body));
+        }
+    }
+
+    //----------------------------------------------------------------------------------------------
+    private void deleteLBRestCall()
+    throws JSONException, IOException {
+        RestClient client = env.fetchContext().client;
+        String uri = "https://" + client.encodePath(region) + ".loadbalancers.api.rackspacecloud.com/v1.0/" +
+        client.encodePath(client.getTenantID()) + "/loadbalancers/" + client.encodePath(id);
+        DeleteMethod method = new DeleteMethod(uri);
+        method.setRequestHeader("X-Auth-Token", client.getAuthToken());
+
+        int status = client.invokeMethod(method);
+        String body = client.getBody(method);
+        method.releaseConnection();
+        if (200 <= status && status <= 204) {
+            log.info("Load balancer deletion request succeeded.");
         }
         else {
             log.warn("Exception when creating load balancer.");
@@ -187,6 +225,9 @@ public class LoadBalancerTask extends SubTask {
     //----------------------------------------------------------------------------------------------
     @Override
     public void create() throws Exception {
+        for (LoadBalancerNodeTask node : nodes) {
+            node.create();
+        }
         try {
             createLBRestCall();
         }
@@ -201,8 +242,7 @@ public class LoadBalancerTask extends SubTask {
     //----------------------------------------------------------------------------------------------
     @Override
     public void destroy() throws Exception {
-        // TODO Auto-generated method stub
-
+        deleteLBRestCall();
     }
 
     //----------------------------------------------------------------------------------------------

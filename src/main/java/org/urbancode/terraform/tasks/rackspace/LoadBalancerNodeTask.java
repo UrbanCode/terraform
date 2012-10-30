@@ -1,7 +1,6 @@
 package org.urbancode.terraform.tasks.rackspace;
 
 import org.apache.log4j.Logger;
-
 import com.urbancode.x2o.tasks.SubTask;
 
 public class LoadBalancerNodeTask extends SubTask {
@@ -14,13 +13,19 @@ public class LoadBalancerNodeTask extends SubTask {
     //**********************************************************************************************
     // INSTANCE
     //**********************************************************************************************
-    String address;
-    String port;
-    String condition = "ENABLED";
+    private EnvironmentTaskRackspace env;
+    private String address;
+    private String port;
+    private String condition = "ENABLED";
+    private String serverName = null;
+    private boolean nameHasSuffix = false;
+    private final String ipType;
 
     //----------------------------------------------------------------------------------------------
-    public LoadBalancerNodeTask() {
+    public LoadBalancerNodeTask(EnvironmentTaskRackspace env, String ipType) {
         super();
+        this.env = env;
+        this.ipType = ipType;
     }
 
     //----------------------------------------------------------------------------------------------
@@ -39,6 +44,11 @@ public class LoadBalancerNodeTask extends SubTask {
     }
 
     //----------------------------------------------------------------------------------------------
+    public String getServerName() {
+        return serverName;
+    }
+
+    //----------------------------------------------------------------------------------------------
     public void setAddress(String address) {
         this.address = address;
     }
@@ -54,10 +64,29 @@ public class LoadBalancerNodeTask extends SubTask {
     }
 
     //----------------------------------------------------------------------------------------------
+    public void setServerName(String serverName) {
+        this.serverName = serverName;
+    }
+
+    //----------------------------------------------------------------------------------------------
+    public void setNameHasSuffix(boolean nameHasSuffix) {
+        this.nameHasSuffix = nameHasSuffix;
+    }
+
+    //----------------------------------------------------------------------------------------------
     @Override
     public void create() throws Exception {
-        // TODO Auto-generated method stub
-
+        if (serverName != null) {
+            if (nameHasSuffix) {
+                serverName = serverName + "-" + env.fetchSuffix();
+            }
+            if (ipType.equalsIgnoreCase("private")) {
+                address = env.fetchContext().resolve("${" + serverName + "-private-ip" + "}");
+            }
+            else if (ipType.equalsIgnoreCase("public")) {
+                address = env.fetchContext().resolve("${" + serverName + "-public-ip" + "}");
+            }
+        }
     }
 
     //----------------------------------------------------------------------------------------------

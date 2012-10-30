@@ -23,6 +23,7 @@ public class EnvironmentTaskRackspace extends EnvironmentTask {
     // INSTANCE
     //**********************************************************************************************
     private List<ServerTask> serverTasks = new ArrayList<ServerTask>();
+    private List<LoadBalancerTask> loadBalancerTasks = new ArrayList<LoadBalancerTask>();
 
     //----------------------------------------------------------------------------------------------
     public EnvironmentTaskRackspace(TerraformContext context) {
@@ -30,8 +31,13 @@ public class EnvironmentTaskRackspace extends EnvironmentTask {
     }
 
     //----------------------------------------------------------------------------------------------
-    public List<ServerTask> getServerTasks(){
+    public List<ServerTask> getServerTasks() {
         return serverTasks;
+    }
+
+    //----------------------------------------------------------------------------------------------
+    public List<LoadBalancerTask> getLoadBalancerTasks() {
+        return loadBalancerTasks;
     }
 
     //----------------------------------------------------------------------------------------------
@@ -44,6 +50,13 @@ public class EnvironmentTaskRackspace extends EnvironmentTask {
         ServerTask server = new ServerTask(this);
         serverTasks.add(server);
         return server;
+    }
+
+    //----------------------------------------------------------------------------------------------
+    public LoadBalancerTask createLoadBalancer() {
+        LoadBalancerTask lb = new LoadBalancerTask(this);
+        loadBalancerTasks.add(lb);
+        return lb;
     }
 
     //----------------------------------------------------------------------------------------------
@@ -106,6 +119,9 @@ public class EnvironmentTaskRackspace extends EnvironmentTask {
     public void create() {
         try {
             createOrDestroyServersInParallel(serverTasks, true);
+            for (LoadBalancerTask lb : loadBalancerTasks) {
+                lb.create();
+            }
         } catch (RemoteException e) {
             log.warn("RemoteException while creating Rackspace servers", e);
         } catch (InterruptedException e) {
@@ -126,6 +142,9 @@ public class EnvironmentTaskRackspace extends EnvironmentTask {
     public void destroy() {
         try {
             createOrDestroyServersInParallel(serverTasks, false);
+            for (LoadBalancerTask lb : loadBalancerTasks) {
+                lb.destroy();
+            }
         } catch (RemoteException e) {
             log.warn("RemoteException while creating Rackspace servers", e);
         } catch (InterruptedException e) {

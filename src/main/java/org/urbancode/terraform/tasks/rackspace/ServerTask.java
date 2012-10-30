@@ -295,6 +295,8 @@ public class ServerTask extends SubTask {
             if (serverJSON.getString("status").equalsIgnoreCase("ACTIVE")) {
                 try {
                     updateIpAddresses(serverJSON.getJSONObject("addresses"));
+                    env.fetchContext().setProperty(name + "-public-ip", publicIp);
+                    env.fetchContext().setProperty(name + "-private-ip", privateIp);
                 }
                 catch(JSONException e) {
                     log.warn("Exception while finding IP addresses. Continuing...", e);
