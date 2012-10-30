@@ -101,7 +101,7 @@ public class ServerTask extends SubTask {
 
     //----------------------------------------------------------------------------------------------
     public void setFlavor(String flavor) {
-        if (Flavor.contains(flavor)) {
+        if (ServerFlavor.contains(flavor)) {
             this.flavor = flavor;
         }
         else {
@@ -220,7 +220,7 @@ public class ServerTask extends SubTask {
 
         server.put("name", name);
         server.put("imageRef", imageId);
-        server.put("flavorRef", Flavor.lookupFlavorID(flavor));
+        server.put("flavorRef", ServerFlavor.lookupFlavorID(flavor));
         data.put("server", server);
         log.debug("Sending body " + data.toString());
         PostMethod method = new PostMethod(uri);

@@ -1,19 +1,19 @@
 package org.urbancode.terraform.tasks.rackspace;
 
-public enum Flavor {
+public enum ServerFlavor {
 
     SIZE_512MB("512MB"), SIZE_1GB("1GB"), SIZE_2GB("2GB"), SIZE_4GB("4GB"), SIZE_8GB("8GB"), SIZE_15GB("15GB"), SIZE_30GB("30GB");
 
     private String size;
 
     //----------------------------------------------------------------------------------------------
-    private Flavor(String size) {
+    private ServerFlavor(String size) {
         this.size = size;
     }
 
     //----------------------------------------------------------------------------------------------
     static public boolean contains(String testString) {
-        for (Flavor c : values()) {
+        for (ServerFlavor c : values()) {
             if (c.size.equals(testString)) {
                 return true;
             }

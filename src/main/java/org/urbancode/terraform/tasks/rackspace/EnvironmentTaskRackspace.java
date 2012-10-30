@@ -24,6 +24,7 @@ public class EnvironmentTaskRackspace extends EnvironmentTask {
     //**********************************************************************************************
     private List<ServerTask> serverTasks = new ArrayList<ServerTask>();
     private List<LoadBalancerTask> loadBalancerTasks = new ArrayList<LoadBalancerTask>();
+    private List<DatabaseTask> databaseTasks = new ArrayList<DatabaseTask>();
 
     //----------------------------------------------------------------------------------------------
     public EnvironmentTaskRackspace(TerraformContext context) {
@@ -38,6 +39,11 @@ public class EnvironmentTaskRackspace extends EnvironmentTask {
     //----------------------------------------------------------------------------------------------
     public List<LoadBalancerTask> getLoadBalancerTasks() {
         return loadBalancerTasks;
+    }
+
+    //----------------------------------------------------------------------------------------------
+    public List<DatabaseTask> getDatabaseTasks() {
+        return databaseTasks;
     }
 
     //----------------------------------------------------------------------------------------------
@@ -60,6 +66,13 @@ public class EnvironmentTaskRackspace extends EnvironmentTask {
     }
 
     //----------------------------------------------------------------------------------------------
+    public DatabaseTask createDatabase() {
+        DatabaseTask db = new DatabaseTask(this);
+        databaseTasks.add(db);
+        return db;
+    }
+
+    //----------------------------------------------------------------------------------------------
     /**
      * Spins off a new thread for each clone in this "chunk" to be created in parallel.
      * @param serverTaskList
@@ -67,13 +80,13 @@ public class EnvironmentTaskRackspace extends EnvironmentTask {
      * @throws InterruptedException
      * @throws Exception
      */
-    private void createOrDestroyServersInParallel(List<ServerTask> serverTaskList, boolean doCreate)
+    private void createOrDestroyServersInParallel(List<ServerTask> serverTaskList, List<DatabaseTask> databaseTaskList, boolean doCreate)
     throws RemoteException, InterruptedException, Exception {
         long pollInterval = 3000L;
         long timeoutInterval = 10L * 60L * 1000L;
         long start;
-        if (serverTaskList != null && !serverTaskList.isEmpty()) {
-            int threadPoolSize = serverTaskList.size();
+        if (serverTaskList != null && !serverTaskList.isEmpty() || (databaseTaskList != null && !databaseTaskList.isEmpty())) {
+            int threadPoolSize = serverTaskList.size() + databaseTaskList.size();
             if (threadPoolSize > MAX_THREADS) {
                 threadPoolSize = MAX_THREADS;
             }
@@ -84,6 +97,11 @@ public class EnvironmentTaskRackspace extends EnvironmentTask {
             start = System.currentTimeMillis();
 
             for (ServerTask instance : serverTaskList) {
+                MultiThreadTask mThread = new MultiThreadTask(instance, doCreate, context);
+                threadList.add(mThread);
+                service.execute(mThread);
+            }
+            for (DatabaseTask instance : databaseTaskList) {
                 MultiThreadTask mThread = new MultiThreadTask(instance, doCreate, context);
                 threadList.add(mThread);
                 service.execute(mThread);
@@ -118,7 +136,7 @@ public class EnvironmentTaskRackspace extends EnvironmentTask {
     @Override
     public void create() {
         try {
-            createOrDestroyServersInParallel(serverTasks, true);
+            createOrDestroyServersInParallel(serverTasks, databaseTasks, true);
             for (LoadBalancerTask lb : loadBalancerTasks) {
                 lb.create();
             }
@@ -141,7 +159,7 @@ public class EnvironmentTaskRackspace extends EnvironmentTask {
     @Override
     public void destroy() {
         try {
-            createOrDestroyServersInParallel(serverTasks, false);
+            createOrDestroyServersInParallel(serverTasks, databaseTasks, false);
             for (LoadBalancerTask lb : loadBalancerTasks) {
                 lb.destroy();
             }

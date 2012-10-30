@@ -1,11 +1,10 @@
 package org.urbancode.terraform.tasks.rackspace;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.methods.DeleteMethod;
+import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.RequestEntity;
 import org.apache.commons.httpclient.methods.StringRequestEntity;
@@ -16,36 +15,28 @@ import org.codehaus.jettison.json.JSONObject;
 
 import com.urbancode.x2o.tasks.SubTask;
 
-public class LoadBalancerTask extends SubTask {
+public class DatabaseTask extends SubTask {
+
     //**********************************************************************************************
     // CLASS
     //**********************************************************************************************
-    static private final Logger log = Logger.getLogger(LoadBalancerTask.class);
+    static private final Logger log = Logger.getLogger(DatabaseTask.class);
 
     //**********************************************************************************************
     // INSTANCE
     //**********************************************************************************************
     private EnvironmentTaskRackspace env;
-    String id = null;
-    String name;
-    String region;
-    String protocol;
-    String port;
-    String algorithm = "RANDOM";
-    String ipType;//public or private
-    boolean autoDelete = true;
-
-    List<LoadBalancerNodeTask> nodes = new ArrayList<LoadBalancerNodeTask>();
+    private String name;
+    private boolean appendSuffix = false;
+    private String region;
+    private String flavor;
+    private int volumeSize;
+    private String id;
 
     //----------------------------------------------------------------------------------------------
-    public LoadBalancerTask(EnvironmentTaskRackspace env) {
+    public DatabaseTask(EnvironmentTaskRackspace env) {
         super();
         this.env = env;
-    }
-
-    //----------------------------------------------------------------------------------------------
-    public String getId() {
-        return id;
     }
 
     //----------------------------------------------------------------------------------------------
@@ -59,33 +50,18 @@ public class LoadBalancerTask extends SubTask {
     }
 
     //----------------------------------------------------------------------------------------------
-    public String getProtocol() {
-        return protocol;
+    public String getFlavor() {
+        return flavor;
     }
 
     //----------------------------------------------------------------------------------------------
-    public String getPort() {
-        return port;
+    public int getVolumeSize() {
+        return volumeSize;
     }
 
     //----------------------------------------------------------------------------------------------
-    public String getAlgorithm() {
-        return algorithm;
-    }
-
-    //----------------------------------------------------------------------------------------------
-    public String getIpType() {
-        return ipType;
-    }
-
-    //----------------------------------------------------------------------------------------------
-    public List<LoadBalancerNodeTask> getNodeTasks(){
-        return nodes;
-    }
-
-    //----------------------------------------------------------------------------------------------
-    public void setId(String id) {
-        this.id = id;
+    public String getId() {
+        return id;
     }
 
     //----------------------------------------------------------------------------------------------
@@ -94,72 +70,94 @@ public class LoadBalancerTask extends SubTask {
     }
 
     //----------------------------------------------------------------------------------------------
+    public void setAppendSuffix(boolean appendSuffix) {
+        this.appendSuffix = appendSuffix;
+    }
+
+    //----------------------------------------------------------------------------------------------
     public void setRegion(String region) {
         if(Region.containsIgnoreCase(region)) {
             this.region = region.toLowerCase();
         }
         else {
-            log.warn("You did not enter a valid region for this load balancer.");
+            log.warn("You did not enter a valid region for a server.");
         }
     }
 
     //----------------------------------------------------------------------------------------------
-    public void setProtocol(String protocol) {
-        this.protocol = protocol;
-    }
-
-    //----------------------------------------------------------------------------------------------
-    public void setPort(String port) {
-        this.port = port;
-    }
-
-    //----------------------------------------------------------------------------------------------
-    public void setAlgorithm(String algorithm) {
-        this.algorithm = algorithm;
-    }
-
-    //----------------------------------------------------------------------------------------------
-    public void setIpType(String ipType) {
-        this.ipType = ipType;
-        if (!ipType.equalsIgnoreCase("public") && !ipType.equalsIgnoreCase("private")) {
-            log.warn("Valid IP types for load balancers are \"public\" or \"private\"");
+    public void setFlavor(String flavor) {
+        if (DatabaseFlavor.contains(flavor)) {
+            this.flavor = flavor;
+        }
+        else {
+            log.warn("Flavor type is not valid.");
         }
     }
 
     //----------------------------------------------------------------------------------------------
-    public LoadBalancerNodeTask createNode() {
-        LoadBalancerNodeTask node = new LoadBalancerNodeTask(env, ipType);
-        nodes.add(node);
-        return node;
+    public void setVolumeSize(int volumeSize) {
+        this.volumeSize = volumeSize;
     }
 
     //----------------------------------------------------------------------------------------------
-    private void createLBRestCall()
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    //----------------------------------------------------------------------------------------------
+    private JSONObject pollForDatabaseStatus()
+    throws IOException, JSONException {
+        JSONObject result = null;
+        RestClient client = env.fetchContext().client;
+        String uri = "https://" + client.encodePath(region) + ".databases.api.rackspacecloud.com/v1.0/" +
+        client.encodePath(client.getTenantID()) + "/instances/" + client.encodePath(id);
+        GetMethod method = new GetMethod(uri);
+        method.setRequestHeader("X-Auth-Token", client.getAuthToken());
+        method.setRequestHeader("Content-Type", "application/json");
+
+        int status = client.invokeMethod(method);
+        String body = client.getBody(method);
+        method.releaseConnection();
+        if (200 <= status && status <= 204) {
+            JSONObject serverJSON = new JSONObject(body).getJSONObject("instance");
+            result = serverJSON;
+        }
+        else {
+            log.warn("Exception when polling database for status.");
+            throw new IOException(String.format("%d %s %s",
+                status,
+                HttpStatus.getStatusText(status),
+                body));
+        }
+        return result;
+    }
+
+    //----------------------------------------------------------------------------------------------
+    private void createDbRestCall()
     throws JSONException, IOException {
         RestClient client = env.fetchContext().client;
-        String uri = "https://" + client.encodePath(region) + ".loadbalancers.api.rackspacecloud.com/v1.0/" +
-        client.encodePath(client.getTenantID()) + "/loadbalancers";
+        String uri = "https://" + client.encodePath(region) + ".databases.api.rackspacecloud.com/v1.0/" +
+        client.encodePath(client.getTenantID()) + "/instances";
         JSONObject data = new JSONObject();
-        JSONObject loadBalancer = new JSONObject();
+        JSONObject instance = new JSONObject();
 
-        loadBalancer.put("name", name);
-        loadBalancer.put("port", port);
-        loadBalancer.put("protocol", protocol);
-        loadBalancer.put("algorithm", algorithm);
-        loadBalancer.put("nodes", generateNodeJSON());
+        instance.put("name", name);
+        instance.put("volume", new JSONObject().put("size", volumeSize));
 
-        JSONArray virtualIps = new JSONArray();
-        JSONObject virtualIp = new JSONObject();
-        if (ipType.equalsIgnoreCase("public")) {
-            virtualIp.put("type", "PUBLIC");
-        }
-        else if (ipType.equalsIgnoreCase("private") || ipType.equalsIgnoreCase("servicenet")) {
-            virtualIp.put("type", "SERVICENET");
-        }
-        virtualIps.put(virtualIp);
-        loadBalancer.put("virtualIps", virtualIps);
+        String flavorRef = "https://" + region + ".databases.api.rackspacecloud.com/v1.0/";
+        flavorRef = flavorRef + client.getTenantID() + "/flavors/" + DatabaseFlavor.lookupFlavorID(flavor);
+        instance.put("flavorRef", flavorRef);
 
-        data.put("loadBalancer", loadBalancer);
+        JSONArray dbs = new JSONArray();
+        JSONObject db = new JSONObject();
+        db.put("name", name);
+        db.put("character_set", "utf8");
+        db.put("collate", "utf8_general_ci");
+        dbs.put(db);
+        instance.put("databases", dbs);
+
+
+        data.put("instance", instance);
         log.debug("Sending body " + data.toString());
         PostMethod method = new PostMethod(uri);
         RequestEntity entity = new StringRequestEntity(data.toString(), "application/json", null);
@@ -171,12 +169,12 @@ public class LoadBalancerTask extends SubTask {
         String body = client.getBody(method);
         method.releaseConnection();
         if (200 <= status && status <= 202) {
-            log.info("Load balancer creation request succeeded.");
+            log.info("Database instance creation request succeeded.");
             JSONObject resultJSON = new JSONObject(body);
-            id = resultJSON.getJSONObject("loadBalancer").getString("id");
+            id = resultJSON.getJSONObject("instance").getString("id");
         }
         else {
-            log.warn("Exception when creating load balancer.");
+            log.warn("Exception when creating database instance.");
             throw new IOException(String.format("%d %s %s",
                 status,
                 HttpStatus.getStatusText(status),
@@ -185,22 +183,24 @@ public class LoadBalancerTask extends SubTask {
     }
 
     //----------------------------------------------------------------------------------------------
-    private void deleteLBRestCall()
+    private void deleteDbRestCall()
     throws JSONException, IOException {
         RestClient client = env.fetchContext().client;
-        String uri = "https://" + client.encodePath(region) + ".loadbalancers.api.rackspacecloud.com/v1.0/" +
-        client.encodePath(client.getTenantID()) + "/loadbalancers/" + client.encodePath(id);
+        String uri = "https://" + client.encodePath(region) + ".databases.api.rackspacecloud.com/v1.0/" +
+        client.encodePath(client.getTenantID()) + "/instances/" + client.encodePath(id);
+
         DeleteMethod method = new DeleteMethod(uri);
         method.setRequestHeader("X-Auth-Token", client.getAuthToken());
+        method.setRequestHeader("Content-Type", "application/json");
 
         int status = client.invokeMethod(method);
         String body = client.getBody(method);
         method.releaseConnection();
         if (200 <= status && status <= 204) {
-            log.info("Load balancer deletion request succeeded.");
+            log.info("Database instance deletion request succeeded.");
         }
         else {
-            log.warn("Exception when deleting load balancer.");
+            log.warn("Exception when deleting database instance.");
             throw new IOException(String.format("%d %s %s",
                 status,
                 HttpStatus.getStatusText(status),
@@ -209,40 +209,45 @@ public class LoadBalancerTask extends SubTask {
     }
 
     //----------------------------------------------------------------------------------------------
-    private JSONArray generateNodeJSON()
-    throws JSONException {
-        JSONArray result = new JSONArray();
-        for (LoadBalancerNodeTask node : nodes) {
-            JSONObject nodeJSON = new JSONObject();
-            nodeJSON.put("address", node.getAddress());
-            nodeJSON.put("port", node.getPort());
-            nodeJSON.put("condition", node.getCondition());
-            result.put(nodeJSON);
-        }
-        return result;
-    }
-
-    //----------------------------------------------------------------------------------------------
     @Override
     public void create() throws Exception {
-        for (LoadBalancerNodeTask node : nodes) {
-            node.create();
+        if (appendSuffix) {
+            name = name + "-" + env.fetchSuffix();
         }
         try {
-            createLBRestCall();
+            createDbRestCall();
+            log.info("Database request succeeded. Polling for database to come online...");
+            boolean active = false;
+            long pollInterval = 3000L;
+            while (!active) {
+                Thread.sleep(pollInterval);
+                JSONObject dbJSON = pollForDatabaseStatus();
+                if (dbJSON.getString("status").equalsIgnoreCase("ACTIVE")) {
+                    active = true;
+                }
+            }
+            log.info("The database is now active.");
         }
         catch(IOException e) {
-            log.error("A REST call failed while creating load balancer", e);
+            log.error("A REST call failed while creating database instance", e);
         }
         catch(JSONException e) {
-            log.error("Malformed JSON while creating load balancer", e);
+            log.error("Malformed JSON while creating database instance", e);
         }
     }
 
     //----------------------------------------------------------------------------------------------
     @Override
     public void destroy() throws Exception {
-        deleteLBRestCall();
+        try {
+            deleteDbRestCall();
+        }
+        catch(IOException e) {
+            log.error("A REST call failed while creating database instance", e);
+        }
+        catch(JSONException e) {
+            log.error("Malformed JSON while creating database instance", e);
+        }
     }
 
     //----------------------------------------------------------------------------------------------
