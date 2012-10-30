@@ -1,0 +1,72 @@
+Microsoft (Windows Azure)
+======================================
+
+Allowed commands:
+
+create - creates an environment of VMs, websites, cloud services, storage, etc.
+
+destroy - deletes a previously created environment
+
+  -----------
+  Credentials
+  -----------
+  Because your Azure credentials are handled by the Azure for Node command line
+  tool, inputting real credentials is unnecessary. However, to satisfy the 
+  Terraform parser, you must have a credentials file with dummy contents. 
+  A credentials file has 4 components: type, name, username, and password.
+  Your credentials file must have this format, but the property values for
+  name, username, and password can be anything.
+  
+  type=org.urbancode.terraform.credentials.microsoft.CredentialsMicrosoft
+  name=my.azure.creds
+  username=asdf
+  password=jkl
+
+  -----------
+  Templates
+  -----------
+  The general layout of an Azure Environment Template is the following:
+  The number in the parenthesis is the number of those elements allowed.
+      context(1)
+        └── environment(1)
+            ├── vm(n)
+            │  └──endpoint(n)
+            │   └──attach-disk(n)
+            └── website(n)
+            
+        The following is a list of elements available in the xml:
+    
+    [ The hierarchy represents which elements go under which in the xml ]
+
+    o context: The context holds the whole environment. It has one or more 
+      xmlns attributes, which specify map an xml namespace to a package. The 
+      packages it points to should contain a properties file named:
+        terralib.classes 
+          for Azure use: xmlns="com.urbancode.uprovision.tasks.microsoft"
+
+      o environment: The environment contains VMs and websites.
+
+        o vm: This is an Azure virtual machine. Required attributes: vm-name,
+         image, username, password, location or affinity-group.
+         Type "azure vm" for more help.
+        
+        Lots of optional attributes are available, and they roughly correspond
+        to the optional flags for creating VMs, which you can find by 
+        typing "azure vm create -h".
+        
+        List of optional attributes: blob-url, vm-size (default small), 
+        ssh (boolean), rdp(boolean), virtual-network-name, subnet-names,
+        add-uuid (makes VM name unique)
+        
+          o endpoint: adds an endpoint to a VM. 
+          Required attributes: public-port, private-port
+          
+          o disk-attach: attaches a disk to a VM. Required attribute: disk-name
+        
+        o website: This is an Azure website. 
+        Required attributes: host-name, location
+        Optional attribute: git(bool)- will create git repo on the site if true
+        
+  For more information, simply type "azure" in your command line 
+  (if you have azure installed).
+

@@ -1,0 +1,364 @@
+VMware
+======================================
+
+Allowed commands:
+
+create - create an environment of VMs, optional networking, etc.
+destroy - delete a previously created environment
+suspend - suspend power on all VMs in the environment (the yellow "pause" icon in vCenter)
+resume - resume all VMs in the environment (power them on)
+snapshot - take a snapshot of all VMs in the environment.
+
+  "create" takes in a template xml file. All other commands take in a generated instance xml file.
+
+  Example "create" command line call to Terraform with a VMware template:
+
+  ./terraform create vmware-template.xml vmware-1.key datacenter=my-datacenter
+  host.name=my-host.mysite.com datastore=my-datastore 
+  destination=path/to/my-destination/folder
+  
+  VMware vSphere instances require four properties to start, which are detailed
+  later in the VMware section.
+  
+  To destroy an instance:
+  
+  Call terraform.sh with the following arguments:
+  First argument: destroy
+  Second argument: the xml instance file generated when you created your 
+    instance (NOT the original template)
+  Third argument: the credentials file
+  
+  No properties are required to destroy an instance.
+  Example command line call to Terraform:
+  
+  terraform destroy terra-env-1234.xml vmware-credentials.key
+  
+  This will power down the VMs, delete them, delete the folder that Terraform
+  created, and delete any virtual switches it created.
+  
+  Example commands for suspend, resume, and snapshot:
+  
+  terraform suspend terra-env-1234.xml vmware-credentials.key
+  terraform resume terra-env-1234.xml vmware-credentials.key
+  terraform snapshot terra-env-1234.xml vmware-credentials.key
+  
+  No properties are needed for any of these commands. The snapshot name will be the current
+  date and time in YYYY-MM-DD hh:mm:ss format. (Example: 2012-08-15 10:01:45)
+
+  -----------
+  Templates
+  -----------
+  
+  Below is a hierarchy of VMware elements in their templates. The number in
+  parentheses represents how many of those elements are allowed.
+  
+        context(1)
+        └── environment(1)
+            ├── clone(n)
+            │   ├── network-ref(n)
+            │   ├── security-group-ref(n)
+            │   ├── post-create-task(n)
+            │   ├── event-listener(n)
+            │   └── command(n)
+            ├── network(n)
+            └── security-group(n)
+                └──port-range(n)
+  
+  All vmware templates must include one context element and one environment 
+  element under the context:
+
+  <context
+  xmlns="org.urbancode.terraform.tasks.vmware">
+      <environment 
+      name="terra-env" 
+      folder-name="terra-folder">
+      </environment>
+  </context>
+
+  To add clones, insert "clone" elements in to the environment element. Clone
+  elements look like this:
+  
+  <clone instance-name="instance-1"
+            order="1"
+            image-path="/mydatacenter/myimagefolder/linux-clone-image"
+            snapshot-name="my-snapshot"
+            count="1">
+  </clone>
+  
+  Required attributes on a clone element: instance-name(string), 
+  order(positive int), image-path(string), snapshot-name(string)
+  Recommended attributes on a clone element:  user(string), password(string). 
+  These specify the VM user name and password (which may need to be root, 
+  depending on what configurations you are doing). The user and password
+  attributes are required on any router clone, any clone with a command element,
+  and any basically any clone with a post-create-task element.
+  
+  User and password should be a valid login on the VM.
+  
+  "count" is an optional attribute that specifies the number of clones to be 
+  created. If no count attribute is specified it will default to "1". 
+  
+  The order attribute distinguishes the order VMs will be created - lowest to
+  highest. If clones have the same number they are created in parallel. The 
+  order in which parallel clones complete can be unpredictable.
+  
+  Terraform supports multiple different clone elements - useful if you want 
+  them to have different name prefixes or orders in which they are created.
+  
+  You can add Unix shell commands to be executed once the VM is created using
+  the "command" element. The command element has one attribute called "cmd" 
+  which takes a shell command. You can also put a series of commands to be 
+  executed separated by semicolons. Note that you should not use any 
+  "shortcuts" in your commands; use fully qualified paths to programs.
+  Example - use /home/username instead of ~, use /bin/sh instead of ./ or bash
+  
+  Examples:
+  <command cmd="/bin/sleep 3" />
+  <command cmd="/bin/sh /home/me/scripts/my-shell-script" />
+  Mount a network drive to /mnt/test
+  <command cmd="/bin/mkdir /mnt/test;/bin/mount -t nfs 
+    nas.myhost.net:/volumes/public /mnt/test"/>
+  
+  For creating a private network, include a network element in the environment 
+  for each subnet.
+  
+  <network network-name="my-net-web" port-count="32"/>
+  
+  A network element must have a network-name(string) and a port-count(int). 
+  This creates a virtual switch and port group.
+  
+  There is an optional parameter vlan-id for a network to specify the port 
+  group VLAN ID. By default it is 0, which represents no VLAN.
+  
+  Example: <network network-name="my-net-web" port-count="32" vlan-id="2096" />
+  
+  All clones on the private network must have a network-ref element pertaining 
+  to the proper network, referenced by name.
+  
+  <network-ref network-name="my-net-web" nic-index="1"/>
+  
+  The name should be the same as the network name they are on. The nic-index 
+  corresponds to the network card which will be attached to the network.
+  
+  A general note about networking - there must be some way for your VMs to have
+  access to a physical NIC in order for them to get an IP. There are two ways 
+  to do this. One is for your image to have a NIC attached that is on an 
+  internet-connected virtual switch (that is, a vSwitch with a physical NIC 
+  attached).
+  The second way is for the VM to be connected to a private network serviced by 
+  a router.
+  The router must have one NIC attached to a vSwitch with a physical NIC and a 
+  NIC attached to the vSwitch that your VMs are on.
+  
+  If you are creating a router to use for the private network, and you want Terraform to manage
+  the networking for your environment, you must use a Linux image that can act as a router. 
+  We recommend a Debian or Ubuntu distribution.
+  
+  You must also include these elements on the router clone:
+  <post-create-task/>
+  <event-listener/>
+  
+  These elements will configure the networking files on the router. It is 
+  highly recommended that the router be created BEFORE any clones that are on 
+  its network (specify using the order attribute).
+  In addition, for any non-router clone on the router, add this attribute: 
+  assign-host-ip="true" . 
+  This will tell the clone to get its IP from the router instead of from your 
+  DHCP service.
+  
+  By default, on a private network, all incoming traffic to ports on the 
+  network are blocked. You can open ports by adding a security group element 
+  to the environment.
+  
+  <security-group name="default-group">
+      <port-range first-port="22" last-port="22"/>
+      <port-range first-port="80" last-port="80"/>
+      <port-range first-port="3306" last-port="3306"/>
+      <port-range first-port="8080" last-port="9090"/>
+  </security-group>
+  
+  This security group will open ports 22, 80, 3306, and 8080-9090 on any 
+  instance that references this security group. To reference a security group 
+  on a clone, add this element to the clone:
+  
+  <security-group-ref name="default-group"/>
+  
+  The name should be equal to the security group name. This feature only works 
+  if you have a router in your template.
+  
+  Finally, an example template with a private network, an application server, 
+  and a database server:
+  
+  <?xml version="1.0" encoding="UTF-8"?>
+  <context
+  xmlns="org.urbancode.terraform.tasks.vmware">
+      <environment 
+      name="terra-env" 
+      folder-name="terra-folder">
+          
+          <network network-name="my-net-web" port-count="32"/>
+          <security-group name="default-group">
+              <port-range first-port="22" last-port="22"/>
+              <port-range first-port="80" last-port="80"/>
+              <port-range first-port="3306" last-port="3306"/>
+              <port-range first-port="8080" last-port="9090"/>
+          </security-group>
+      
+          <clone instance-name="router-1"
+                    order="1"
+                    image-path="/mydatacenter/myimagefolder/router-image"
+                    snapshot-name="my-snapshot"
+                    user="root"
+                    password="mypassword">
+              <network-ref network-name="my-net-web" nic-index="1"/>
+              <post-create-task/>
+              <event-listener/>
+          </clone>
+                    
+          <clone instance-name="app-instance-1"
+                    order="2"
+                    image-path="/mydatacenter/myimagefolder/linux-clone-image"
+                    snapshot-name="my-snapshot"
+                    assign-host-ip="true"
+                    count="1">
+              <security-group-ref name="default-group"/>
+              <network-ref network-name="my-net-web" nic-index="0"/>
+          </clone>
+          
+          <clone instance-name="db-instance-1"
+                    order="2"
+                    image-path="/mydatacenter/myimagefolder/linux-clone-image"
+                    snapshot-name="my-snapshot"
+                    assign-host-ip="true"
+                    count="1">
+              <security-group-ref name="default-group"/>
+              <network-ref network-name="my-net-web" nic-index="0"/>
+          </clone>
+          
+      </environment>
+  </context>
+  
+  ----------------------
+  Chef Post-Create Tasks
+  ----------------------
+  Terraform now supports a post create task for running a Chef cookbook with Chef Solo.
+  The name of the element is: <chef:post-create-task>. It goes inside a clone element.
+  You must have this namespace in your context element:
+  
+    xmlns:chef="org.urbancode.terraform.tasks.vmware.chef"
+    
+  So for example, your opening context tag might look like this:
+    
+    <context
+    xmlns="org.urbancode.terraform.tasks.vmware"
+    xmlns:chef="org.urbancode.terraform.tasks.vmware.chef">
+  
+  This task will:
+    1. check if Chef is installed, and if not, install it
+    2. attempt to create the directories /etc/chef, /var/chef, /var/chef/data_bags if they do
+      not exist yet
+    3. Copy the configuration files solo.rb, node.json, and the json configuration file to the VM
+    4. run a cookbook located at an Internet repository via URL, or one pre-baked on your VM's
+      file system
+    5. the output of the process is logged to /var/chef/chef.out on the guest VM
+    
+    There are several relevant configuration files needed to run this post-create task. All of them
+    should be placed in your conf directory.
+    
+    chef-install.sh - this is the install script for Chef that gets copied over. It's not
+    recommended that you mess with this as it comes straight from Opscode.
+    
+    The following files will be specified by name on your xml template and can be renamed so you can
+    store many different versions of them:
+    
+    solo.rb - the chef-solo configuration file
+    node.json - the chef configuration file if the VM is a node
+    chef.json - the json configuration file which gets passed in via the -j argument to chef-solo
+    
+    This is what the task element should look like in your xml file (with appropriate file names):
+    
+     <chef:post-create-task cookbook-url="http://example-repo.com/cookbooks/mybook.tar.gz"
+     solo-rb-file="solo.rb" node-json-file="node.json" json-conf-file="chef.json"/>
+     
+  The cookbook-url attribute is required, but it could be a file path instead.
+  The file attributes are not required, but if they are not specified, they will default to
+  "solo.rb", "node.json", and "chef.json" respectively.
+  
+  So for example, say you want a node named foo with the configuration file node-foo.json.
+  And you also want a node named bar on a different VM that has the conf file node-bar.json.
+  Say they also had different run lists, specified on their conf files, foo.json and bar.json.
+  But you might want the same solo.rb file because that is standard across your system.
+  
+  Your xml might look like this:
+  
+    <clone instance-name="vm1"
+                  order="1"
+                  image-path="/datacenter/images/ubuntu-image"
+                  snapshot-name="initial-snapshot"
+                  poweredOn="true"
+                  user="root"
+                  password="password">
+            <command cmd="/usr/bin/apt-get update"/>
+            <chef:post-create-task cookbook-url="http://repo.com/cookbook1.tar.gz" 
+            solo-rb-file="solo.rb" node-json-file="node-foo.json" json-conf-file="foo.json"/>
+    </clone>
+    <clone instance-name="vm2"
+                  order="2"
+                  image-path="/datacenter/images/ubuntu-image"
+                  snapshot-name="initial-snapshot"
+                  poweredOn="true"
+                  user="root"
+                  password="password">
+            <command cmd="/usr/bin/apt-get update"/>
+            <chef:post-create-task cookbook-url="http://repo.com/cookbook2.tar.gz" 
+            solo-rb-file="solo.rb" node-json-file="node-bar.json" json-conf-file="bar.json"/>
+    </clone>
+  
+  A few caveats:
+  
+  For now, this must be run as root.
+  
+  It is recommended that you run a command to update your package manager repos beforehand.
+  If your cookbook calls apt-get, often you will get an error message saying that
+  "apt-get exited with code 100" if you did not update apt-get recently.
+  For example, for a Ubuntu VM, inside your clone element and before your chef task, put this:
+  
+    <command cmd="/usr/bin/apt-get update"/>
+
+  -----------
+  Credentials
+  -----------
+  A credentials file is a text file ending in a .key suffix. It contains 
+  name=value pairs separated by lines.
+
+  Example file - creds-example.key
+  Contents:
+
+  type=org.urbancode.terraform.credentials.vmware.CredentialsVmware
+  name=my.vmware.creds
+  username=my-vcenter-user
+  password=my-vcenter-password
+  url=https://vcenter.mysite.com/sdk
+  
+  For vmware, the "type", "name", "username", "password", and "url" properties 
+  are all mandatory.
+  The "name" property whatever you want to name your credentials. The name should be unique and
+  should not contain spaces.
+  Username is your vCenter login name.
+  Password is your vCenter password.
+  Url is the url pointing to your vCenter server, followed by a /sdk suffix. HTTPS is recommended.
+  
+  Vmware environments have 4 required properties when creating an environment. 
+  EC2 environments have none.
+  Here are the four required properties for vmware that must be passed in the 
+  command line arguments:
+
+  datacenter=my-datacenter
+  host.name=my-host.mysite.com
+  destination=path/to/my-destination/folder
+  datastore=my-datastore
+
+  These correspond to the vSphere datacenter name, the name of the host the VMs 
+  will be created on, the destination folder for the environment folder, and 
+  the datastore for the VMs.
+
