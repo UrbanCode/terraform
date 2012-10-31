@@ -1,6 +1,8 @@
 package org.urbancode.terraform.tasks.rackspace;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.methods.DeleteMethod;
@@ -32,6 +34,8 @@ public class DatabaseTask extends SubTask {
     private String flavor;
     private int volumeSize;
     private String id;
+    private String hostname;
+    private List<DatabaseUserTask> dbUsers = new ArrayList<DatabaseUserTask>();
 
     //----------------------------------------------------------------------------------------------
     public DatabaseTask(EnvironmentTaskRackspace env) {
@@ -62,6 +66,16 @@ public class DatabaseTask extends SubTask {
     //----------------------------------------------------------------------------------------------
     public String getId() {
         return id;
+    }
+
+    //----------------------------------------------------------------------------------------------
+    public String getHostname() {
+        return hostname;
+    }
+
+    //----------------------------------------------------------------------------------------------
+    public List<DatabaseUserTask> getUsers() {
+        return dbUsers;
     }
 
     //----------------------------------------------------------------------------------------------
@@ -105,6 +119,18 @@ public class DatabaseTask extends SubTask {
     }
 
     //----------------------------------------------------------------------------------------------
+    public void setHostname(String hostname) {
+        this.hostname = hostname;
+    }
+
+    //----------------------------------------------------------------------------------------------
+    public DatabaseUserTask createUser() {
+        DatabaseUserTask user = new DatabaseUserTask();
+        dbUsers.add(user);
+        return user;
+    }
+
+    //----------------------------------------------------------------------------------------------
     private JSONObject pollForDatabaseStatus()
     throws IOException, JSONException {
         JSONObject result = null;
@@ -133,6 +159,21 @@ public class DatabaseTask extends SubTask {
     }
 
     //----------------------------------------------------------------------------------------------
+    private JSONArray generateUserJSON()
+    throws JSONException {
+        JSONArray result = new JSONArray();
+        for (DatabaseUserTask user : dbUsers) {
+            JSONObject userJSON = new JSONObject();
+            JSONObject dbName = new JSONObject().put("name", name);
+            userJSON.put("databases", new JSONArray().put(dbName));
+            userJSON.put("name", user.getUsername());
+            userJSON.put("password", user.fetchPassword());
+            result.put(userJSON);
+        }
+        return result;
+    }
+
+    //----------------------------------------------------------------------------------------------
     private void createDbRestCall()
     throws JSONException, IOException {
         RestClient client = env.fetchContext().client;
@@ -156,6 +197,7 @@ public class DatabaseTask extends SubTask {
         dbs.put(db);
         instance.put("databases", dbs);
 
+        instance.put("users", generateUserJSON());
 
         data.put("instance", instance);
         log.debug("Sending body " + data.toString());
@@ -172,6 +214,7 @@ public class DatabaseTask extends SubTask {
             log.info("Database instance creation request succeeded.");
             JSONObject resultJSON = new JSONObject(body);
             id = resultJSON.getJSONObject("instance").getString("id");
+            hostname = resultJSON.getJSONObject("instance").getString("hostname");
         }
         else {
             log.warn("Exception when creating database instance.");

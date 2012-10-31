@@ -18,6 +18,11 @@ public class DatabaseUserTask extends SubTask {
     String password;
 
     //----------------------------------------------------------------------------------------------
+    public DatabaseUserTask() {
+        super();
+    }
+
+    //----------------------------------------------------------------------------------------------
     public String getUsername() {
         return username;
     }
@@ -25,6 +30,11 @@ public class DatabaseUserTask extends SubTask {
     //----------------------------------------------------------------------------------------------
     public String getPassword() {
         return "${" + username + ".password}";
+    }
+
+    //----------------------------------------------------------------------------------------------
+    public String fetchPassword() {
+        return password;
     }
 
     //----------------------------------------------------------------------------------------------
