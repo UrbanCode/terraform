@@ -24,7 +24,7 @@ public class EnvironmentTaskRackspace extends EnvironmentTask {
     //**********************************************************************************************
     private List<ServerTask> serverTasks = new ArrayList<ServerTask>();
     private List<LoadBalancerTask> loadBalancerTasks = new ArrayList<LoadBalancerTask>();
-    private List<DatabaseTask> databaseTasks = new ArrayList<DatabaseTask>();
+    private List<DatabaseInstanceTask> dbInstanceTasks = new ArrayList<DatabaseInstanceTask>();
 
     //----------------------------------------------------------------------------------------------
     public EnvironmentTaskRackspace(TerraformContext context) {
@@ -42,8 +42,8 @@ public class EnvironmentTaskRackspace extends EnvironmentTask {
     }
 
     //----------------------------------------------------------------------------------------------
-    public List<DatabaseTask> getDatabaseTasks() {
-        return databaseTasks;
+    public List<DatabaseInstanceTask> getDatabaseInstanceTasks() {
+        return dbInstanceTasks;
     }
 
     //----------------------------------------------------------------------------------------------
@@ -66,9 +66,9 @@ public class EnvironmentTaskRackspace extends EnvironmentTask {
     }
 
     //----------------------------------------------------------------------------------------------
-    public DatabaseTask createDatabase() {
-        DatabaseTask db = new DatabaseTask(this);
-        databaseTasks.add(db);
+    public DatabaseInstanceTask createDatabaseInstance() {
+        DatabaseInstanceTask db = new DatabaseInstanceTask(this);
+        dbInstanceTasks.add(db);
         return db;
     }
 
@@ -80,7 +80,7 @@ public class EnvironmentTaskRackspace extends EnvironmentTask {
      * @throws InterruptedException
      * @throws Exception
      */
-    private void createOrDestroyServersInParallel(List<ServerTask> serverTaskList, List<DatabaseTask> databaseTaskList, boolean doCreate)
+    private void createOrDestroyServersInParallel(List<ServerTask> serverTaskList, List<DatabaseInstanceTask> databaseTaskList, boolean doCreate)
     throws RemoteException, InterruptedException, Exception {
         long pollInterval = 3000L;
         long timeoutInterval = 10L * 60L * 1000L;
@@ -101,7 +101,7 @@ public class EnvironmentTaskRackspace extends EnvironmentTask {
                 threadList.add(mThread);
                 service.execute(mThread);
             }
-            for (DatabaseTask instance : databaseTaskList) {
+            for (DatabaseInstanceTask instance : databaseTaskList) {
                 MultiThreadTask mThread = new MultiThreadTask(instance, doCreate, context);
                 threadList.add(mThread);
                 service.execute(mThread);
@@ -136,7 +136,7 @@ public class EnvironmentTaskRackspace extends EnvironmentTask {
     @Override
     public void create() {
         try {
-            createOrDestroyServersInParallel(serverTasks, databaseTasks, true);
+            createOrDestroyServersInParallel(serverTasks, dbInstanceTasks, true);
             for (LoadBalancerTask lb : loadBalancerTasks) {
                 lb.create();
             }
@@ -159,7 +159,7 @@ public class EnvironmentTaskRackspace extends EnvironmentTask {
     @Override
     public void destroy() {
         try {
-            createOrDestroyServersInParallel(serverTasks, databaseTasks, false);
+            createOrDestroyServersInParallel(serverTasks, dbInstanceTasks, false);
             for (LoadBalancerTask lb : loadBalancerTasks) {
                 lb.destroy();
             }

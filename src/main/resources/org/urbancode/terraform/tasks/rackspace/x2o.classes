@@ -3,5 +3,6 @@ environment=org.urbancode.terraform.tasks.rackspace.EnvironmentTaskRackspace
 server=org.urbancode.terraform.tasks.rackspace.ServerTask
 load-balancer=org.urbancode.terraform.tasks.rackspace.LoadBalancerTask
 node=org.urbancode.terraform.tasks.rackspace.LoadBalancerNodeTask
+database-instance=org.urbancode.terraform.tasks.rackspace.DatabaseInstanceTask
 database=org.urbancode.terraform.tasks.rackspace.DatabaseTask
 user=org.urbancode.terraform.tasks.rackspace.DatabaseUserTask
