@@ -52,9 +52,6 @@ public class VpcSecurityGroupRefTask extends SecurityGroupRefTask {
                     ref = env.getVpc().findSecurityGroupForName(groupName);
                 }
             }
-            else {
-                // not supported atm
-            }
         }
 
         return ref;

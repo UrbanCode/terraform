@@ -254,7 +254,6 @@ public class LoadBalancerTask extends SubTask {
     //----------------------------------------------------------------------------------------------
     private List<String> resolveSecGroupIds(List<SecurityGroupRefTask> list)
     throws Exception {
-        // TODO - will be a comma separated list - need to parse
         List<String> result = new ArrayList<String>();
         if (list != null && !list.isEmpty()) {
             // Check out the env
@@ -348,7 +347,7 @@ public class LoadBalancerTask extends SubTask {
                         Listener tmp = new Listener(task.getProtocol(),
                                 task.getLoadBalancerPort(), task.getInstancePort());
                         if (task.isSecure()) {
-                            tmp.setSSLCertificateId(task.getCertId());  // TODO - test
+                            tmp.setSSLCertificateId(task.getCertId());
                         }
                         listeners.add(tmp);
                     }

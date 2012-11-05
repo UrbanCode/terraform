@@ -138,8 +138,6 @@ public abstract class SecurityGroupTask extends SubTask {
         return result;
     }
 
-    abstract protected boolean exists();
-
     //----------------------------------------------------------------------------------------------
     @Override
     public void create()
@@ -154,24 +152,18 @@ public abstract class SecurityGroupTask extends SubTask {
         log.debug("Security Group " + name + " has fullname " + fullName);
 
         try {
-            if (exists()) {
-                log.warn("Security Group exists " + fullName);
-            }
-            else {
-                log.info("Creating SecurityGroup");
-                setId(helper.createSecurityGroup(fullName, vpcId, descr, ec2Client));
-                log.info("SecurityGroup " + name + " created with id: " + groupId);
-                helper.tagInstance(groupId, "terraform.environment",
-                        context.getEnvironment().getName(), ec2Client);
+            log.info("Creating SecurityGroup");
+            setId(helper.createSecurityGroup(fullName, vpcId, descr, ec2Client));
+            log.info("SecurityGroup " + name + " created with id: " + groupId);
+            helper.tagInstance(groupId, "terraform.environment",
+                    context.getEnvironment().getName(), ec2Client);
 
-                if (getRules() != null) {
-                    for (RuleTask rule : getRules()) {
-                        rule.setGroupId(groupId);
-                        rule.create();
-                    }
+            if (getRules() != null) {
+                for (RuleTask rule : getRules()) {
+                    rule.setGroupId(groupId);
+                    rule.create();
                 }
             }
-
         }
         catch (Exception e) {
             throw new EnvironmentCreationException("Could not create Security Group completely.",

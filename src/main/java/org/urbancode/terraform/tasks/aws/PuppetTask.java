@@ -33,8 +33,6 @@ public class PuppetTask extends BootActionSubTask {
     // INSTANCE
     //**********************************************************************************************
 
-//    private ContextEC2 context;
-
     private String name;
     private String manifestUrl;
     private String destPath;

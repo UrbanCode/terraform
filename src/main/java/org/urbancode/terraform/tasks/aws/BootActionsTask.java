@@ -87,9 +87,6 @@ public class BootActionsTask extends SubTask {
         return (ScriptTask)scriptTask;
     }
 
-    // TODO - not tested if works with puppetTasks AND scriptTasks.
-    //         You should be able to just complete the puppet task
-    //         with the scriptTask.
     //----------------------------------------------------------------------------------------------
     public BootActionSubTask createPuppet() {
         BootActionSubTask puppet = new PuppetTask(context);

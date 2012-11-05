@@ -49,7 +49,6 @@ public class EbsTask extends SubTask {
 
     private boolean persist;
     private boolean onLaunch;
-    private boolean mount;
 
     private BlockDeviceMapping blockMap;
 
@@ -135,15 +134,6 @@ public class EbsTask extends SubTask {
     }
 
     //----------------------------------------------------------------------------------------------
-    public boolean isVerified() {
-        boolean verified = false;
-
-        // TODO - verify this
-
-        return verified;
-    }
-
-    //----------------------------------------------------------------------------------------------
     /**
      * Creates the EBS volume on instance launch. Only the data structures are required as we send
      * then with the RunInstancesRequest.
@@ -174,40 +164,17 @@ public class EbsTask extends SubTask {
             ec2Client = context.fetchEC2Client();
         }
 
-        if (!isVerified()) {
-            log.info("Creating EBS Volume...");
-            // TODO - null checks
-            volumeId = helper.createEbsVolume(zone, volumeSize, snapshotId, ec2Client);
-            log.info("EBS Volume " + name + " created with id: " + volumeId);
+        log.info("Creating EBS Volume...");
+        volumeId = helper.createEbsVolume(zone, volumeSize, snapshotId, ec2Client);
+        log.info("EBS Volume " + name + " created with id: " + volumeId);
 
-            log.info("Attaching volume...");
-            // TODO - null checks
-            helper.attachEbsVolumeToInstance(volumeId, instanceId, deviceName, ec2Client);
-            log.info("EBS Volume " + volumeId + " attached to instance " + instanceId + " at " +
-                    deviceName);
-        }
+        log.info("Attaching volume...");
+        helper.attachEbsVolumeToInstance(volumeId, instanceId, deviceName, ec2Client);
+        log.info("EBS Volume " + volumeId + " attached to instance " + instanceId + " at " +
+                deviceName);
     }
 
     //----------------------------------------------------------------------------------------------
-    /**
-     *
-     */
-    private void mountVolume() {
-        // TODO
-    }
-
-    //----------------------------------------------------------------------------------------------
-    /**
-     *
-     */
-    private void destroyOnLaunch() {
-        // TODO
-    }
-
-    //----------------------------------------------------------------------------------------------
-    /**
-     *
-     */
     private void destroyPostLaunch() {
         if (ec2Client == null) {
             ec2Client = context.fetchEC2Client();
@@ -230,22 +197,13 @@ public class EbsTask extends SubTask {
         else {
             createPostLaunch();
         }
-
-        if (mount) {
-            mountVolume();
-        }
     }
 
     //----------------------------------------------------------------------------------------------
     @Override
     public void destroy() {
 
-        // try to unmount?
-
-        if (onLaunch) {
-            destroyOnLaunch();
-        }
-        else {
+        if (!onLaunch) {
             destroyPostLaunch();
         }
 

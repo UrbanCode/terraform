@@ -36,7 +36,6 @@ public abstract class SecurityGroupRefTask extends SubTask {
     }
 
     //----------------------------------------------------------------------------------------------
-    // TODO return generic type
     abstract public SecurityGroupTask fetchSecurityGroup();
 
 }

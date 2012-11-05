@@ -97,7 +97,6 @@ public class RouteTask extends SubTask {
                           "target: " + target +
                           "dest: " + cidr +
                           "RouteTable-Id: " + routeTableId);
-                // TODO - throw exception rather than return
                 return;
             }
             helper.createRoute(routeTableId, cidr, target, ec2Client);

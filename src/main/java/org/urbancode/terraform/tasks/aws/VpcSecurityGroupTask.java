@@ -38,9 +38,4 @@ public class VpcSecurityGroupTask extends SecurityGroupTask {
         this.vpcId = vpcId;
     }
 
-    @Override
-    protected boolean exists() {
-        boolean result = false;
-        return result;
-    }
 }

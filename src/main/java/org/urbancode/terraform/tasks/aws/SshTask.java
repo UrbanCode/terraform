@@ -142,13 +142,8 @@ public class SshTask extends PostCreateActionTask {
                           + " || id-file: " + idFilePath);
                 throw new PostCreateException("Could not make SSH connection!");
             }
-
-            // resolve any props in the cmds
             cmds = context.resolve(cmds);
-
-            // wait until we can make a connection - default port is 22
             SshHelper.waitForPort(host, port);
-
             runCmds();
         }
         catch (RemoteException e) {

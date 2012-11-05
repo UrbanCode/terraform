@@ -461,10 +461,8 @@ public class InstanceTask extends Task {
 
     //----------------------------------------------------------------------------------------------
     private String setupType() {
-        // TODO - resolve
         String size = sizeType;
 
-        // TODO - make this format check better
         if (size.indexOf(".") == -1) {
             size = null;
         }
@@ -483,7 +481,6 @@ public class InstanceTask extends Task {
 
     //----------------------------------------------------------------------------------------------
     private String setupKeyPair() {
-        // TODO - resolve
         String keyPair = keyRef;
 
         if (keyPair == null || keyPair.isEmpty()) {
@@ -553,7 +550,6 @@ public class InstanceTask extends Task {
                 String allocId = helper.requestElasticIp(ec2Client);
                 setElasticIpAllocId(allocId);
 
-                // TODO - manually assign EIPs
                 String eip = helper.assignElasticIp(instanceId, allocId, ec2Client);
                 setPublicIp(eip);
             }
@@ -570,9 +566,6 @@ public class InstanceTask extends Task {
         if (ec2Client == null) {
             throw new RemoteException("No connection to EC2");
         }
-
-        // TODO - need a check here to make sure that all conditions are good
-        // vpc/subnet/zone
 
         if (loadBalancer != null && !loadBalancer.isEmpty()) {
             // we need to find the fullName of the load-balancer with name loadBalancer
@@ -678,7 +671,6 @@ public class InstanceTask extends Task {
     }
 
     //----------------------------------------------------------------------------------------------
-    // TODO - remove arg -
     private void startPostCreateActions(String keyPair)
     throws PostCreateException {
         if (pca != null) {
@@ -730,7 +722,7 @@ public class InstanceTask extends Task {
 
         log.debug("Creating instance " + name);
 
-        context.setProperty("server.name", name);  // TODO - change this
+        context.setProperty("server.name", name);
 
         // check AWS connections
         if (ec2Client == null) {
@@ -743,8 +735,6 @@ public class InstanceTask extends Task {
         updatePlatform();
 
         try {
-            // TODO determine if verification is necessary
-
             // setup
             userData = setupBootActions();
             size = setupType();
@@ -780,7 +770,6 @@ public class InstanceTask extends Task {
 
                 // set public Ip
                 if (zone != null && !zone.isEmpty()) {
-                    // TODO - manually set IP not yet supported
                     setPublicIp(instance.getPublicIpAddress());
                     context.setProperty(getName() + ".public.ip", getPublicIp());
                 }
@@ -826,9 +815,7 @@ public class InstanceTask extends Task {
             }
             catch (AmazonServiceException e) {
                 // swallow exception if we get invalidInstance
-                // I'm not sure if we want to always do this since
-                // we may actually send an invalid instance or something
-                // but this will ignore the exception if you try to
+                // this will ignore the exception if you try to
                 // deregister and instance that is not registered with
                 // the load balancer - allowing the instance to terminate
                 // completely.
@@ -955,7 +942,6 @@ public class InstanceTask extends Task {
                 }
                 else {
                     log.error("Unable to clone SecurityGroupRefTasks");
-                    // throw
                 }
                 nSecGroup.setSecurityGroupName(secGroup.getSecurityGroupName());
             }

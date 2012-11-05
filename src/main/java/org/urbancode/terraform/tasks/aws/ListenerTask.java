@@ -31,8 +31,6 @@ public class ListenerTask extends SubTask {
     // INSTANCE
     //**********************************************************************************************
 
-//    private ContextEC2 context;
-
     private String protocol;
     private String certId;
     private int instancePort;
@@ -45,7 +43,6 @@ public class ListenerTask extends SubTask {
 
     //----------------------------------------------------------------------------------------------
     public void setProtocol(String protocol) {
-        // TODO - check for valid protocol
         this.protocol = protocol;
     }
 

@@ -123,6 +123,7 @@ import com.amazonaws.services.elasticloadbalancing.model.Listener;
 import com.amazonaws.services.elasticloadbalancing.model.LoadBalancerDescription;
 import com.amazonaws.services.elasticloadbalancing.model.RegisterInstancesWithLoadBalancerRequest;
 import com.amazonaws.services.elasticloadbalancing.model.RegisterInstancesWithLoadBalancerResult;
+import com.urbancode.x2o.tasks.CreationException;
 
 public class AWSHelper {
 
@@ -621,7 +622,7 @@ public class AWSHelper {
     public String launchLoadBalancer(String loadBalancerName, List<String> subnets,
                                         List<String> secGroups, List<Listener> listeners,
                                         List<String> zones, AmazonElasticLoadBalancing lbClient)
-    throws NullPointerException {
+    throws CreationException {
         CreateLoadBalancerRequest request = new CreateLoadBalancerRequest()
                                                 .withLoadBalancerName(loadBalancerName);
         if (subnets != null && !subnets.isEmpty()) {
@@ -631,7 +632,7 @@ public class AWSHelper {
             request = request.withAvailabilityZones(zones);
         }
         else {
-            throw new NullPointerException("Must specify either zones or subnets for load balancer "
+            throw new CreationException("Must specify either zones or subnets for load balancer "
                                             + loadBalancerName);
         }
 
@@ -639,7 +640,7 @@ public class AWSHelper {
             request = request.withListeners(listeners);
         }
         else {
-            throw new NullPointerException("List of Listeners must not be null!");
+            throw new CreationException("List of Listeners must not be null!");
         }
 
         if (secGroups != null && !secGroups.isEmpty()) {
@@ -883,8 +884,6 @@ public class AWSHelper {
      * @param ec2Client
      */
     public void deleteInternetGateway(String gatewayId, AmazonEC2 ec2Client) {
-        // TODO check if gateway is attached to anything
-
         try {
             DeleteInternetGatewayRequest request = new DeleteInternetGatewayRequest()
                                                         .withInternetGatewayId(gatewayId);
@@ -893,7 +892,7 @@ public class AWSHelper {
         catch (AmazonServiceException e) {
             log.error("Failed to delete Internet Gateway", e);
             if (!"InvalidInternetGatewayID.NotFound".equalsIgnoreCase(e.getErrorCode())) {
-                // we're only going to swallow the expcetion if the gateway id was not found
+                // swallow the exception only if the gateway id was not found
                 throw e;
             }
         }
@@ -916,13 +915,12 @@ public class AWSHelper {
         }
         catch (AmazonServiceException e) {
             log.error("Failed to attach Internet Gateway to Vpc", e);
-            // TODO - is this the correct string?
             if ("InvalidVpcID.NotFound".equalsIgnoreCase(e.getErrorCode())) {
                 // could not find vpc
                 log.error("Vpc " + vpcId + " not found.");
             }
             else if ("InvalidInternetGatewayID.NotFound".equalsIgnoreCase(e.getErrorCode())) {
-                // we're only going to swallow the expcetion if the gateway id was not found
+                // swallow the exception only if the gateway id was not found
                 log.error("Internet Gateway " + gatewayId + " not found.");
             }
             else {
@@ -976,7 +974,6 @@ public class AWSHelper {
     public void setupHealthCheck(String loadBalancerName, String target, int healthyThresh,
                                     int unhealthyThresh, int interval, int timeout,
                                     AmazonElasticLoadBalancing elbClient) {
-        // TODO - validate format of target
         HealthCheck hCheck = new HealthCheck()
                                  .withTarget(target)
                                  .withHealthyThreshold(healthyThresh)
@@ -1033,7 +1030,6 @@ public class AWSHelper {
         }
         catch (AmazonServiceException e) {
             log.error("Failed to associate Route Table with Subnet", e);
-            // TODO - is this the correct string?
             if (!"InvalidRouteTableID.NotFound".equalsIgnoreCase(e.getErrorCode())) {
                 throw e;
             }
@@ -1084,7 +1080,7 @@ public class AWSHelper {
             log.error("Failed to delete subnet", e);
             if (!"InvalidSubnetID.NotFound".equals(e.getErrorCode())
                 && !"InvalidRouteTableID.NotFound".equals(e.getErrorCode())) {
-                // we're only going to swallow the expcetion if the subnet id was not found
+                // swallow the exception if the subnet id was not found
                 throw e;
             }
         }
@@ -1104,7 +1100,6 @@ public class AWSHelper {
         }
         catch (AmazonServiceException e) {
             log.error("Failed to disassociate Route Table from Subnet", e);
-            // TODO - is this the correct string?
             if (!"InvalidAssociationID.NotFound".equalsIgnoreCase(e.getErrorCode())) {
                 throw e;
             }
@@ -1194,7 +1189,6 @@ public class AWSHelper {
         }
         catch (AmazonServiceException e) {
             log.error("Failed to delete Rule on Security Group " + groupId);
-            // TODO - is this the correct string?
             if (!"InvalidGroup.NotFound".equals(e.getErrorCode())) {
                 throw e;
             }
@@ -1644,14 +1638,12 @@ public class AWSHelper {
             DescribeLoadBalancersResult result = elbClient.describeLoadBalancers(request);
 
             if (result != null && result.getLoadBalancerDescriptions() != null) {
-                // grab first entry since we only requested 1 LB
-                // Though, maybe this will grab all vpc ELBs with names too?
                 loadBalancer = result.getLoadBalancerDescriptions().get(0);
             }
         }
         catch (AmazonServiceException e) {
             if (e.getErrorCode().equals("LoadBalancerNotFound")) {
-                // if we can't find the ELB to delete, it's already gone, that's probably good
+                // if we can't find the ELB to delete, it's already gone
                 log.warn("Could not find Load Balancer " + name, e);
             }
         }

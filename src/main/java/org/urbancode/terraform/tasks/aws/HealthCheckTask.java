@@ -32,8 +32,6 @@ public class HealthCheckTask extends SubTask {
     // INSTANCE
     //**********************************************************************************************
 
-    private ContextAWS context;
-
     private String protocol;
     private String path;
 

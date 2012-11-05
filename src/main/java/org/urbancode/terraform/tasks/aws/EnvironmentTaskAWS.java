@@ -253,7 +253,6 @@ public class EnvironmentTaskAWS extends EnvironmentTask {
                     newInstance = instance.clone();
                     instanceName = String.format(instance.getName() + "%02d", i);
                     newInstance.setName(instanceName);
-                    // TODO - update EBS names?
                     newInstances.add(newInstance);
                 }
                 instanceName = String.format(instance.getName() + "%02d", 0);
@@ -272,7 +271,6 @@ public class EnvironmentTaskAWS extends EnvironmentTask {
     //----------------------------------------------------------------------------------------------
     private void launchInstances()
     throws Exception {
-        //TODO clean up
         // setup launch groups
         if (instances != null) {
             log.debug("Preparing to launch instances");
@@ -288,7 +286,7 @@ public class EnvironmentTaskAWS extends EnvironmentTask {
 
             InstanceTask currentInst = queue.poll();
             // get instance at first of queue, continue if not null...
-            while (currentInst != null) {   // = queue.poll())
+            while (currentInst != null) {
                 log.debug("Queue iter: " + currentInst);
                 // create new LaunchGroup
                 List<InstanceTask> launchGroup = new ArrayList<InstanceTask>();

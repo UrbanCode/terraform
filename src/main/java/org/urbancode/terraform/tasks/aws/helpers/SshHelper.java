@@ -46,7 +46,6 @@ public class SshHelper {
 
     private String name = "SshHelper";
 
-    // TODO - change prop name
     final static private int BUFFER_SIZE =
             Integer.getInteger("org.urbancode.terraform.util.io.buffer.size", 8192);
 

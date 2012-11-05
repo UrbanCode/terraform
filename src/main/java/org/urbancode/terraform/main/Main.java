@@ -147,11 +147,7 @@ public class Main {
         if (!"".equals(filePath)) {
         result = new File(filePath);
             if (result.exists()) {
-                // the File exists
-                // is it a file?
                 if (result.isFile()) {
-                    // it's a file
-                    // is it readable?
                     if (!result.canRead()) {
                         String msg = "Input file does not exist: "+filePath;
                         log.fatal(msg);
@@ -165,7 +161,6 @@ public class Main {
                 }
             }
             else {
-                // it doesn't exist
                 String msg = "Input file does not exist: "+filePath;
                 log.fatal(msg);
                 throw new FileNotFoundException(msg);
@@ -231,7 +226,7 @@ public class Main {
             if (AllowedCommands.CREATE.getCommandName().equalsIgnoreCase(command)) {
                 // create new file if creating a new environment
                 UUID uuid = UUID.randomUUID();
-                //convert uuid to base 64
+                //convert uuid to base 62 (allowed chars: 0-9 a-z A-Z)
                 ByteBuffer bb = ByteBuffer.wrap(new byte[16]);
                 bb.putLong(uuid.getMostSignificantBits());
                 bb.putLong(uuid.getLeastSignificantBits());
@@ -258,8 +253,7 @@ public class Main {
                 String suffix = parseSuffix(context.getEnvironment().getName());
                 context.getEnvironment().setSuffix(suffix);
                 log.debug("found suffix " + suffix);
-                // we want to write out the environments whether we succeed in destroying them
-                // or fail (then it will write out whatever is left)
+                // write out instance failure regardless of success or failure
                 outputXmlFile = inputXmlFile;
                 log.debug("Calling destroy() on context");
                 context.destroy();
@@ -381,7 +375,6 @@ public class Main {
         }
         catch (FileNotFoundException e) {
             log.error("Unable to load properties from " + path, e);
-        // TODO - throw
         }
         catch (IOException e) {
             log.error("IOException when loading properties from " + path, e);

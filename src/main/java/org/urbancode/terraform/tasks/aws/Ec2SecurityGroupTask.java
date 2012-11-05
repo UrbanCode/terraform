@@ -1,12 +1,12 @@
 /*******************************************************************************
  * Copyright 2012 Urbancode, Inc
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,16 +18,14 @@ package org.urbancode.terraform.tasks.aws;
 
 import org.apache.log4j.Logger;
 
-import com.amazonaws.services.ec2.model.SecurityGroup;
-
 
 public class Ec2SecurityGroupTask extends SecurityGroupTask {
-    
+
     //**********************************************************************************************
     // CLASS
     //**********************************************************************************************
     final static private Logger log = Logger.getLogger(Ec2SecurityGroupTask.class);
-    
+
     //**********************************************************************************************
     // INSTANCE
     //**********************************************************************************************
@@ -35,22 +33,6 @@ public class Ec2SecurityGroupTask extends SecurityGroupTask {
     //----------------------------------------------------------------------------------------------
     public Ec2SecurityGroupTask(ContextAWS context) {
         super(context);
-    }
-    
-    @Override
-    protected boolean exists() {
-        boolean result = false;
-        // TODO
-//        if (ec2Client == null) {
-//            log.error("Connection to AWS EC2 required");
-//        }
-//        
-//        SecurityGroup found = helper.getSecurityGroupForName(fullName, ec2Client);
-//        if (found != null) {
-//            result = true;
-//        }
-        
-        return result;
     }
 
 }
