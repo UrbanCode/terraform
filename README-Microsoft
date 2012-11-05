@@ -41,7 +41,7 @@ destroy - deletes a previously created environment
     o context: The context holds the whole environment. It has one or more 
       xmlns attributes, which specify map an xml namespace to a package. The 
       packages it points to should contain a properties file named:
-        terralib.classes 
+        x2o.classes 
           for Azure use: xmlns="com.urbancode.uprovision.tasks.microsoft"
 
       o environment: The environment contains VMs and websites.

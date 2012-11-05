@@ -61,7 +61,7 @@ resume - start all stopped instances in the environment.
     o context: The context holds the whole environment. It has one or more 
       xmlns attributes, which specify map an xml namespace to a package. The 
       packages it points to should contain a properties file named:
-        terralib.classes 
+        x2o.classes 
 	      for VMware use: xmlns="com.urbancode.uprovision.tasks.vmware"
 	      for AWS use: xmlns="com.urbancode.uprovision.tasks.aws"
 

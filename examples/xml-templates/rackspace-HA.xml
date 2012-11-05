@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<context
+xmlns="org.urbancode.terraform.tasks.rackspace">
+    <environment 
+    name="SIT-env">
+      <server name="app-server" append-suffix="true" region="ORD" flavor="2GB" image="8bf22129-8483-462b-a020-1754ec822770"/>
+      <server name="http-server-1" append-suffix="true" region="ORD" flavor="512MB" image="8bf22129-8483-462b-a020-1754ec822770"/>
+      <server name="http-server-2" append-suffix="true" region="ORD" flavor="512MB" image="8bf22129-8483-462b-a020-1754ec822770"/>
+      <database-instance name="MySQL-SIT" append-suffix="true" region="ORD" flavor="1GB" volume-size="3">
+        <database name="db1"/>
+        <database name="db2"/>
+        <user username="admin" password="${db.password}"/>
+      </database-instance>
+      <load-balancer name="lb1" port="80" ipType="PRIVATE" algorithm="RANDOM" region="ORD" protocol="HTTP">
+        <node port="80" server-name="http-server-1" name-has-suffix="true"/>
+        <node port="80" server-name="http-server-2" name-has-suffix="true"/>
+      </load-balancer>
+    </environment>
+</context>

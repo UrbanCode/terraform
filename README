@@ -17,26 +17,31 @@ Installation Instructions
    Maven (for building/dependencies) 
 
 
-    To use the VMware portion of Terraform, you will need to have access to
+  To use the VMware portion of Terraform, you will need to have access to
   a VCenter server.
 
-    To use the Amazon Web Services portion of Terraform, you will need to have 
+  To use the Amazon Web Services portion of Terraform, you will need to have 
   an AWS Account with the EC2 services. This service is free, but see Amazon
   for limitations.
       (to get an AWS account: https://console.aws.amazon.com/console/home )
 
-    Windows Azure with Terraform, is a wrapper around the Azure Node.js-based command line tool. 
-    That tool depends on Node.js and npm, Node's package manager.
-    Follow the installation instructions here:
+  Windows Azure with Terraform wraps around the Azure Node.js-based CLI. 
+  That tool depends on Node.js and npm, Node's package manager.
+  Follow the installation instructions here to get it:
     
     https://www.windowsazure.com/en-us/manage/linux/other-resources/command-line-tools/
     
-    Since that command line tool is only available on Unix systems, Terraform with Azure cannot
-    currently be run on Windows. Support for a wrapper around the Window's based Powershell
-    commandlets may come in the future.
+  Since that command line tool is only available on Unix systems, 
+  Terraform with Azure cannot currently be run on Windows. Support for a 
+  wrapper around the Window's based Powershell commandlets may come in the future.
+  
+  To use Rackspace Next Gen Cloud Servers as your provider with Terraform,
+  you must have a Rackspace account and an API key. Your account must
+  be set up to use whatever services you are requesting.
+  Some services (like Cloud Networks as of 11/5/12) are in a closed beta.
 
 
-Building Terraform
+Building Terraform From Source
 ======================================
   Set your current working directory to the extracted terraform directory.
   To build terraform, run:

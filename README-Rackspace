@@ -1,0 +1,104 @@
+Rackspace README
+======================================
+
+Allowed commands:
+
+create - creates an environment of servers, databases, load balancers, etc.
+
+destroy - deletes a previously created environment
+
+  -----------
+  Credentials
+  -----------
+  A Rackspace credentials file requires a valid Rackspace username and API key.
+  
+  type=org.urbancode.terraform.credentials.rackspace.CredentialsRackspace
+  name=my.rackspace.creds
+  username=myusername
+  api-key=0123456789abcdef
+
+  -----------
+  Templates
+  -----------
+  The general layout of an Rackspace Environment Template is the following:
+  The number in the parenthesis is the number of those elements allowed.
+      context(1)
+        └── environment(1)
+            ├── server(n)
+            ├── database-instance(n)
+            │  └──database(n)
+            │  └──user(n)
+            └── load-balancer(n)
+               └──node(n)
+            
+        The following is a list of elements available in the xml:
+    
+    [ The hierarchy represents which elements go under which in the xml ]
+
+    o context: The context holds the whole environment. It has one or more 
+      xmlns attributes, which specify map an xml namespace to a package. The 
+      packages it points to should contain a properties file named:
+        x2o.classes 
+          for Rackspace use: xmlns="com.urbancode.uprovision.tasks.rackspace"
+
+      o environment: The environment contains servers, database instances, 
+        and load balancers.
+
+        o server: This is a Rackspace cloud server. Required attributes: name,
+         region (allowed regions are ORD and DFW at the moment), image,
+         and flavor (RAM size. allowed flavors: 512MB, 1GB, 2GB, etc.)
+         Image must be the GUID associated with an image. Support for
+         putting in image names instead will be forthcoming.
+        
+        Optional attribute: append-suffix, which will give the server name a
+        unique suffix (same as the environment suffix, 4 base-62 digits).
+        The append-suffix attribute value should be either "true" or "false".
+        
+        o database-instance: Represents a VM hosting a MySQL instance. 
+        Required attributes: name, region (ORD or DFW), flavor, volume-size
+        Volume size refers to disk space in GB, allowed values are 1-50.
+        
+          o database: this actually creates a database on the MySQL instance.
+          Required attribute: name
+          
+          o user: this creates a user for the database.
+          Required attributes: username, password
+        
+        o load-balancer: this creates a load balancer to manage traffic.
+        Required attributes: name, port (balances traffic on that port),
+        ipType (either PRIVATE or PUBLIC), algorithm (load balancing algorithm,
+        see Rackspace for options. is RANDOM by defualt), region, protocol.
+        Protocol refers to the type of traffic (HTTP, HTTPS, TCP, etc).
+        Optional attribute: append-suffix
+        
+          o node: a load balancer must have one or more nodes to manage.
+          For now, this node must be a server you're creating in this template.
+          Required attributes: server-name
+          Optional attribute: name-has-suffix (true or false). This must be
+          set to true if the server you're referencing is appending a
+          suffix to its name.
+        
+Here is an example of a template representing a high-availability environment.
+This server has an app server, 2 web servers, a database, and a load balancer
+that is managing the HTTP traffic of the 2 web servers.
+
+<?xml version="1.0" encoding="UTF-8"?>
+<context
+xmlns="org.urbancode.terraform.tasks.rackspace">
+    <environment 
+    name="SIT-env">
+      <server name="app-server" append-suffix="true" region="ORD" flavor="2GB" image="8bf22129-8483-462b-a020-1754ec822770"/>
+      <server name="http-server-1" append-suffix="true" region="ORD" flavor="512MB" image="8bf22129-8483-462b-a020-1754ec822770"/>
+      <server name="http-server-2" append-suffix="true" region="ORD" flavor="512MB" image="8bf22129-8483-462b-a020-1754ec822770"/>
+      <database-instance name="MySQL-SIT" append-suffix="true" region="ORD" flavor="1GB" volume-size="3">
+        <database name="db1"/>
+        <database name="db2"/>
+        <user username="admin" password="${db.password}"/>
+      </database-instance>
+      <load-balancer name="lb1" port="80" ipType="PRIVATE" algorithm="RANDOM" region="ORD" protocol="HTTP">
+        <node port="80" server-name="http-server-1" name-has-suffix="true"/>
+        <node port="80" server-name="http-server-2" name-has-suffix="true"/>
+      </load-balancer>
+    </environment>
+</context>
+
