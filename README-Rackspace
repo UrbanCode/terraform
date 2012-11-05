@@ -67,7 +67,7 @@ destroy - deletes a previously created environment
         o load-balancer: this creates a load balancer to manage traffic.
         Required attributes: name, port (balances traffic on that port),
         ipType (either PRIVATE or PUBLIC), algorithm (load balancing algorithm,
-        see Rackspace for options. is RANDOM by defualt), region, protocol.
+        see Rackspace for options. is RANDOM by default), region, protocol.
         Protocol refers to the type of traffic (HTTP, HTTPS, TCP, etc).
         Optional attribute: append-suffix
         
