@@ -21,6 +21,7 @@ import java.util.List;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
+import org.urbancode.terraform.tasks.EnvironmentCreationException;
 
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.ec2.AmazonEC2;
@@ -123,7 +124,6 @@ import com.amazonaws.services.elasticloadbalancing.model.Listener;
 import com.amazonaws.services.elasticloadbalancing.model.LoadBalancerDescription;
 import com.amazonaws.services.elasticloadbalancing.model.RegisterInstancesWithLoadBalancerRequest;
 import com.amazonaws.services.elasticloadbalancing.model.RegisterInstancesWithLoadBalancerResult;
-import com.urbancode.x2o.tasks.CreationException;
 
 public class AWSHelper {
 
@@ -176,6 +176,7 @@ public class AWSHelper {
         AssociateAddressRequest assAddReq = new AssociateAddressRequest()
                                                 .withInstanceId(instanceId)
                                                 .withAllocationId(allocationId);
+        @SuppressWarnings("unused")
         AssociateAddressResult res = ec2Client.associateAddress(assAddReq);
 
         DescribeAddressesRequest req = new DescribeAddressesRequest().withAllocationIds(allocationId);
@@ -246,8 +247,6 @@ public class AWSHelper {
                     throw new RemoteException(instance.getStateReason().getMessage());
                 }
             }
-            // check to see if the instance failed at startup
-
             Thread.sleep(pollInterval);
         }
         log.info("Instance " + instanceId + " is now in " + state + " state");
@@ -402,7 +401,6 @@ public class AWSHelper {
         }
         else if (zone != null && !zone.isEmpty()) {
             // launch in EC2
-            // TODO - check for valid zones
             Placement placement = new Placement().withAvailabilityZone(zone);
             request = request.withPlacement(placement);
         }
@@ -617,12 +615,12 @@ public class AWSHelper {
      * @param listeners - you can create these locally. holds info on ports/protocols
      * @param lbClient - AmazonElasticLoadBalancing
      * @return DNSName - the DNS name of the newly created load balancer
-     * @throws NullPointerException
+     * @throws EnvironmentCreationException if load balancer has neither zones nor subnets
      */
     public String launchLoadBalancer(String loadBalancerName, List<String> subnets,
                                         List<String> secGroups, List<Listener> listeners,
                                         List<String> zones, AmazonElasticLoadBalancing lbClient)
-    throws CreationException {
+    throws EnvironmentCreationException {
         CreateLoadBalancerRequest request = new CreateLoadBalancerRequest()
                                                 .withLoadBalancerName(loadBalancerName);
         if (subnets != null && !subnets.isEmpty()) {
@@ -632,7 +630,7 @@ public class AWSHelper {
             request = request.withAvailabilityZones(zones);
         }
         else {
-            throw new CreationException("Must specify either zones or subnets for load balancer "
+            throw new EnvironmentCreationException("Must specify either zones or subnets for load balancer "
                                             + loadBalancerName);
         }
 
@@ -640,7 +638,7 @@ public class AWSHelper {
             request = request.withListeners(listeners);
         }
         else {
-            throw new CreationException("List of Listeners must not be null!");
+            throw new EnvironmentCreationException("List of Listeners must not be null!");
         }
 
         if (secGroups != null && !secGroups.isEmpty()) {
@@ -663,15 +661,15 @@ public class AWSHelper {
     public String getAssociationIdForAllocationId(String allocId, AmazonEC2 ec2Client) {
         String assocId = null;
         try {
-        DescribeAddressesRequest request = new DescribeAddressesRequest().withAllocationIds(allocId);
-        DescribeAddressesResult result = ec2Client.describeAddresses(request);
-        List<Address> addresses = result.getAddresses();
-        if (addresses != null & !addresses.isEmpty()) {
-            if (addresses.size() > 1) {
-                log.error("Found more than one Address for allocationId ( " + allocId + " ) !");
+            DescribeAddressesRequest request = new DescribeAddressesRequest().withAllocationIds(allocId);
+            DescribeAddressesResult result = ec2Client.describeAddresses(request);
+            List<Address> addresses = result.getAddresses();
+            if (addresses != null & !addresses.isEmpty()) {
+                if (addresses.size() > 1) {
+                    log.error("Found more than one Address for allocationId ( " + allocId + " ) !");
+                }
+                assocId = addresses.get(0).getAssociationId();
             }
-            assocId = addresses.get(0).getAssociationId();
-        }
         }
         catch (AmazonServiceException e) {
             log.error("AmazonSerivceException caught while trying to get Association Id", e);
@@ -741,6 +739,7 @@ public class AWSHelper {
                                            .withInstanceId(instanceId)
                                            .withVolumeId(volumeId)
                                            .withDevice(device);
+        @SuppressWarnings("unused")
         AttachVolumeResult result = ec2Client.attachVolume(request);
     }
 
@@ -760,6 +759,7 @@ public class AWSHelper {
                                            .withInstanceId(instanceId)
                                            .withVolumeId(volumeId)
                                            .withForce(force);
+        @SuppressWarnings("unused")
         DetachVolumeResult result = ec2Client.detachVolume(request);
     }
 
@@ -985,6 +985,7 @@ public class AWSHelper {
                                  .withHealthCheck(hCheck)
                                  .withLoadBalancerName(loadBalancerName);
 
+        @SuppressWarnings("unused")
         ConfigureHealthCheckResult healthResult = elbClient.configureHealthCheck(healthRequest);
     }
 

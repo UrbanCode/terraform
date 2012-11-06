@@ -61,8 +61,7 @@ public class ContextRackspace implements TerraformContext {
     //----------------------------------------------------------------------------------------------
     @Override
     public void restore() throws RestorationException {
-        // TODO Auto-generated method stub
-
+        // TODO Rackspace update commands
     }
 
     //----------------------------------------------------------------------------------------------

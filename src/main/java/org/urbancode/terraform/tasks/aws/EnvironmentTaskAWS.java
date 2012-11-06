@@ -501,6 +501,6 @@ public class EnvironmentTaskAWS extends EnvironmentTask {
     @Override
     public void restore()
     throws EnvironmentRestorationException {
-        //TODO implement if necessary
+        // not necessary to run AWS update commands
     }
 }

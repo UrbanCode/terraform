@@ -92,8 +92,7 @@ public class LoadBalancerNodeTask extends SubTask {
     //----------------------------------------------------------------------------------------------
     @Override
     public void destroy() throws Exception {
-        // TODO Auto-generated method stub
-
+        // Load balancer nodes are deleted when the load balancer is deleted
     }
 
 }

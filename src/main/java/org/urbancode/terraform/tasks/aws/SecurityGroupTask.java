@@ -146,7 +146,6 @@ public abstract class SecurityGroupTask extends SubTask {
             ec2Client = context.fetchEC2Client();
         }
 
-        // give unique name
         String uuid = context.getEnvironment().fetchSuffix();
         fullName = name + ("-" + uuid);
         log.debug("Security Group " + name + " has fullname " + fullName);

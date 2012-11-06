@@ -424,7 +424,6 @@ public class InstanceTask extends Task {
             if (instances != null && !instances.isEmpty()) {
                 for (Instance instance : instances) {
                     if (instance.getImageId().equals(amiId)) {
-                        // TODO - clean this shit up
                         String subId = ((EnvironmentTaskAWS)context.getEnvironment()).getVpc()
                                         .findSubnetForName(subnetName).getId();
                         if (instance.getSubnetId() != null
@@ -559,7 +558,6 @@ public class InstanceTask extends Task {
         }
     }
 
-    // TODO
     //----------------------------------------------------------------------------------------------
     private void registerWithLoadBalancer()
     throws RemoteException, EnvironmentCreationException {
@@ -621,7 +619,6 @@ public class InstanceTask extends Task {
         }
     }
 
-    // TODO
     //----------------------------------------------------------------------------------------------
     private void deregisterWithLoadBalancer() {
         if (context != null && context.getEnvironment() != null

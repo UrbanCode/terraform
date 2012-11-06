@@ -100,7 +100,7 @@ public class BootActionsTask extends SubTask {
         String userData = "";
 
         if (platform.equalsIgnoreCase("windows")) {
-            // TODO windows boot actions
+            // windows boot actions are not supported
         }
         else {
             userData += "#!" + shell + " \n\n";  // #! is REQUIRED to be first characters)

@@ -309,12 +309,10 @@ public class LoadBalancerTask extends SubTask {
                 elbClient = context.fetchELBClient();
             }
 
-            // give unique name
             String uuid = context.getEnvironment().fetchSuffix();
             fullName = loadBalancerName + ("-" + uuid);
             log.debug("Security Group " + loadBalancerName + " has fullname " + fullName);
 
-            // scope of the policy name? Will this need to change?
             String stickyPolicyName = "StickyPolicy";
             long defaultCookieExp = 60000;
 

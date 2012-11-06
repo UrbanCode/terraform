@@ -18,7 +18,6 @@ public class CredentialsParserMicrosoft extends CredentialsParser {
     //----------------------------------------------------------------------------------------------
     @Override
     public Credentials parse(Properties props) {
-        // TODO Auto-generated method stub
         return new CredentialsMicrosoft("", "", "");
     }
 

@@ -65,14 +65,12 @@ public class SshTask extends PostCreateActionTask {
     throws PostCreateException, JSchException {
         SshConnection result = null;
 
-        // see if we have anything to connect to
         if (host == null || host.isEmpty()) {
             String msg = "No host specified to connect to";
             log.error(msg);
             throw new PostCreateException(msg);
         }
 
-        // see if we have a user to connect as
         if (user == null || user.isEmpty()) {
             String msg = "No user specified to connect as for instance " + host;
             log.error(msg);
@@ -104,7 +102,6 @@ public class SshTask extends PostCreateActionTask {
     //----------------------------------------------------------------------------------------------
     private void runCmds()
     throws JSchException, IOException, InterruptedException, ExecutionException {
-     // run the commands
         ChannelExec channel = ssh.run(cmds);
         channel.getOutputStream().close();
 
@@ -114,7 +111,6 @@ public class SshTask extends PostCreateActionTask {
         String outputText = output.get();
         String errorText = error.get();
 
-        // check the exit status of the commands
         while (true) {
             if (channel.isClosed()) {
                 int exitCode = channel.getExitStatus();

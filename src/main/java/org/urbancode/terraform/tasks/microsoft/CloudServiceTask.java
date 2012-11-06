@@ -36,8 +36,7 @@ public class CloudServiceTask extends SubTask {
     //----------------------------------------------------------------------------------------------
     @Override
     public void create() throws Exception {
-        // TODO Auto-generated method stub
-
+        // cloud services are generated when a VM is started
     }
 
     //----------------------------------------------------------------------------------------------

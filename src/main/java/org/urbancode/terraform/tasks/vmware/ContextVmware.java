@@ -164,7 +164,6 @@ public class ContextVmware implements TerraformContext {
             }
         }
         catch (IOException e) {
-            // TODO - throw
             log.fatal("IOException when trying to run create() on context!", e);
         }
         catch(EnvironmentCreationException e) {
@@ -183,7 +182,6 @@ public class ContextVmware implements TerraformContext {
             host = createVirtualHost();
         }
         catch (IOException e) {
-            // TODO - throw
             log.fatal("IOException when trying to run destroy() on context!", e);
         }
         env.setVirtualHost(host);
