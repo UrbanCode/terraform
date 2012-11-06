@@ -213,10 +213,4 @@ public class SubnetTask extends SubTask {
         }
     }
 
-    //----------------------------------------------------------------------------------------------
-    @Override
-    public void restore() {
-        // TODO Auto-generated method stub
-
-    }
 }

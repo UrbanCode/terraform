@@ -20,10 +20,11 @@ import org.urbancode.terraform.tasks.EnvironmentCreationException;
 import org.urbancode.terraform.tasks.EnvironmentDestructionException;
 import org.urbancode.terraform.tasks.EnvironmentRestorationException;
 
+import com.urbancode.x2o.tasks.Restorable;
 import com.urbancode.x2o.tasks.Task;
 
 
-public class EnvironmentTask extends Task {
+public class EnvironmentTask extends Task implements Restorable {
 
     //**********************************************************************************************
     // CLASS

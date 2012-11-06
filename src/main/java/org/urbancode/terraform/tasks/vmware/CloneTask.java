@@ -32,6 +32,7 @@ import org.urbancode.terraform.tasks.vmware.util.IpInUseException;
 import org.urbancode.terraform.tasks.vmware.util.Path;
 import org.urbancode.terraform.tasks.vmware.util.VirtualHost;
 
+import com.urbancode.x2o.tasks.Restorable;
 import com.vmware.vim25.GuestInfo;
 import com.vmware.vim25.GuestNicInfo;
 import com.vmware.vim25.InvalidProperty;
@@ -57,7 +58,7 @@ import com.vmware.vim25.mo.ResourcePool;
 import com.vmware.vim25.mo.Task;
 import com.vmware.vim25.mo.VirtualMachine;
 
-public class CloneTask extends com.urbancode.x2o.tasks.SubTask implements Cloneable, Comparable<CloneTask> {
+public class CloneTask extends com.urbancode.x2o.tasks.SubTask implements Restorable, Cloneable, Comparable<CloneTask> {
 
     // **********************************************************************************************
     // CLASS

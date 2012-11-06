@@ -365,10 +365,4 @@ public class VpcTask extends Task {
         }
     }
 
-    //----------------------------------------------------------------------------------------------
-    @Override
-    public void restore() {
-        // TODO Auto-generated method stub
-
-    }
 }

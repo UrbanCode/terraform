@@ -128,12 +128,4 @@ public class HealthCheckTask extends SubTask {
 
     }
 
-    //----------------------------------------------------------------------------------------------
-    @Override
-    public void restore() {
-        // TODO Auto-generated method stub
-
-    }
-
-
 }

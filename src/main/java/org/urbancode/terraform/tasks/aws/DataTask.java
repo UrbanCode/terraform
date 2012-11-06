@@ -66,13 +66,4 @@ public class DataTask extends BootActionSubTask {
         script = null;
     }
 
-    //----------------------------------------------------------------------------------------------
-    @Override
-    public void restore() {
-        // TODO Auto-generated method stub
-
-    }
-
-
-
 }

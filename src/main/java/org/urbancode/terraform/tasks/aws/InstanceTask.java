@@ -870,13 +870,6 @@ public class InstanceTask extends Task {
 
     //----------------------------------------------------------------------------------------------
     @Override
-    public void restore() {
-        // TODO Auto-generated method stub
-
-    }
-
-    //----------------------------------------------------------------------------------------------
-    @Override
     public InstanceTask clone() {
         InstanceTask result = new InstanceTask(context);
 

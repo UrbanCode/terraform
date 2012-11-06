@@ -69,10 +69,4 @@ public class VpcSecurityGroupRefTask extends SecurityGroupRefTask {
         ref = null;
     }
 
-    //----------------------------------------------------------------------------------------------
-    @Override
-    public void restore() {
-        // TODO Auto-generated method stub
-
-    }
 }

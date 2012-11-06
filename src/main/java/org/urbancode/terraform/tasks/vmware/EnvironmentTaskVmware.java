@@ -29,6 +29,8 @@ import org.apache.log4j.Logger;
 import org.urbancode.terraform.tasks.common.TerraformContext;
 import org.urbancode.terraform.tasks.common.EnvironmentTask;
 import com.urbancode.x2o.tasks.MultiThreadTask;
+import com.urbancode.x2o.tasks.RestorationException;
+
 import org.urbancode.terraform.tasks.vmware.events.TaskEventService;
 import org.urbancode.terraform.tasks.vmware.util.GlobalIpAddressPool;
 import org.urbancode.terraform.tasks.vmware.util.IpAddressPool;
@@ -481,8 +483,8 @@ public class EnvironmentTaskVmware extends EnvironmentTask {
                 network.destroy();
             }
         }
-        catch (RemoteException e) {
-            log.warn("RemoteException when deleting vm", e);
+        catch(RestorationException e) {
+            log.warn("Problem with restoring folder.", e);
         }
     }
 
@@ -508,8 +510,8 @@ public class EnvironmentTaskVmware extends EnvironmentTask {
                 network.setHostPath(hostPath);
             }
         }
-        catch (RemoteException e) {
-            log.warn("RemoteException when deleting vm", e);
+        catch(RestorationException e) {
+            log.warn("Problem with restoring folder.", e);
         }
     }
 

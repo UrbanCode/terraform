@@ -23,6 +23,7 @@ import org.urbancode.terraform.tasks.vmware.util.Path;
 import org.urbancode.terraform.tasks.vmware.util.SwitchResult;
 import org.urbancode.terraform.tasks.vmware.util.VirtualHost;
 
+import com.urbancode.x2o.tasks.Restorable;
 import com.urbancode.x2o.tasks.SubTask;
 import com.vmware.vim25.HostNetworkPolicy;
 import com.vmware.vim25.HostPortGroupSpec;
@@ -32,7 +33,7 @@ import com.vmware.vim25.mo.HostNetworkSystem;
 import com.vmware.vim25.mo.HostSystem;
 import com.vmware.vim25.mo.Network;
 
-public class NetworkTask extends SubTask {
+public class NetworkTask extends SubTask implements Restorable {
 
     //**********************************************************************************************
     // CLASS

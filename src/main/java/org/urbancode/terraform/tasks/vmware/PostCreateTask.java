@@ -207,10 +207,4 @@ public class PostCreateTask extends ExtensionTask {
     public void destroy() {
     }
 
-    //----------------------------------------------------------------------------------------------
-    @Override
-    public void restore() {
-        //nothing to restore since VM is restored in setValues
-    }
-
 }

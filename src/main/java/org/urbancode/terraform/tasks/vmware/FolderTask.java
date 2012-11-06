@@ -22,6 +22,8 @@ import org.apache.log4j.Logger;
 import org.urbancode.terraform.tasks.vmware.util.Path;
 import org.urbancode.terraform.tasks.vmware.util.VirtualHost;
 
+import com.urbancode.x2o.tasks.Restorable;
+import com.urbancode.x2o.tasks.RestorationException;
 import com.urbancode.x2o.tasks.SubTask;
 import com.vmware.vim25.DuplicateName;
 import com.vmware.vim25.InvalidName;
@@ -32,7 +34,7 @@ import com.vmware.vim25.mo.Datacenter;
 import com.vmware.vim25.mo.Folder;
 import com.vmware.vim25.mo.ManagedEntity;
 
-public class FolderTask extends SubTask {
+public class FolderTask extends SubTask implements Restorable {
 
     //**********************************************************************************************
     // CLASS
@@ -125,10 +127,14 @@ public class FolderTask extends SubTask {
 
     //----------------------------------------------------------------------------------------------
     @Override
-    public void restore() throws RemoteException {
+    public void restore() throws RestorationException {
         this.folderRef = new Path(destPath, folderName);
         log.debug("restoring folder " + this.folderRef.toString());
-        this.folder = getFolderFromDatacenter(folderRef);
+        try {
+            this.folder = getFolderFromDatacenter(folderRef);
+        } catch (RemoteException e) {
+            throw new RestorationException(e);
+        }
     }
 
     //----------------------------------------------------------------------------------------------

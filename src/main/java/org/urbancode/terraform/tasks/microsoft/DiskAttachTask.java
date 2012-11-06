@@ -47,13 +47,6 @@ public class DiskAttachTask extends SubTask {
 
     //----------------------------------------------------------------------------------------------
     @Override
-    public void restore() throws Exception {
-        // TODO Auto-generated method stub
-
-    }
-
-    //----------------------------------------------------------------------------------------------
-    @Override
     public void destroy() throws Exception {
         // TODO Auto-generated method stub
 

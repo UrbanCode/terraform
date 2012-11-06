@@ -113,11 +113,4 @@ public class ScriptTask extends BootActionSubTask {
         setCmds(null);
     }
 
-    //----------------------------------------------------------------------------------------------
-    @Override
-    public void restore() {
-        // TODO Auto-generated method stub
-
-    }
-
 }

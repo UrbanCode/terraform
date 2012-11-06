@@ -144,9 +144,4 @@ public class NetworkRefTask extends SubTask {
         //this gets destroyed when the clone is destroyed
     }
 
-    //----------------------------------------------------------------------------------------------
-    @Override
-    public void restore() {
-    }
-
 }

@@ -178,10 +178,4 @@ public class SshTask extends PostCreateActionTask {
         //not needed for this task
     }
 
-    //----------------------------------------------------------------------------------------------
-    @Override
-    public void restore() {
-        //not needed for this task
-    }
-
 }

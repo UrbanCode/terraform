@@ -312,11 +312,4 @@ public class DatabaseInstanceTask extends SubTask {
         }
     }
 
-    //----------------------------------------------------------------------------------------------
-    @Override
-    public void restore() throws Exception {
-        // TODO Auto-generated method stub
-
-    }
-
 }

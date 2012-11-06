@@ -69,13 +69,6 @@ public class WebsiteTask extends SubTask {
 
     //----------------------------------------------------------------------------------------------
     @Override
-    public void restore() throws Exception {
-        // TODO Auto-generated method stub
-
-    }
-
-    //----------------------------------------------------------------------------------------------
-    @Override
     public void destroy() throws Exception {
         log.info("Websites cannot currently be deleted by Terraform. Please delete from web portal.");
 

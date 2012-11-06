@@ -123,11 +123,4 @@ public class BootActionsTask extends SubTask {
         //already disconnected
     }
 
-    //----------------------------------------------------------------------------------------------
-    @Override
-    public void restore() throws Exception {
-        // TODO Auto-generated method stub
-
-    }
-
 }

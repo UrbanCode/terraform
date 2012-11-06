@@ -153,10 +153,4 @@ public class PuppetTask extends BootActionSubTask {
         return script;
     }
 
-    //----------------------------------------------------------------------------------------------
-    @Override
-    public void restore() {
-        // TODO Auto-generated method stub
-
-    }
 }

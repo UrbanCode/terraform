@@ -46,10 +46,4 @@ public class Ec2SecurityGroupRefTask extends SecurityGroupRefTask {
 
     }
 
-    //----------------------------------------------------------------------------------------------
-    @Override
-    public void restore() {
-        // TODO Auto-generated method stub
-
-    }
 }

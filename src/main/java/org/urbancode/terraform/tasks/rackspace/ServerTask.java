@@ -317,11 +317,4 @@ public class ServerTask extends SubTask {
         deleteServerRestCall();
     }
 
-    //----------------------------------------------------------------------------------------------
-    @Override
-    public void restore() throws Exception {
-        // TODO Auto-generated method stub
-
-    }
-
 }
