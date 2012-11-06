@@ -48,9 +48,6 @@ import org.urbancode.terraform.credentials.rackspace.CredentialsParserRackspace;
 import org.urbancode.terraform.credentials.rackspace.CredentialsRackspace;
 import org.urbancode.terraform.credentials.vmware.CredentialsParserVmware;
 import org.urbancode.terraform.credentials.vmware.CredentialsVmware;
-import org.urbancode.terraform.tasks.EnvironmentCreationException;
-import org.urbancode.terraform.tasks.EnvironmentDestructionException;
-import org.urbancode.terraform.tasks.EnvironmentRestorationException;
 import org.urbancode.terraform.tasks.aws.ContextAWS;
 import org.urbancode.terraform.tasks.common.TerraformContext;
 
@@ -312,18 +309,6 @@ public class Main {
                     log.warn("Could not resolve context to call command \"" + command + "\"");
                 }
             }
-        }
-        catch (EnvironmentCreationException e) {
-            log.fatal("Did not successfully create environment", e);
-            throw e;
-        }
-        catch (EnvironmentRestorationException e) {
-            log.fatal("Did not successfully restore environment", e);
-            throw e;
-        }
-        catch (EnvironmentDestructionException e) {
-            log.fatal("Did not successfully destroy environment", e);
-            throw e;
         }
         catch (ParserConfigurationException e1) {
             throw new XmlParsingException("ParserConfigurationException: " + e1.getMessage(), e1);
