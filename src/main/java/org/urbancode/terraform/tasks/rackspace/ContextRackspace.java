@@ -1,8 +1,8 @@
 package org.urbancode.terraform.tasks.rackspace;
 
 import org.apache.log4j.Logger;
-import org.urbancode.terraform.credentials.Credentials;
-import org.urbancode.terraform.credentials.CredentialsException;
+import org.urbancode.terraform.credentials.common.Credentials;
+import org.urbancode.terraform.credentials.common.CredentialsException;
 import org.urbancode.terraform.credentials.rackspace.CredentialsRackspace;
 import org.urbancode.terraform.tasks.common.EnvironmentTask;
 import org.urbancode.terraform.tasks.common.TerraformContext;

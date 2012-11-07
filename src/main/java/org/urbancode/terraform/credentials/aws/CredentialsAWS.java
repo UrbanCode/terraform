@@ -16,7 +16,7 @@
 package org.urbancode.terraform.credentials.aws;
 
 import org.apache.log4j.Logger;
-import org.urbancode.terraform.credentials.Credentials;
+import org.urbancode.terraform.credentials.common.Credentials;
 
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;

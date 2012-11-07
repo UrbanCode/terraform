@@ -1,8 +1,8 @@
 package org.urbancode.terraform.tasks.microsoft;
 
 import org.apache.log4j.Logger;
-import org.urbancode.terraform.credentials.Credentials;
-import org.urbancode.terraform.credentials.CredentialsException;
+import org.urbancode.terraform.credentials.common.Credentials;
+import org.urbancode.terraform.credentials.common.CredentialsException;
 import org.urbancode.terraform.credentials.microsoft.CredentialsMicrosoft;
 import org.urbancode.terraform.tasks.common.TerraformContext;
 import org.urbancode.terraform.tasks.common.EnvironmentTask;

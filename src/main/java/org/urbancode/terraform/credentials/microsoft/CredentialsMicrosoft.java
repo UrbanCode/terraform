@@ -1,6 +1,6 @@
 package org.urbancode.terraform.credentials.microsoft;
 
-import org.urbancode.terraform.credentials.Credentials;
+import org.urbancode.terraform.credentials.common.Credentials;
 
 public class CredentialsMicrosoft extends Credentials {
 

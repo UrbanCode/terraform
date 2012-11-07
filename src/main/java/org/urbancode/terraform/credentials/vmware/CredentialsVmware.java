@@ -15,7 +15,7 @@
  ******************************************************************************/
 package org.urbancode.terraform.credentials.vmware;
 
-import org.urbancode.terraform.credentials.Credentials;
+import org.urbancode.terraform.credentials.common.Credentials;
 
 
 public class CredentialsVmware extends Credentials {

@@ -15,8 +15,8 @@
  ******************************************************************************/
 package org.urbancode.terraform.tasks.common;
 
-import org.urbancode.terraform.credentials.Credentials;
-import org.urbancode.terraform.credentials.CredentialsException;
+import org.urbancode.terraform.credentials.common.Credentials;
+import org.urbancode.terraform.credentials.common.CredentialsException;
 
 import com.urbancode.x2o.tasks.Context;
 import com.urbancode.x2o.util.PropertyResolver;

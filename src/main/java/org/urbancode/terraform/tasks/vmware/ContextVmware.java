@@ -20,7 +20,7 @@ import java.net.MalformedURLException;
 import java.rmi.RemoteException;
 
 import org.apache.log4j.Logger;
-import org.urbancode.terraform.credentials.Credentials;
+import org.urbancode.terraform.credentials.common.Credentials;
 import org.urbancode.terraform.credentials.vmware.CredentialsVmware;
 import org.urbancode.terraform.tasks.common.TerraformContext;
 import org.urbancode.terraform.tasks.common.EnvironmentTask;
