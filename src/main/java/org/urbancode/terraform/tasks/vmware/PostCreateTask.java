@@ -24,7 +24,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.urbancode.terraform.tasks.util.IOUtil;
+import org.urbancode.terraform.tasks.common.util.IOUtil;
 import org.urbancode.terraform.tasks.vmware.util.VirtualHost;
 
 import com.urbancode.x2o.tasks.ExtensionTask;

@@ -26,7 +26,7 @@ import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
-import org.urbancode.terraform.tasks.util.IOUtil;
+import org.urbancode.terraform.tasks.common.util.IOUtil;
 import org.urbancode.terraform.tasks.vmware.CloneTask;
 import org.urbancode.terraform.tasks.vmware.EnvironmentTaskVmware;
 import org.urbancode.terraform.tasks.vmware.PortRangeTask;

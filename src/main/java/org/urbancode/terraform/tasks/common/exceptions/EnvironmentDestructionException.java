@@ -1,47 +1,49 @@
 /*******************************************************************************
  * Copyright 2012 Urbancode, Inc
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.urbancode.terraform.tasks;
+package org.urbancode.terraform.tasks.common.exceptions;
 
-public class PostCreateException extends Exception {
+import com.urbancode.x2o.tasks.DestructionException;
+
+public class EnvironmentDestructionException extends DestructionException {
 
     //**********************************************************************************************
     // CLASS
     //**********************************************************************************************
-    final static private long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
     //**********************************************************************************************
     // INSTANCE
     //**********************************************************************************************
 
     //----------------------------------------------------------------------------------------------
-    public PostCreateException() {
+    public EnvironmentDestructionException() {
     }
 
     //----------------------------------------------------------------------------------------------
-    public PostCreateException(String message, Throwable cause) {
+    public EnvironmentDestructionException(String message, Throwable cause) {
         super(message, cause);
     }
 
     //----------------------------------------------------------------------------------------------
-    public PostCreateException(String message) {
+    public EnvironmentDestructionException(String message) {
         super(message);
     }
 
     //----------------------------------------------------------------------------------------------
-    public PostCreateException(Throwable cause) {
+    public EnvironmentDestructionException(Throwable cause) {
         super(cause);
     }
 }

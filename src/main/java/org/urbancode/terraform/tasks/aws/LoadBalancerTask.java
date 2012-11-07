@@ -20,9 +20,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import org.apache.log4j.Logger;
-import org.urbancode.terraform.tasks.EnvironmentCreationException;
-import org.urbancode.terraform.tasks.EnvironmentDestructionException;
 import org.urbancode.terraform.tasks.aws.helpers.AWSHelper;
+import org.urbancode.terraform.tasks.common.exceptions.EnvironmentCreationException;
+import org.urbancode.terraform.tasks.common.exceptions.EnvironmentDestructionException;
 
 import com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancing;
 import com.amazonaws.services.elasticloadbalancing.model.Listener;

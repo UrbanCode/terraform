@@ -22,10 +22,11 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 import org.apache.log4j.Logger;
-import org.urbancode.terraform.tasks.PostCreateException;
 import org.urbancode.terraform.tasks.aws.helpers.SshConnection;
 import org.urbancode.terraform.tasks.aws.helpers.SshHelper;
 import org.urbancode.terraform.tasks.common.TerraformContext;
+import org.urbancode.terraform.tasks.common.exceptions.PostCreateException;
+
 import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.JSchException;
 

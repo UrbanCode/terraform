@@ -12,7 +12,7 @@ import org.urbancode.terraform.tasks.aws.ContextAWS;
 import org.urbancode.terraform.tasks.aws.EnvironmentTaskAWS;
 import org.urbancode.terraform.tasks.aws.InstanceTask;
 import org.urbancode.terraform.tasks.aws.helpers.AWSHelper;
-import org.urbancode.terraform.tasks.util.InstancePriorityComparator;
+import org.urbancode.terraform.tasks.aws.util.InstancePriorityComparator;
 
 import com.amazonaws.services.ec2.AmazonEC2;
 

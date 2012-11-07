@@ -19,12 +19,12 @@ import org.apache.log4j.Logger;
 import org.urbancode.terraform.credentials.Credentials;
 import org.urbancode.terraform.credentials.CredentialsException;
 import org.urbancode.terraform.credentials.aws.CredentialsAWS;
-import org.urbancode.terraform.tasks.EnvironmentCreationException;
-import org.urbancode.terraform.tasks.EnvironmentDestructionException;
-import org.urbancode.terraform.tasks.EnvironmentRestorationException;
 import org.urbancode.terraform.tasks.aws.helpers.AWSHelper;
 import org.urbancode.terraform.tasks.common.EnvironmentTask;
 import org.urbancode.terraform.tasks.common.TerraformContext;
+import org.urbancode.terraform.tasks.common.exceptions.EnvironmentCreationException;
+import org.urbancode.terraform.tasks.common.exceptions.EnvironmentDestructionException;
+import org.urbancode.terraform.tasks.common.exceptions.EnvironmentRestorationException;
 
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.services.ec2.AmazonEC2;

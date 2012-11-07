@@ -20,8 +20,8 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.urbancode.terraform.tasks.PostCreateException;
 import org.urbancode.terraform.tasks.common.TerraformContext;
+import org.urbancode.terraform.tasks.common.exceptions.PostCreateException;
 
 import com.urbancode.x2o.tasks.SubTask;
 

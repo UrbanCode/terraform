@@ -1,4 +1,4 @@
-package org.urbancode.terraform.tasks;
+package org.urbancode.terraform.tasks.common.exceptions;
 
 import com.urbancode.x2o.tasks.RestorationException;
 

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.urbancode.terraform.tasks;
+package org.urbancode.terraform.tasks.common.exceptions;
 
 import com.urbancode.x2o.tasks.CreationException;
 

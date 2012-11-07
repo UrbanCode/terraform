@@ -1,4 +1,4 @@
-package org.urbancode.terraform.tasks.util;
+package org.urbancode.terraform.tasks.common.util;
 
 import java.io.IOException;
 import java.io.InputStream;

@@ -8,7 +8,7 @@ import java.util.List;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
-import org.urbancode.terraform.tasks.util.IOUtil;
+import org.urbancode.terraform.tasks.common.util.IOUtil;
 
 public class AzureCmdRunner {
 

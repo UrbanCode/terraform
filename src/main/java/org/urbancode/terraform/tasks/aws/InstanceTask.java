@@ -22,10 +22,10 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.urbancode.terraform.tasks.EnvironmentCreationException;
-import org.urbancode.terraform.tasks.EnvironmentDestructionException;
-import org.urbancode.terraform.tasks.PostCreateException;
 import org.urbancode.terraform.tasks.aws.helpers.AWSHelper;
+import org.urbancode.terraform.tasks.common.exceptions.EnvironmentCreationException;
+import org.urbancode.terraform.tasks.common.exceptions.EnvironmentDestructionException;
+import org.urbancode.terraform.tasks.common.exceptions.PostCreateException;
 
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.ec2.AmazonEC2;

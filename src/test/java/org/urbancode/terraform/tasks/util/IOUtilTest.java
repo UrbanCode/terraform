@@ -8,6 +8,7 @@ import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.urbancode.terraform.tasks.common.util.IOUtil;
 
 public class IOUtilTest {
 

@@ -16,9 +16,9 @@
 package org.urbancode.terraform.tasks.common;
 
 import org.apache.log4j.Logger;
-import org.urbancode.terraform.tasks.EnvironmentCreationException;
-import org.urbancode.terraform.tasks.EnvironmentDestructionException;
-import org.urbancode.terraform.tasks.EnvironmentRestorationException;
+import org.urbancode.terraform.tasks.common.exceptions.EnvironmentCreationException;
+import org.urbancode.terraform.tasks.common.exceptions.EnvironmentDestructionException;
+import org.urbancode.terraform.tasks.common.exceptions.EnvironmentRestorationException;
 
 import com.urbancode.x2o.tasks.Restorable;
 import com.urbancode.x2o.tasks.Task;
