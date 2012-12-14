@@ -15,6 +15,8 @@
  ******************************************************************************/
 package org.urbancode.terraform.tasks.aws;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -93,16 +95,25 @@ public class ScriptTask extends BootActionSubTask {
     //----------------------------------------------------------------------------------------------
     @Override
     public void create() {
-        String taskData = "";
-
-        taskData += getShell() + " `wget " + getUrl() + "`";
-        if (getParams() != null && !getParams().isEmpty()) {
-            for (ParamTask param : getParams()) {
-                taskData += " " + param.getValue();
-            }
+        String cmds = "";
+        File tmp = null;
+        try {
+            tmp = File.createTempFile("tf.init.", ".sh");
         }
-        taskData += "; \n";
-        setCmds(taskData);
+        catch (IOException e) {
+            throw new RuntimeException("Could not create temp file for init scripts", e);
+        }
+        String scriptName = tmp.getName();
+        String wgetCmd = "wget -O " + scriptName + " " + getUrl() + "; ";
+        String shellCmd = "/bin/bash " + scriptName;
+
+        for (ParamTask param : getParams()) {
+            shellCmd += " " + param.getValue();
+        }
+        shellCmd += "; ";
+        cmds = wgetCmd + "\n" + shellCmd;
+
+        setCmds(cmds);
     }
 
     //----------------------------------------------------------------------------------------------
