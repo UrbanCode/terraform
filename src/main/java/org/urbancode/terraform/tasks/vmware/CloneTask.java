@@ -351,6 +351,13 @@ public class CloneTask extends com.urbancode.x2o.tasks.SubTask implements Restor
         this.postCreateTaskList.add(task);
         return task;
     }
+    
+    //----------------------------------------------------------------------------------------------
+    public PostCreateTask addCopyFile(PostCreateTask task) {
+        task.setValues(this);
+        this.postCreateTaskList.add(task);
+        return task;
+    }
 
     //----------------------------------------------------------------------------------------------
     public NetworkRefTask createNetworkRef() {
@@ -485,7 +492,7 @@ public class CloneTask extends com.urbancode.x2o.tasks.SubTask implements Restor
         Datastore result = null;
 
         VirtualHost host = environment.fetchVirtualHost();
-        Datacenter datacenter = host.getDatacenter(path);
+        Datacenter datacenter = host.getDatacenterFromEnd(environment.fetchDatacenterPath());
 
         for (Datastore d : datacenter.getDatastores()) {
             if (d.getName().equals(path.getName())) {
@@ -556,26 +563,63 @@ public class CloneTask extends com.urbancode.x2o.tasks.SubTask implements Restor
 
         VirtualHost host = environment.fetchVirtualHost();
         List<String> folderNames = path.getFolders().toList();
-        Datacenter datacenter = host.getDatacenter(path);
+        Path datacenterPath = environment.fetchDatacenterPath();
 
-        // traverse folders
-        result = datacenter.getVmFolder();
-        Folder nextFolder = null;
-        for (String folderName : folderNames) {
-            for (ManagedEntity e : result.getChildEntity()) {
-                if (e instanceof Folder && e.getName().equals(folderName)) {
-                    nextFolder = (Folder) e;
-                    break;
+        //on restoration and destruction
+        if (datacenterPath == null) {
+            // traverse folders
+            result = host.getRootFolder();
+            Folder nextFolder = null;
+            for (String fName : folderNames) {
+                for (ManagedEntity e : result.getChildEntity()) {
+                    log.trace("Searching ManagedEntity " + e.getName() + " for fname " + fName);
+                    if (e instanceof Folder && e.getName().equals(fName)) {
+                        nextFolder = (Folder) e;
+                        break;
+                    }
+                    else if (e instanceof Datacenter && e.getName().equals(fName)) {
+                        Datacenter datacenter = (Datacenter) e;
+                        nextFolder = datacenter.getVmFolder();
+                        break;
+                    }
                 }
+                if (nextFolder == null) {
+                    throw new NotFound();
+                }
+                result = nextFolder;
+                    nextFolder = null;
             }
-            if (nextFolder == null) {
+            if (result == null) {
                 throw new NotFound();
             }
-            result = nextFolder;
-            nextFolder = null;
         }
-        if (result == null) {
-            throw new NotFound();
+        //on creation
+        else{
+            Datacenter datacenter = host.getDatacenterFromEnd(datacenterPath);
+            List<String> skippableFolders =  datacenterPath.toList();
+
+            // traverse folders
+            result = datacenter.getVmFolder();
+            Folder nextFolder = null;
+            for (String fName : folderNames) {
+                if (!skippableFolders.contains(fName)){
+                    for (ManagedEntity e : result.getChildEntity()) {
+                        log.trace("Searching ManagedEntity " + e.getName() + " for fname " + fName);
+                        if (e instanceof Folder && e.getName().equals(fName)) {
+                            nextFolder = (Folder) e;
+                            break;
+                        }
+                    }
+                    if (nextFolder == null) {
+                        throw new NotFound();
+                    }
+                    result = nextFolder;
+                    nextFolder = null;
+                }
+            }
+            if (result == null) {
+                throw new NotFound();
+            }
         }
 
         return result;

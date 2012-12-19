@@ -44,6 +44,7 @@ public class FolderTask extends SubTask implements Restorable {
     //**********************************************************************************************
     // INSTANCE
     //**********************************************************************************************
+    private Path datacenterPath = null;
     private Folder parentFolder = null;
     private Folder folder = null;
     private String folderName = null;
@@ -69,6 +70,11 @@ public class FolderTask extends SubTask implements Restorable {
     //----------------------------------------------------------------------------------------------
     public void setFolderName(String folderName) {
         this.folderName = folderName;
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    public void setDatacenterPath(Path datacenterPath){
+        this.datacenterPath = datacenterPath;
     }
 
     //----------------------------------------------------------------------------------------------
@@ -151,28 +157,63 @@ public class FolderTask extends SubTask implements Restorable {
     public Folder getFolderFromDatacenter(Path path)
     throws RemoteException {
         Folder result = null;
-        log.debug("dest path: " + path.toString());
         List<String> folderNames = path.getFolders().toList();
-        Datacenter datacenter = host.getDatacenter(path);
-
-        // traverse folders
-        result = datacenter.getVmFolder();
-        Folder nextFolder = null;
-        for (String fName : folderNames) {
-            for (ManagedEntity e : result.getChildEntity()) {
-                if (e instanceof Folder && e.getName().equals(fName)) {
-                    nextFolder = (Folder) e;
-                    break;
+        
+        //on restoration and destruction
+        if (datacenterPath == null) {
+            // traverse folders
+            result = host.getRootFolder();
+            Folder nextFolder = null;
+            for (String fName : folderNames) {
+                for (ManagedEntity e : result.getChildEntity()) {
+                    log.trace("Searching ManagedEntity " + e.getName() + " for fname " + fName);
+                    if (e instanceof Folder && e.getName().equals(fName)) {
+                        nextFolder = (Folder) e;
+                        break;
+                    }
+                    else if (e instanceof Datacenter && e.getName().equals(fName)) {
+                        Datacenter datacenter = (Datacenter) e;
+                        nextFolder = datacenter.getVmFolder();
+                        break;
+                    }
                 }
+                if (nextFolder == null) {
+                    throw new NotFound();
+                }
+                result = nextFolder;
+                    nextFolder = null;
             }
-            if (nextFolder == null) {
+            if (result == null) {
                 throw new NotFound();
             }
-            result = nextFolder;
-            nextFolder = null;
         }
-        if (result == null) {
-            throw new NotFound();
+        //on creation
+        else{
+            Datacenter datacenter = host.getDatacenterFromEnd(datacenterPath);
+            List<String> skippableFolders =  datacenterPath.toList();
+
+            // traverse folders
+            result = datacenter.getVmFolder();
+            Folder nextFolder = null;
+            for (String fName : folderNames) {
+                if (!skippableFolders.contains(fName)){
+                    for (ManagedEntity e : result.getChildEntity()) {
+                        log.trace("Searching ManagedEntity " + e.getName() + " for fname " + fName);
+                        if (e instanceof Folder && e.getName().equals(fName)) {
+                            nextFolder = (Folder) e;
+                            break;
+                        }
+                    }
+                    if (nextFolder == null) {
+                        throw new NotFound();
+                    }
+                    result = nextFolder;
+                    nextFolder = null;
+                }
+            }
+            if (result == null) {
+                throw new NotFound();
+            }
         }
 
         return result;

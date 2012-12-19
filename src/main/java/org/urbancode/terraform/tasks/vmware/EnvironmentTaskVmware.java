@@ -26,16 +26,16 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import org.apache.log4j.Logger;
-import org.urbancode.terraform.tasks.common.TerraformContext;
 import org.urbancode.terraform.tasks.common.EnvironmentTask;
-import com.urbancode.x2o.tasks.MultiThreadTask;
-import com.urbancode.x2o.tasks.RestorationException;
-
+import org.urbancode.terraform.tasks.common.TerraformContext;
 import org.urbancode.terraform.tasks.vmware.events.TaskEventService;
 import org.urbancode.terraform.tasks.vmware.util.GlobalIpAddressPool;
 import org.urbancode.terraform.tasks.vmware.util.IpAddressPool;
 import org.urbancode.terraform.tasks.vmware.util.Path;
 import org.urbancode.terraform.tasks.vmware.util.VirtualHost;
+
+import com.urbancode.x2o.tasks.MultiThreadTask;
+import com.urbancode.x2o.tasks.RestorationException;
 
 
 public class EnvironmentTaskVmware extends EnvironmentTask {
@@ -53,6 +53,7 @@ public class EnvironmentTaskVmware extends EnvironmentTask {
     private String folderName;
     private IpAddressPool ipPool;
 
+    private Path datacenterPath;
     private Path destPath;
     private Path hostPath;
     private Path datastorePath;
@@ -99,6 +100,11 @@ public class EnvironmentTaskVmware extends EnvironmentTask {
     //----------------------------------------------------------------------------------------------
     public String getFolderName() {
         return folderName;
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    protected Path fetchDatacenterPath(){
+        return this.datacenterPath;
     }
 
     //----------------------------------------------------------------------------------------------
@@ -169,7 +175,7 @@ public class EnvironmentTaskVmware extends EnvironmentTask {
 
     //----------------------------------------------------------------------------------------------
     public void setAllPaths(String datacenter, String hostName, String destination, String datastore) {
-        Path datacenterPath = new Path(datacenter);
+        datacenterPath = new Path(datacenter);
         hostPath = new Path(datacenterPath, hostName);
         destPath = new Path(datacenterPath, destination);
         datastorePath = new Path(datacenterPath, datastore);
@@ -178,6 +184,7 @@ public class EnvironmentTaskVmware extends EnvironmentTask {
     //----------------------------------------------------------------------------------------------
     public FolderTask createFolder() {
         this.folderTask = new FolderTask();
+        this.folderTask.setDatacenterPath(datacenterPath);
         this.folderTask.setDestPath(destPath);
         this.folderTask.setVirtualHost(host);
         return this.folderTask;

@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.apache.log4j.Logger;
+
 import com.vmware.vim25.NotFound;
 import com.vmware.vim25.VirtualDevice;
 import com.vmware.vim25.VirtualDeviceConfigSpec;
@@ -277,8 +278,46 @@ public class VirtualHost implements Serializable {
     throws RemoteException {
         ComputeResource result = null;
 
-        String hostName = path.getHostName();
-        Datacenter datacenter = getDatacenter(path);
+        String name = path.getName();
+        //Datacenter datacenter = getDatacenter(path);
+        Folder root = serviceInstance.getRootFolder();
+        //for (ManagedEntity e : datacenter.getHostFolder().getChildEntity()) {
+        Folder folderResult = root;
+        Folder nextFolder = null;
+        for (String fName : path.getFolders().toList()) {
+            for (ManagedEntity e : folderResult.getChildEntity()) {
+                log.trace("ManagedEntity " + e.getName() + " with type " + e.getClass() + " attempting to match " + name);
+                if (e instanceof ComputeResource && e.getName().equals(name)){
+                    result = (ComputeResource) e;
+                    break;
+                }
+                if (e instanceof Folder && e.getName().equals(fName)) {
+                    nextFolder = (Folder) e;
+                    break;
+                }
+                else if (e instanceof Datacenter && e.getName().equals(fName)) {
+                    Datacenter datacenter = (Datacenter) e;
+                    nextFolder = datacenter.getHostFolder();
+                    break;
+                }
+            }
+            folderResult = nextFolder;
+            nextFolder = null;
+        }
+        if (result == null) {
+            throw new NotFound();
+        }
+
+        return result;
+    }
+    /*
+    //----------------------------------------------------------------------------------------------
+    public ComputeResource getComputeResource(Path fullPath, Path partialPath, Path datacenterPartialPath)
+    throws RemoteException {
+        ComputeResource result = null;
+
+        String hostName = partialPath.getName();
+        Datacenter datacenter = getDatacenter(fullPath, datacenterPartialPath);
 
         for (ManagedEntity e : datacenter.getHostFolder().getChildEntity()) {
             if (e instanceof ComputeResource && e.getName().equals(hostName)) {
@@ -291,7 +330,7 @@ public class VirtualHost implements Serializable {
         }
 
         return result;
-    }
+    }*/
 
     //----------------------------------------------------------------------------------------------
     public Datacenter getDatacenter(Path path)
@@ -306,10 +345,44 @@ public class VirtualHost implements Serializable {
             }
         }
         if (result == null) {
-            log.warn("could not find datacenter on path " + path.toString());
+            log.warn("could not find datacenter at beginning of path " + path.toString());
             throw new NotFound();
         }
         return result;
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    public Datacenter getDatacenterFromEnd(Path path)
+    throws RemoteException {
+        Datacenter result = null;
+        String name = path.getName();
+        Folder folderResult = serviceInstance.getRootFolder();
+        Folder nextFolder = null;
+        for (String fName : path.getFolders().toList()) {
+            for (ManagedEntity e : folderResult.getChildEntity()) {
+                log.trace("ManagedEntity " + e.getName() + " with type " + e.getClass() + " attempting to match " + name);
+                if (e instanceof Datacenter && e.getName().equals(name)){
+                    result = (Datacenter) e;
+                    break;
+                }
+                if (e instanceof Folder && e.getName().equals(fName)) {
+                    nextFolder = (Folder) e;
+                    break;
+                }
+            }
+            folderResult = nextFolder;
+            nextFolder = null;
+        }
+        if (result == null) {
+            log.warn("could not find datacenter at end of path " + path.toString());
+            throw new NotFound();
+        }
+        return result;
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    public Folder getRootFolder() {
+        return serviceInstance.getRootFolder();
     }
 
 }

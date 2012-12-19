@@ -9,3 +9,4 @@ port-range=org.urbancode.terraform.tasks.vmware.PortRangeTask
 post-create-task=org.urbancode.terraform.tasks.vmware.RouterConfigPostCreateTask
 event-listener=org.urbancode.terraform.tasks.vmware.events.CloneVmCreatedEventListener
 command=org.urbancode.terraform.tasks.vmware.VmPostCreateTask
+copy-file=org.urbancode.terraform.tasks.vmware.CopyFileTask

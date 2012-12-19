@@ -94,14 +94,12 @@ public class ScriptTask extends BootActionSubTask {
     @Override
     public void create() {
         String taskData = "";
-
-        taskData += getShell() + " `wget " + getUrl() + "`";
+        taskData += "wget " + getUrl() + ";";
         if (getParams() != null && !getParams().isEmpty()) {
             for (ParamTask param : getParams()) {
                 taskData += " " + param.getValue();
             }
         }
-        taskData += "; \n";
         setCmds(taskData);
     }
 
