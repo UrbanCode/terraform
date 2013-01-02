@@ -50,11 +50,6 @@ public class VmPostCreateTask extends PostCreateTask {
     }
 
     //----------------------------------------------------------------------------------------------
-    public String getCmd() {
-        return cmd;
-    }
-
-    //----------------------------------------------------------------------------------------------
     private void parseAndRunCmd(String myCmd)
     throws IOException, InterruptedException {
         if (myCmd != null && !myCmd.isEmpty()) {
