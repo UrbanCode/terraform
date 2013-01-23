@@ -19,3 +19,4 @@ health-check=org.urbancode.terraform.tasks.aws.HealthCheckTask
 instance-ref=org.urbancode.terraform.tasks.aws.InstanceRefTask
 ec2-security-group=org.urbancode.terraform.tasks.aws.Ec2SecurityGroupTask
 vpc-security-group=org.urbancode.terraform.tasks.aws.VpcSecurityGroupTask
+route=org.urbancode.terraform.tasks.aws.RouteTask
