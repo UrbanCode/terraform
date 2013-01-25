@@ -36,6 +36,7 @@ import com.amazonaws.services.ec2.model.GroupIdentifier;
 import com.amazonaws.services.ec2.model.Image;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancing;
+import com.urbancode.x2o.tasks.Task;
 
 public class InstanceTask extends Task {
 
@@ -105,10 +106,14 @@ public class InstanceTask extends Task {
         String ip4RegEx = "[0-9][0-9]?[0-9]?\\.[0-9][0-9]?[0-9]?\\.[0-9][0-9]?[0-9]?\\.[0-9][0-9]?[0-9]?";
         Pattern ip4Pattern = Pattern.compile(ip4RegEx);
         Matcher ip4Matcher = ip4Pattern.matcher(privateIp);
-        if (!(ip4Matcher.find() && ip4Matcher.end() == privateIp.length())) {
-            throw new EnvironmentCreationException("Bad Private IP Address Format");
+        if (ip4Matcher.find() && ip4Matcher.end() == privateIp.length()) {
+            this.privateIp = privateIp;
         }
-        this.privateIp = privateIp;
+        else {
+            log.error("Invalid Private IP Address for instance " + this.getName());
+            this.privateIp = "";
+        }
+
     }
 
     //----------------------------------------------------------------------------------------------
