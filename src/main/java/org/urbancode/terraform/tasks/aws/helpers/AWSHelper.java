@@ -389,7 +389,7 @@ public class AWSHelper {
      */
     public String launchAmi(String amiId, String subnetId, String keyPair, String size,
             String userData, List<String> groups, List<BlockDeviceMapping> blockMaps,
-            String ariId, String akiId, String zone, AmazonEC2 ec2Client) {
+            String ariId, String akiId, String zone, String privateIp, AmazonEC2 ec2Client) {
         String instanceId = null;
         RunInstancesRequest request =  new RunInstancesRequest()
                                             .withImageId(amiId)
@@ -428,6 +428,9 @@ public class AWSHelper {
         }
         if (akiId != null && !akiId.isEmpty()) {
             request = request.withKernelId(akiId);
+        }
+        if (privateIp != null && !privateIp.isEmpty()) {
+            request = request.withPrivateIpAddress(privateIp);
         }
 
         RunInstancesResult result = ec2Client.runInstances(request);

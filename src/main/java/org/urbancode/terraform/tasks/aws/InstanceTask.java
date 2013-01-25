@@ -20,6 +20,8 @@ import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
 import org.urbancode.terraform.tasks.aws.helpers.AWSHelper;
@@ -34,7 +36,6 @@ import com.amazonaws.services.ec2.model.GroupIdentifier;
 import com.amazonaws.services.ec2.model.Image;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancing;
-import com.urbancode.x2o.tasks.Task;
 
 public class InstanceTask extends Task {
 
@@ -100,6 +101,13 @@ public class InstanceTask extends Task {
 
     //----------------------------------------------------------------------------------------------
     public void setPrivateIp(String privateIp) {
+
+        String ip4RegEx = "[0-9][0-9]?[0-9]?\\.[0-9][0-9]?[0-9]?\\.[0-9][0-9]?[0-9]?\\.[0-9][0-9]?[0-9]?";
+        Pattern ip4Pattern = Pattern.compile(ip4RegEx);
+        Matcher ip4Matcher = ip4Pattern.matcher(privateIp);
+        if (!(ip4Matcher.find() && ip4Matcher.end() == privateIp.length())) {
+            throw new EnvironmentCreationException("Bad Private IP Address Format");
+        }
         this.privateIp = privateIp;
     }
 
@@ -753,7 +761,7 @@ public class InstanceTask extends Task {
 
                 // launch the instance and set the Id
                 instanceId = helper.launchAmi(amiId, subnetId, keyPair, size, userData, groupIds,
-                        blockMaps, ariId, akiId, zone, ec2Client);
+                        blockMaps, ariId, akiId, zone, privateIp, ec2Client);
 
                 postStartup();
 
