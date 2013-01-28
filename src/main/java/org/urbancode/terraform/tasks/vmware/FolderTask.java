@@ -157,8 +157,7 @@ public class FolderTask extends SubTask implements Restorable {
     public Folder getFolderFromDatacenter(Path path)
     throws RemoteException {
         Folder result = null;
-        List<String> folderNames = path.getFolders().toList();
-        
+        List<String> folderNames = path.toList();
         //on restoration and destruction
         if (datacenterPath == null) {
             // traverse folders
@@ -188,7 +187,7 @@ public class FolderTask extends SubTask implements Restorable {
             }
         }
         //on creation
-        else{
+        else {
             Datacenter datacenter = host.getDatacenterFromEnd(datacenterPath);
             List<String> skippableFolders =  datacenterPath.toList();
 

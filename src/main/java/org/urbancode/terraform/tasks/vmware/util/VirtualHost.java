@@ -279,12 +279,11 @@ public class VirtualHost implements Serializable {
         ComputeResource result = null;
 
         String name = path.getName();
-        //Datacenter datacenter = getDatacenter(path);
         Folder root = serviceInstance.getRootFolder();
-        //for (ManagedEntity e : datacenter.getHostFolder().getChildEntity()) {
         Folder folderResult = root;
         Folder nextFolder = null;
-        for (String fName : path.getFolders().toList()) {
+        //fixed to accomodate datacenters on root folder, need to check if works for nonroot case
+        for (String fName : path.toList()) {
             for (ManagedEntity e : folderResult.getChildEntity()) {
                 log.trace("ManagedEntity " + e.getName() + " with type " + e.getClass() + " attempting to match " + name);
                 if (e instanceof ComputeResource && e.getName().equals(name)){
@@ -310,27 +309,6 @@ public class VirtualHost implements Serializable {
 
         return result;
     }
-    /*
-    //----------------------------------------------------------------------------------------------
-    public ComputeResource getComputeResource(Path fullPath, Path partialPath, Path datacenterPartialPath)
-    throws RemoteException {
-        ComputeResource result = null;
-
-        String hostName = partialPath.getName();
-        Datacenter datacenter = getDatacenter(fullPath, datacenterPartialPath);
-
-        for (ManagedEntity e : datacenter.getHostFolder().getChildEntity()) {
-            if (e instanceof ComputeResource && e.getName().equals(hostName)) {
-                result = (ComputeResource) e;
-                break;
-            }
-        }
-        if (result == null) {
-            throw new NotFound();
-        }
-
-        return result;
-    }*/
 
     //----------------------------------------------------------------------------------------------
     public Datacenter getDatacenter(Path path)
@@ -357,8 +335,10 @@ public class VirtualHost implements Serializable {
         Datacenter result = null;
         String name = path.getName();
         Folder folderResult = serviceInstance.getRootFolder();
+        
+        List<String> folderList = path.getFolders().toList();
         Folder nextFolder = null;
-        for (String fName : path.getFolders().toList()) {
+        for (String fName : folderList) {
             for (ManagedEntity e : folderResult.getChildEntity()) {
                 log.trace("ManagedEntity " + e.getName() + " with type " + e.getClass() + " attempting to match " + name);
                 if (e instanceof Datacenter && e.getName().equals(name)){
@@ -372,6 +352,15 @@ public class VirtualHost implements Serializable {
             }
             folderResult = nextFolder;
             nextFolder = null;
+        }
+        if (folderList.isEmpty()) {
+            for (ManagedEntity e : folderResult.getChildEntity()) {
+                log.trace("ManagedEntity " + e.getName() + " with type " + e.getClass() + " attempting to match " + name);
+                if (e instanceof Datacenter && e.getName().equals(name)){
+                    result = (Datacenter) e;
+                    break;
+                }
+            }
         }
         if (result == null) {
             log.warn("could not find datacenter at end of path " + path.toString());

@@ -562,7 +562,8 @@ public class CloneTask extends com.urbancode.x2o.tasks.SubTask implements Restor
         Folder result = null;
 
         VirtualHost host = environment.fetchVirtualHost();
-        List<String> folderNames = path.getFolders().toList();
+        //fixed to accomodate datacenters on root folder, need to check if works for nonroot case
+        List<String> folderNames = path.toList();
         Path datacenterPath = environment.fetchDatacenterPath();
 
         //on restoration and destruction
