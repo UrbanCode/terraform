@@ -42,14 +42,7 @@ set CRFILE=%3
 shift 
 shift
 shift
-
-set PROPERTIES=
-:getprops
-if "%~1" == "" goto startlaunch
-set PROPERTIES=%PROPERTIES% %~1
-
 shift
-goto getprops
 
 :startlaunch
 echo OPTION %OPTION%
@@ -61,7 +54,7 @@ goto displayhelp
 
 :launch
 echo "LAUNCHING"
-set TERRAFORM_COMMAND=%javacmd% -cp %CLASSPATH% "%main_class%" "%OPTION%" "%INFILE%" "%CRFILE%" "%PROPERTIES%"
+set TERRAFORM_COMMAND=%javacmd% -cp %CLASSPATH% "%main_class%" %*
 echo %TERRAFORM_COMMAND%
 %TERRAFORM_COMMAND%
 goto finished
