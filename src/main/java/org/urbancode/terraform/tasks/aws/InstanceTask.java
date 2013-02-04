@@ -768,6 +768,7 @@ public class InstanceTask extends Task {
                 instanceId = helper.launchAmi(amiId, subnetId, keyPair, size, userData, groupIds,
                         blockMaps, ariId, akiId, zone, privateIp, ec2Client);
 
+                Thread.sleep(1000);
                 postStartup();
 
                 // give instance elastic ip
