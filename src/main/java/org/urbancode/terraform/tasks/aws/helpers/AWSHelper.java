@@ -1507,6 +1507,12 @@ public class AWSHelper {
      * @param ec2Client
      */
     public void tagInstance(String instanceId, String tag, String value, AmazonEC2 ec2Client) {
+        //quick fix
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            // swallow
+        }
         CreateTagsRequest request = new CreateTagsRequest();
         request = request.withResources(instanceId)
                          .withTags(new Tag(tag, value));
