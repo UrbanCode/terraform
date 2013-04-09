@@ -147,7 +147,7 @@ public class DatabaseInstanceTask extends SubTask {
     private JSONObject pollForDatabaseStatus()
     throws IOException, JSONException {
         JSONObject result = null;
-        RestClient client = env.fetchContext().client;
+        RackspaceRestClient client = env.fetchContext().client;
         String uri = "https://" + client.encodePath(region) + ".databases.api.rackspacecloud.com/v1.0/" +
         client.encodePath(client.getTenantID()) + "/instances/" + client.encodePath(id);
         GetMethod method = new GetMethod(uri);
@@ -192,7 +192,7 @@ public class DatabaseInstanceTask extends SubTask {
     //----------------------------------------------------------------------------------------------
     private void createDbRestCall()
     throws JSONException, IOException {
-        RestClient client = env.fetchContext().client;
+        RackspaceRestClient client = env.fetchContext().client;
         String uri = "https://" + client.encodePath(region) + ".databases.api.rackspacecloud.com/v1.0/" +
         client.encodePath(client.getTenantID()) + "/instances";
         JSONObject data = new JSONObject();
@@ -247,7 +247,7 @@ public class DatabaseInstanceTask extends SubTask {
     //----------------------------------------------------------------------------------------------
     private void deleteDbRestCall()
     throws JSONException, IOException {
-        RestClient client = env.fetchContext().client;
+        RackspaceRestClient client = env.fetchContext().client;
         String uri = "https://" + client.encodePath(region) + ".databases.api.rackspacecloud.com/v1.0/" +
         client.encodePath(client.getTenantID()) + "/instances/" + client.encodePath(id);
 

@@ -136,7 +136,7 @@ public class LoadBalancerTask extends SubTask {
     //----------------------------------------------------------------------------------------------
     private void createLBRestCall()
     throws JSONException, IOException {
-        RestClient client = env.fetchContext().client;
+        RackspaceRestClient client = env.fetchContext().client;
         String uri = "https://" + client.encodePath(region) + ".loadbalancers.api.rackspacecloud.com/v1.0/" +
         client.encodePath(client.getTenantID()) + "/loadbalancers";
         JSONObject data = new JSONObject();
@@ -187,7 +187,7 @@ public class LoadBalancerTask extends SubTask {
     //----------------------------------------------------------------------------------------------
     private void deleteLBRestCall()
     throws JSONException, IOException {
-        RestClient client = env.fetchContext().client;
+        RackspaceRestClient client = env.fetchContext().client;
         String uri = "https://" + client.encodePath(region) + ".loadbalancers.api.rackspacecloud.com/v1.0/" +
         client.encodePath(client.getTenantID()) + "/loadbalancers/" + client.encodePath(id);
         DeleteMethod method = new DeleteMethod(uri);

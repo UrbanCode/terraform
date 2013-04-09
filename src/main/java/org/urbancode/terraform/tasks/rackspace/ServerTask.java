@@ -129,7 +129,7 @@ public class ServerTask extends SubTask {
     private String resolveImageIDForImageName(String imageName)
     throws IOException, JSONException {
         String result = null;
-        RestClient client = env.fetchContext().client;
+        RackspaceRestClient client = env.fetchContext().client;
         String uri = "https://" + client.encodePath(region) + ".servers.api.rackspacecloud.com/v2/" +
         client.encodePath(client.getTenantID()) + "/images/detail";
         GetMethod method = new GetMethod(uri);
@@ -164,7 +164,7 @@ public class ServerTask extends SubTask {
     private JSONObject pollForServerStatus()
     throws IOException, JSONException {
         JSONObject result = null;
-        RestClient client = env.fetchContext().client;
+        RackspaceRestClient client = env.fetchContext().client;
         String uri = "https://" + client.encodePath(region) + ".servers.api.rackspacecloud.com/v2/" +
         client.encodePath(client.getTenantID()) + "/servers/" + client.encodePath(id);
         GetMethod method = new GetMethod(uri);
@@ -212,7 +212,7 @@ public class ServerTask extends SubTask {
     //----------------------------------------------------------------------------------------------
     private void createServerRestCall(String imageId)
     throws JSONException, IOException {
-        RestClient client = env.fetchContext().client;
+        RackspaceRestClient client = env.fetchContext().client;
         String uri = "https://" + client.encodePath(region) + ".servers.api.rackspacecloud.com/v2/" +
         client.encodePath(client.getTenantID()) + "/servers";
         JSONObject data = new JSONObject();
@@ -248,7 +248,7 @@ public class ServerTask extends SubTask {
     //----------------------------------------------------------------------------------------------
     private void deleteServerRestCall()
     throws JSONException, IOException {
-        RestClient client = env.fetchContext().client;
+        RackspaceRestClient client = env.fetchContext().client;
         String uri = "https://" + client.encodePath(region) + ".servers.api.rackspacecloud.com/v2/" +
         client.encodePath(client.getTenantID()) + "/servers/" + client.encodePath(id);
         log.debug("deletion uri: " + uri);

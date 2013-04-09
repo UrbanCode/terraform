@@ -23,12 +23,12 @@ import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 
 
-public class RestClient {
+public class RackspaceRestClient {
 
     //**********************************************************************************************
     // CLASS
     //**********************************************************************************************
-    static private final Logger log = Logger.getLogger(RestClient.class);
+    static private final Logger log = Logger.getLogger(RackspaceRestClient.class);
 
     //**********************************************************************************************
     // INSTANCE
@@ -38,7 +38,7 @@ public class RestClient {
     private String tenantID = null;
 
     //----------------------------------------------------------------------------------------------
-    protected RestClient() {
+    protected RackspaceRestClient() {
         MultiThreadedHttpConnectionManager connectionManager =
                 new MultiThreadedHttpConnectionManager();
         httpClient = new HttpClient(connectionManager);

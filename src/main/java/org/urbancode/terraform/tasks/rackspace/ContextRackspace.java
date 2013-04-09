@@ -23,12 +23,12 @@ public class ContextRackspace implements TerraformContext {
     private EnvironmentTaskRackspace env;
     private PropertyResolver resolver;
     private CredentialsRackspace creds;
-    protected RestClient client;
+    protected RackspaceRestClient client;
 
     //----------------------------------------------------------------------------------------------
     @Override
     public void create() throws CreationException {
-        client = new RestClient();
+        client = new RackspaceRestClient();
         try {
             client.authenticate(creds.getUser(), creds.getApiKey());
             env.create();
@@ -42,7 +42,7 @@ public class ContextRackspace implements TerraformContext {
     //----------------------------------------------------------------------------------------------
     @Override
     public void destroy() throws DestructionException {
-        client = new RestClient();
+        client = new RackspaceRestClient();
         try {
             client.authenticate(creds.getUser(), creds.getApiKey());
             env.destroy();
