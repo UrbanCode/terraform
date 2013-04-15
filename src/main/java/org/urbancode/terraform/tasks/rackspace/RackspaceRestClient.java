@@ -96,11 +96,6 @@ public class RackspaceRestClient {
     }
 
     //----------------------------------------------------------------------------------------------
-    public String sendRESTCall(String region, String subdomain, String uri, String headers, String body) {
-        return null;
-    }
-
-    //----------------------------------------------------------------------------------------------
     protected String getBody(HttpMethodBase method)
     throws IOException {
         StringBuilder builder = new StringBuilder();
