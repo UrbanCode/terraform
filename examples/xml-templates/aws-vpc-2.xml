@@ -1,4 +1,4 @@
-<context xmlns="org.urbancode.terraform.tasks.aws" >
+<context xmlns="com.urbancode.terraform.tasks.aws" >
   <environment name="durr" >
     <vpc cidr="192.168.1.0/16">
       <subnet name="myHouse" zone="us-east-1d" cidr="192.168.2.0/24" />

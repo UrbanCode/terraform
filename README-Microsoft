@@ -17,7 +17,7 @@ destroy - deletes a previously created environment
   Your credentials file must have this format, but the property values for
   name, username, and password can be anything.
   
-  type=org.urbancode.terraform.credentials.microsoft.CredentialsMicrosoft
+  type=com.urbancode.terraform.credentials.microsoft.CredentialsMicrosoft
   name=my.azure.creds
   username=asdf
   password=jkl

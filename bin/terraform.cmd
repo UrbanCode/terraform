@@ -8,7 +8,7 @@ goto start
 :start
 set javacmd=java
 
-set main_class=org.urbancode.terraform.main.Main
+set main_class=com.urbancode.terraform.main.Main
 
 set currdir=%cd%
 set SCRIPT_HOME="%~dp0"

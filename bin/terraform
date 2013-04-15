@@ -13,9 +13,9 @@ javacmd="java"
 INPUT_FILE=$2
 CREDS=$3
 
-create_class=org.urbancode.terraform.main.Main
-destroy_class=org.urbancode.terraform.main.Main
-restore_class=org.urbancode.terraform.main.Main
+create_class=com.urbancode.terraform.main.Main
+destroy_class=com.urbancode.terraform.main.Main
+restore_class=com.urbancode.terraform.main.Main
 
 # set TERRAFORM_HOME
 SHELL_NAME=$0

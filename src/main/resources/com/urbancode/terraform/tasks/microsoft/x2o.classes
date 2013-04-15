@@ -1,0 +1,4 @@
+context=com.urbancode.terraform.tasks.microsoft.ContextMicrosoft
+environment=com.urbancode.terraform.tasks.microsoft.EnvironmentTaskMicrosoft
+vm=com.urbancode.terraform.tasks.microsoft.VMTask
+endpoint=com.urbancode.terraform.tasks.microsoft.EndpointTask

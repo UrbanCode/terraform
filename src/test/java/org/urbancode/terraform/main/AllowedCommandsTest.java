@@ -4,6 +4,8 @@ import junit.framework.Assert;
 
 import org.junit.Test;
 
+import com.urbancode.terraform.main.AllowedCommands;
+
 public class AllowedCommandsTest {
 
     //**********************************************************************************************

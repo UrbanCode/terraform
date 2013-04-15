@@ -1,0 +1,8 @@
+context=com.urbancode.terraform.tasks.rackspace.ContextRackspace
+environment=com.urbancode.terraform.tasks.rackspace.EnvironmentTaskRackspace
+server=com.urbancode.terraform.tasks.rackspace.ServerTask
+load-balancer=com.urbancode.terraform.tasks.rackspace.LoadBalancerTask
+node=com.urbancode.terraform.tasks.rackspace.LoadBalancerNodeTask
+database-instance=com.urbancode.terraform.tasks.rackspace.DatabaseInstanceTask
+database=com.urbancode.terraform.tasks.rackspace.DatabaseTask
+user=com.urbancode.terraform.tasks.rackspace.DatabaseUserTask

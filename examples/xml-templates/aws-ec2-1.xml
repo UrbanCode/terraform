@@ -5,7 +5,7 @@ This is an Environment Template used to create an environment with Amazon Web Se
 -->
 
 <!-- The context points to what Tasks to use for each element of the template-->
-<context xmlns="org.urbancode.terraform.tasks.aws" >
+<context xmlns="com.urbancode.terraform.tasks.aws" >
   <!-- The name of your instances will be prefixed with your environment name-->
   <environment name="durr" >
     <!-- This is an instance to launch. It has a name, an Amazon Machine Image. 

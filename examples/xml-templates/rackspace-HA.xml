@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <context
-xmlns="org.urbancode.terraform.tasks.rackspace">
+xmlns="com.urbancode.terraform.tasks.rackspace">
     <environment 
     name="SIT-env">
       <server name="app-server" append-suffix="true" region="ORD" flavor="2GB" image="8bf22129-8483-462b-a020-1754ec822770"/>

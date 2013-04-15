@@ -3,8 +3,9 @@ package org.urbancode.terraform.tasks.util;
 import java.net.URL;
 
 import org.junit.Test;
-import org.urbancode.terraform.tasks.vmware.util.GlobalIpAddressPool;
-import org.urbancode.terraform.tasks.vmware.util.IpAddressPool;
+
+import com.urbancode.terraform.tasks.vmware.util.GlobalIpAddressPool;
+import com.urbancode.terraform.tasks.vmware.util.IpAddressPool;
 
 public class GlobalIpPoolTest {
 

@@ -68,7 +68,7 @@ snapshot - take a snapshot of all VMs in the environment.
   element under the context:
 
   <context
-  xmlns="org.urbancode.terraform.tasks.vmware">
+  xmlns="com.urbancode.terraform.tasks.vmware">
       <environment 
       name="terra-env" 
       folder-name="terra-folder">
@@ -191,7 +191,7 @@ snapshot - take a snapshot of all VMs in the environment.
   
   <?xml version="1.0" encoding="UTF-8"?>
   <context
-  xmlns="org.urbancode.terraform.tasks.vmware">
+  xmlns="com.urbancode.terraform.tasks.vmware">
       <environment 
       name="terra-env" 
       folder-name="terra-folder">
@@ -245,13 +245,13 @@ snapshot - take a snapshot of all VMs in the environment.
   The name of the element is: <chef:post-create-task>. It goes inside a clone element.
   You must have this namespace in your context element:
   
-    xmlns:chef="org.urbancode.terraform.tasks.vmware.chef"
+    xmlns:chef="com.urbancode.terraform.tasks.vmware.chef"
     
   So for example, your opening context tag might look like this:
     
     <context
-    xmlns="org.urbancode.terraform.tasks.vmware"
-    xmlns:chef="org.urbancode.terraform.tasks.vmware.chef">
+    xmlns="com.urbancode.terraform.tasks.vmware"
+    xmlns:chef="com.urbancode.terraform.tasks.vmware.chef">
   
   This task will:
     1. check if Chef is installed, and if not, install it
@@ -334,7 +334,7 @@ snapshot - take a snapshot of all VMs in the environment.
   Example file - creds-example.key
   Contents:
 
-  type=org.urbancode.terraform.credentials.vmware.CredentialsVmware
+  type=com.urbancode.terraform.credentials.vmware.CredentialsVmware
   name=my.vmware.creds
   username=my-vcenter-user
   password=my-vcenter-password

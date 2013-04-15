@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <context
-xmlns="org.urbancode.terraform.tasks.vmware">
+xmlns="com.urbancode.terraform.tasks.vmware">
     <!-- This creates an environment with a router, app server, and db server on a private network-->
     <environment 
     name="my-environment" 

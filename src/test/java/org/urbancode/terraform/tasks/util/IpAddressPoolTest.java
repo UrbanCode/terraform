@@ -2,9 +2,10 @@ package org.urbancode.terraform.tasks.util;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.urbancode.terraform.tasks.vmware.util.Ip4;
-import org.urbancode.terraform.tasks.vmware.util.IpAddressPool;
-import org.urbancode.terraform.tasks.vmware.util.IpInUseException;
+
+import com.urbancode.terraform.tasks.vmware.util.Ip4;
+import com.urbancode.terraform.tasks.vmware.util.IpAddressPool;
+import com.urbancode.terraform.tasks.vmware.util.IpInUseException;
 
 public class IpAddressPoolTest {
 
