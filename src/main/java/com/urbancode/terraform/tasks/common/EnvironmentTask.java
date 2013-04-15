@@ -24,7 +24,7 @@ import com.urbancode.x2o.tasks.Restorable;
 import com.urbancode.x2o.tasks.Task;
 
 
-public class EnvironmentTask extends Task implements Restorable {
+public abstract class EnvironmentTask extends Task implements Restorable {
 
     //**********************************************************************************************
     // CLASS
@@ -106,7 +106,6 @@ public class EnvironmentTask extends Task implements Restorable {
 
     //----------------------------------------------------------------------------------------------
     /**
-     * this is sort of a temporary solution right now to ensure deletion of temporary folders
      * @param suffix - a unique string (we expect this to be 4 base 62 characters, eg. 8ZeJ)
      */
     public void setSuffix(String suffix) {
@@ -137,25 +136,19 @@ public class EnvironmentTask extends Task implements Restorable {
      * Creates the defined environment and all sub-objects it includes.
      */
     @Override
-    public void create()
-    throws EnvironmentCreationException {
-    }
+    public abstract void create() throws EnvironmentCreationException;
 
     //----------------------------------------------------------------------------------------------
     /**
      * Restore the defined environment and all sub-objects it includes.
      */
     @Override
-    public void restore()
-    throws EnvironmentRestorationException {
-    }
+    public abstract void restore() throws EnvironmentRestorationException;
 
     //----------------------------------------------------------------------------------------------
     /**
      * Destroys the whole environment, including all sub-objects.
      */
     @Override
-    public void destroy()
-    throws EnvironmentDestructionException {
-    }
+    public abstract void destroy() throws EnvironmentDestructionException;
 }

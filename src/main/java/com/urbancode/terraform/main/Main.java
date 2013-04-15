@@ -33,6 +33,9 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.xml.sax.SAXException;
 
 import com.urbancode.terraform.commands.vmware.ResumeCommand;
 import com.urbancode.terraform.commands.vmware.SuspendCommand;
@@ -47,6 +50,8 @@ import com.urbancode.terraform.credentials.microsoft.CredentialsMicrosoft;
 import com.urbancode.terraform.credentials.microsoft.CredentialsParserMicrosoft;
 import com.urbancode.terraform.credentials.rackspace.CredentialsParserRackspace;
 import com.urbancode.terraform.credentials.rackspace.CredentialsRackspace;
+import com.urbancode.terraform.credentials.vcloud.CredentialsParserVCloud;
+import com.urbancode.terraform.credentials.vcloud.CredentialsVCloud;
 import com.urbancode.terraform.credentials.vmware.CredentialsParserVmware;
 import com.urbancode.terraform.credentials.vmware.CredentialsVmware;
 import com.urbancode.terraform.tasks.aws.ContextAWS;
@@ -57,10 +62,9 @@ import com.urbancode.x2o.tasks.DestructionException;
 import com.urbancode.x2o.tasks.RestorationException;
 import com.urbancode.x2o.util.Property;
 import com.urbancode.x2o.util.PropertyResolver;
-import com.urbancode.x2o.xml.*;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.xml.sax.SAXException;
+import com.urbancode.x2o.xml.XmlModelParser;
+import com.urbancode.x2o.xml.XmlParsingException;
+import com.urbancode.x2o.xml.XmlWrite;
 
 
 public class Main {
@@ -453,6 +457,7 @@ public class Main {
         CredentialsParserRegistry.getInstance().register(CredentialsVmware.class.getName(), CredentialsParserVmware.class);
         CredentialsParserRegistry.getInstance().register(CredentialsMicrosoft.class.getName(), CredentialsParserMicrosoft.class);
         CredentialsParserRegistry.getInstance().register(CredentialsRackspace.class.getName(), CredentialsParserRackspace.class);
+        CredentialsParserRegistry.getInstance().register(CredentialsVCloud.class.getName(), CredentialsParserVCloud.class);
     }
 
     //----------------------------------------------------------------------------------------------

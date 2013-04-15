@@ -1,0 +1,9 @@
+context=com.urbancode.terraform.tasks.vcloud.ContextVCloud
+environment=com.urbancode.terraform.tasks.vcloud.EnvironmentTaskVCloud
+v-app=com.urbancode.terraform.tasks.vcloud.VAppTask
+vm=com.urbancode.terraform.tasks.vcloud.VMTask
+network=com.urbancode.terraform.tasks.vcloud.NetworkTask
+firewall-rule=com.urbancode.terraform.tasks.vcloud.FirewallRuleTask
+nat-rule=com.urbancode.terraform.tasks.vcloud.NATRuleTask
+dhcp=com.urbancode.terraform.tasks.vcloud.DHCPTask
+static-routing=com.urbancode.terraform.tasks.vcloud.StaticRoutingTask
