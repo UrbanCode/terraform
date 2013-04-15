@@ -1,12 +1,11 @@
-package org.urbancode.terraform.main;
+package com.urbancode.terraform.credentials.microsoft;
 
-import junit.framework.Assert;
+import java.util.Properties;
 
-import org.junit.Test;
+import com.urbancode.terraform.credentials.common.Credentials;
+import com.urbancode.terraform.credentials.common.CredentialsParser;
 
-import com.urbancode.terraform.main.AllowedCommands;
-
-public class AllowedCommandsTest {
+public class CredentialsParserMicrosoft extends CredentialsParser {
 
     //**********************************************************************************************
     // CLASS
@@ -17,9 +16,9 @@ public class AllowedCommandsTest {
     //**********************************************************************************************
 
     //----------------------------------------------------------------------------------------------
-    @Test
-    public void testEnum() {
-        String create = "create";
-        Assert.assertEquals(true, AllowedCommands.contains(create));
+    @Override
+    public Credentials parse(Properties props) {
+        return new CredentialsMicrosoft("", "", "");
     }
+
 }

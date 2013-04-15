@@ -1,13 +1,8 @@
-package org.urbancode.terraform.main;
+package com.urbancode.terraform.credentials.rackspace;
 
-import junit.framework.Assert;
+import com.urbancode.terraform.credentials.common.Credentials;
 
-import org.junit.Test;
-
-import com.urbancode.terraform.main.AllowedCommands;
-
-public class AllowedCommandsTest {
-
+public class CredentialsRackspace extends Credentials {
     //**********************************************************************************************
     // CLASS
     //**********************************************************************************************
@@ -15,11 +10,16 @@ public class AllowedCommandsTest {
     //**********************************************************************************************
     // INSTANCE
     //**********************************************************************************************
+    private String apiKey;
 
     //----------------------------------------------------------------------------------------------
-    @Test
-    public void testEnum() {
-        String create = "create";
-        Assert.assertEquals(true, AllowedCommands.contains(create));
+    public CredentialsRackspace(String name, String username, String password, String apiKey) {
+        super(name, username, password);
+        this.apiKey = apiKey;
+    }
+
+    //----------------------------------------------------------------------------------------------
+    public String getApiKey() {
+        return apiKey;
     }
 }

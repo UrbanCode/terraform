@@ -1,12 +1,6 @@
-package org.urbancode.terraform.main;
+package com.urbancode.terraform.commands.common;
 
-import junit.framework.Assert;
-
-import org.junit.Test;
-
-import com.urbancode.terraform.main.AllowedCommands;
-
-public class AllowedCommandsTest {
+public interface Command {
 
     //**********************************************************************************************
     // CLASS
@@ -16,10 +10,5 @@ public class AllowedCommandsTest {
     // INSTANCE
     //**********************************************************************************************
 
-    //----------------------------------------------------------------------------------------------
-    @Test
-    public void testEnum() {
-        String create = "create";
-        Assert.assertEquals(true, AllowedCommands.contains(create));
-    }
+    public void execute() throws CommandException;
 }
