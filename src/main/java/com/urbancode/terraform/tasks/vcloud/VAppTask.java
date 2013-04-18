@@ -1,10 +1,34 @@
 package com.urbancode.terraform.tasks.vcloud;
 
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.log4j.Logger;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpression;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
 
+import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
+
+import com.savvis.sdk.oauth.connections.HttpApiResponse;
 import com.urbancode.x2o.tasks.SubTask;
 
 public class VAppTask extends SubTask {
@@ -21,6 +45,9 @@ public class VAppTask extends SubTask {
     private List<VMTask> vmTasks = new ArrayList<VMTask>();
     
     private String name;
+    private String templateId;
+    private String description;
+    private String id;
     
     //----------------------------------------------------------------------------------------------
     public VAppTask(EnvironmentTaskVCloud env) {
@@ -39,8 +66,38 @@ public class VAppTask extends SubTask {
     }
     
     //----------------------------------------------------------------------------------------------
+    public String getDescription() {
+        return description;
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    public String getId() {
+        return id;
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    public String getTemplateId() { 
+        return templateId;
+    }
+    
+    //----------------------------------------------------------------------------------------------
     public void setName(String name) {
         this.name = name;
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    public void setDescription(String description) {
+        this.description = description;
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    public void setTemplateId(String templateId) {
+        this.templateId = templateId;
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    public void setId(String id) {
+        this.id = id;
     }
     
     //----------------------------------------------------------------------------------------------
@@ -53,9 +110,18 @@ public class VAppTask extends SubTask {
     //----------------------------------------------------------------------------------------------
     @Override
     public void create() throws Exception {
+        String suffixString = "-" + env.fetchSuffix();
+        name = name.contains(suffixString) ? name : name + suffixString;
         for (VMTask vmTask : vmTasks) {
             vmTask.create();
         }
+        String requestBody = generateCreateRequest();
+        String contentType = "application/vnd.vmware.vcloud.instantiateVAppTemplateParams+xml";
+        String urlSuffix = "/vdc/" + env.getVcdId() + "/action/instantiateVAppTemplate";
+        HttpApiResponse response = SavvisClient.getInstance().makeApiCallWithSuffix(urlSuffix, 
+                SavvisClient.POST_METHOD, requestBody, contentType);
+        log.debug("response: " + response.getResponseString());
+        id = findHref(response.getResponseString());
     }
 
     //----------------------------------------------------------------------------------------------
@@ -64,6 +130,191 @@ public class VAppTask extends SubTask {
         for (VMTask vmTask : vmTasks) {
             vmTask.destroy();
         }
+        HttpApiResponse response = SavvisClient.getInstance().makeApiCallWithSuffix("/vApp/" + id, 
+                SavvisClient.GET_METHOD, "", "");
+        log.trace("response: " + response.getResponseString());
+        
+        response = SavvisClient.getInstance().makeApiCallWithSuffix("/vApp/" + id + "/action/undeploy", 
+                SavvisClient.POST_METHOD, undeployBody(), "application/vnd.vmware.vcloud.undeployVAppParams+xml");
+        log.trace("response: " + response.getResponseString());
+        
+        log.trace("Waiting for undeployment.");
+        Thread.sleep(60000);
+        
+        response = SavvisClient.getInstance().makeApiCallWithSuffix("/vApp/" + id, 
+                SavvisClient.DELETE_METHOD, "", "");
+        log.trace("response: " + response.getResponseString());
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    public String generateCreateRequest() 
+    throws ParserConfigurationException, TransformerException {
+        DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+        Document resultDoc = dBuilder.newDocument();
+        resultDoc.setXmlVersion("1.0");
+        Element root = resultDoc.createElement("InstantiateVAppTemplateParams");
+        resultDoc.appendChild(root);
+        root.setAttribute("xmlns", "http://www.vmware.com/vcloud/v1.5");
+        root.setAttribute("name", name);
+        root.setAttribute("deploy", String.valueOf(true));
+        root.setAttribute("powerOn", String.valueOf(true));
+        root.setAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
+        root.setAttribute("xmlns:ovf", "http://schemas.dmtf.org/ovf/envelope/1");
+        
+        if (!StringUtils.isEmpty(description)) {
+            Element descriptionElement = resultDoc.createElement("Description");
+            descriptionElement.setTextContent(description);
+            root.appendChild(descriptionElement);
+        }
+        
+        /*Element params = resultDoc.createElement("InstantiationParams");
+        
+        Document templateDoc = fetchvAppTemplate();
+        Node networkConfigSection = null;
+        try {
+            networkConfigSection = getNetworkConfigForTemplate(templateDoc);
+            log.info(networkConfigSection.toString());
+        } catch (XPathExpressionException e) {
+            log.error(e);
+        }
+        
+        params.appendChild(resultDoc.importNode(networkConfigSection, true));
+        root.appendChild(params);*/
+        
+        Element source = resultDoc.createElement("Source");
+        String baseUrl = SavvisClient.getInstance().getCredentials().getApiBaseLocation();
+        String cleanTemplateId = cleanTemplateId();
+        source.setAttribute("href", baseUrl + "/vAppTemplate/" + cleanTemplateId);
+        root.appendChild(source);
+        
+        Element eulas = resultDoc.createElement("AllEULAsAccepted");
+        eulas.setTextContent(String.valueOf(true));
+        root.appendChild(eulas);
+        
+        TransformerFactory tf = TransformerFactory.newInstance();
+        Transformer transformer = tf.newTransformer();
+        StringWriter writer = new StringWriter();
+        transformer.transform(new DOMSource(resultDoc), new StreamResult(writer));
+        String result = writer.getBuffer().toString().replaceAll("\n|\r", "");
+        log.trace(result);
+        
+        return result;
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    private String findHref(String vAppBody) throws XPathExpressionException {
+        String result;
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder builder;
+        Document doc = null;
+        try {
+            builder = factory.newDocumentBuilder();
+            doc = builder.parse(new InputSource(new StringReader(vAppBody)));
+        } 
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+        XPath xpath = XPathFactory.newInstance().newXPath();
+        XPathExpression networkQuery = xpath.compile("/VApp/@href");
+        Object preResult = networkQuery.evaluate(doc, XPathConstants.STRING);
+        if (preResult == null) {
+            throw new XPathExpressionException("The vApp link could not be found.");
+        }
+        String href = (String) preResult;
+        result = href.substring(href.indexOf("vapp-"));
+        return result;
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    private Node getNetworkConfigForTemplate(Document templateDoc) 
+    throws XPathExpressionException {
+        Node result;
+        XPath xpath = XPathFactory.newInstance().newXPath();
+        XPathExpression networkQuery = xpath.compile("//NetworkConfigSection");
+        Object preResult = networkQuery.evaluate(templateDoc, XPathConstants.NODE);
+        if (preResult == null) {
+            throw new XPathExpressionException("The network config node could not be found.");
+        }
+        System.out.println("pre result class: " + preResult.getClass().getCanonicalName());
+        result = (Node) preResult;
+        System.out.println("------DIAGNOSTICS--------");
+        System.out.println("node name: " + result.getNodeName());
+        System.out.println("child nodes? " + result.hasChildNodes());
+        NodeList children = result.getChildNodes();
+        for (int i=0; i<children.getLength(); i++) {
+            System.out.println("child node: " + children.item(i).getNodeName());
+        }
+        System.out.println("final class: " + result.getClass().getCanonicalName());
+        return result;
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    private Document fetchvAppTemplate(String templateToFetch) {
+        Document result = null;
+        HttpApiResponse response = SavvisClient.getInstance().makeApiCallWithSuffix(
+                "/vAppTemplate/" + templateToFetch, 
+                SavvisClient.GET_METHOD, "", "");
+        String responseBody = response.getResponseString();
+        
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder builder;
+        try {
+            builder = factory.newDocumentBuilder();
+            result = builder.parse(new InputSource(new StringReader(responseBody)));
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+        return result;
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    private String cleanTemplateId() {
+        String cleanTemplateId = templateId;
+        if (!cleanTemplateId.contains("vappTemplate")) {
+            cleanTemplateId = "vappTemplate-" + cleanTemplateId;
+        }
+        return cleanTemplateId;
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    private String undeployBody() {
+        String result = "";
+        Document doc = null;
+        
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        try {
+            doc = factory.newDocumentBuilder().newDocument();
+        } catch (ParserConfigurationException e) {
+            log.error(e);
+        }
+        
+        Element undeployParams = doc.createElement("UndeployVAppParams");
+        undeployParams.setAttribute("xmlns", "http://www.vmware.com/vcloud/v1.5");
+        Element undeployAction = doc.createElement("UndeployPowerAction");
+        undeployAction.setTextContent("powerOff");
+        undeployParams.appendChild(undeployAction);
+        doc.appendChild(undeployParams);
+        
+        TransformerFactory tf = TransformerFactory.newInstance();
+        Transformer transformer;
+        try {
+            transformer = tf.newTransformer();
+            StringWriter writer = new StringWriter();
+            transformer.transform(new DOMSource(doc), new StreamResult(writer));
+            result = writer.getBuffer().toString().replaceAll("\n|\r", "");
+        } 
+        catch (TransformerConfigurationException e) {
+            log.error(e);
+        } 
+        catch (TransformerException e) {
+            log.error(e);
+        }
+        log.trace("sending undeploy body: " + result);
+        return result;
     }
 
 }

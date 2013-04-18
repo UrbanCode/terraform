@@ -22,7 +22,9 @@ public class NetworkTask extends SubTask {
     private DHCPTask dhcpTask;
     private StaticRoutingTask staticRoutingTask;
     
-    String networkName;
+    private String networkName;
+    private String href;
+    private String fenceMode;
     
     //----------------------------------------------------------------------------------------------
     public List<FirewallRuleTask> getFirewallRuleTasks() {
@@ -50,8 +52,28 @@ public class NetworkTask extends SubTask {
     }
     
     //----------------------------------------------------------------------------------------------
+    public String getHref() {
+        return href;
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    public String getFenceMode() {
+        return fenceMode;
+    }
+    
+    //----------------------------------------------------------------------------------------------
     public void setNetworkName(String networkName) {
         this.networkName = networkName;
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    public void setHref(String href) {
+        this.href = href;
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    public void setFenceMode(String fenceMode) {
+        this.fenceMode = fenceMode;
     }
     
     //----------------------------------------------------------------------------------------------

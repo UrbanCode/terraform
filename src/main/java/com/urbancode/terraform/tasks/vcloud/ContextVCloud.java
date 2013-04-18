@@ -24,7 +24,6 @@ public class ContextVCloud implements TerraformContext {
     private EnvironmentTaskVCloud env;
     private PropertyResolver resolver;
     private CredentialsVCloud creds;
-    private SavvisClient client;
 
     //----------------------------------------------------------------------------------------------
     @Override
@@ -68,7 +67,7 @@ public class ContextVCloud implements TerraformContext {
     public void setCredentials(Credentials creds)
             throws CredentialsException {
         this.creds = (CredentialsVCloud) creds;
-        this.client = new SavvisClient(this.creds);
+        SavvisClient.getInstance().setCredentials(this.creds);
     }
 
     //----------------------------------------------------------------------------------------------
@@ -84,8 +83,9 @@ public class ContextVCloud implements TerraformContext {
     }
     
     //----------------------------------------------------------------------------------------------
-    public SavvisClient fetchClient() {
-        return client;
+    public EnvironmentTaskVCloud createEnvironment() {
+        this.env = new EnvironmentTaskVCloud(this);
+        return this.env;
     }
-
+    
 }

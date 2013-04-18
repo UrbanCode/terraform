@@ -24,6 +24,8 @@ public class EnvironmentTaskVCloud extends EnvironmentTask {
     //**********************************************************************************************
     private List<VAppTask> vAppTasks = new ArrayList<VAppTask>();
     
+    private String vdcId;
+    
     //----------------------------------------------------------------------------------------------
     public EnvironmentTaskVCloud(TerraformContext context) {
         super(context);
@@ -32,6 +34,16 @@ public class EnvironmentTaskVCloud extends EnvironmentTask {
     //----------------------------------------------------------------------------------------------
     public List<VAppTask> getVAppTasks() {
         return vAppTasks;
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    public String getVcdId() {
+        return vdcId;
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    public void setVcdId(String vdcId) {
+        this.vdcId = vdcId;
     }
     
     //----------------------------------------------------------------------------------------------
