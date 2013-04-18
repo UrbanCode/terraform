@@ -32,9 +32,8 @@ import com.urbancode.terraform.tasks.common.exceptions.EnvironmentCreationExcept
 import com.urbancode.terraform.tasks.common.exceptions.EnvironmentDestructionException;
 import com.urbancode.terraform.tasks.common.exceptions.EnvironmentRestorationException;
 import com.urbancode.x2o.tasks.CreationException;
-import com.urbancode.x2o.util.PropertyResolver;
 
-public class ContextAWS implements TerraformContext {
+public class ContextAWS extends TerraformContext {
 
     //**********************************************************************************************
     // CLASS
@@ -52,7 +51,6 @@ public class ContextAWS implements TerraformContext {
     private CredentialsAWS credentials;
     private EnvironmentTaskAWS environment;
 
-    private PropertyResolver resolver;
 
     //----------------------------------------------------------------------------------------------
     /**
@@ -62,12 +60,6 @@ public class ContextAWS implements TerraformContext {
     public ContextAWS() {
         environment = null;
         helper = new AWSHelper();
-    }
-
-    //----------------------------------------------------------------------------------------------
-    @Override
-    public void setProperty(String name, String value) {
-        resolver.setProperty(name, value);
     }
 
     //----------------------------------------------------------------------------------------------
@@ -137,28 +129,6 @@ public class ContextAWS implements TerraformContext {
     public EnvironmentTaskAWS createEnvironment() {
         environment = new EnvironmentTaskAWS(this);
         return environment;
-    }
-
-    //----------------------------------------------------------------------------------------------
-    /**
-     * A property is declared with ${}  (e.g.  ${server.name} )
-     *
-     * @param toResolve - The string to be ran through the resolver
-     *
-     * @return the same string as the input, but with all properties resolved
-     */
-    @Override
-    public String resolve(String toResolve) {
-        return resolver.resolve(toResolve);
-    }
-
-    //----------------------------------------------------------------------------------------------
-    /**
-     * @param resolver - The property resolver to use for this Context
-     */
-    @Override
-    public void setResolver(PropertyResolver resolver) {
-        this.resolver = resolver;
     }
 
     //----------------------------------------------------------------------------------------------

@@ -20,7 +20,6 @@ import java.io.IOException;
 import org.apache.log4j.Logger;
 
 import com.urbancode.terraform.tasks.vmware.CloneTask;
-import com.urbancode.terraform.tasks.vmware.ContextVmware;
 import com.urbancode.terraform.tasks.vmware.PostCreateTask;
 
 
@@ -34,7 +33,6 @@ public class UDAgentPostCreateTask extends PostCreateTask {
     //**********************************************************************************************
     // INSTANCE
     //**********************************************************************************************
-    private ContextVmware context;
     private String agentPath = "/opt/urbandeploy/agent";
     private String agentName = null;
     private String udHost = null;
@@ -94,7 +92,6 @@ public class UDAgentPostCreateTask extends PostCreateTask {
     //----------------------------------------------------------------------------------------------
     @Override
     public void create() {
-        this.context = (ContextVmware) environment.fetchContext();
         this.vmToConfig = cloneTask.fetchVm();
 
         try {
@@ -114,7 +111,6 @@ public class UDAgentPostCreateTask extends PostCreateTask {
     //----------------------------------------------------------------------------------------------
     @Override
     public void destroy() {
-        this.context = (ContextVmware) environment.fetchContext();
         this.vmToConfig = cloneTask.fetchVm();
         try {
             runCommand(vmUser, vmPassword, "runProgramInGuest", "/bin/sh",

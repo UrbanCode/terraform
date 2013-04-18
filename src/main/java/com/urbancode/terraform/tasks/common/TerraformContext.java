@@ -22,20 +22,42 @@ import com.urbancode.x2o.tasks.Context;
 import com.urbancode.x2o.util.PropertyResolver;
 
 
-public interface TerraformContext extends Context{
+public abstract class TerraformContext implements Context {
+    //**********************************************************************************************
+    // CLASS
+    //**********************************************************************************************
+
+    //**********************************************************************************************
+    // INSTANCE
+    //**********************************************************************************************
+    protected PropertyResolver resolver;
 
     //----------------------------------------------------------------------------------------------
     @Override
-    public void setResolver(PropertyResolver resolver);
+    public void setResolver(PropertyResolver resolver) {
+        this.resolver = resolver;
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    @Override
+    public void setProperty(String propName, String propValue) {
+        resolver.setProperty(propName, propValue);
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    @Override
+    public String resolve(String propName) {
+        return resolver.resolve(propName);
+    }
 
     //----------------------------------------------------------------------------------------------
-    public void setCredentials(Credentials credentials)
+    public abstract void setCredentials(Credentials credentials)
     throws CredentialsException;
 
     //----------------------------------------------------------------------------------------------
-    public EnvironmentTask getEnvironment();
+    public abstract EnvironmentTask getEnvironment();
 
     //----------------------------------------------------------------------------------------------
-    public Credentials fetchCredentials();
+    public abstract Credentials fetchCredentials();
 
 }

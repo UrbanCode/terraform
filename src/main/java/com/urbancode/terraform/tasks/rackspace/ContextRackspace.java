@@ -10,9 +10,8 @@ import com.urbancode.terraform.tasks.common.TerraformContext;
 import com.urbancode.x2o.tasks.CreationException;
 import com.urbancode.x2o.tasks.DestructionException;
 import com.urbancode.x2o.tasks.RestorationException;
-import com.urbancode.x2o.util.PropertyResolver;
 
-public class ContextRackspace implements TerraformContext {
+public class ContextRackspace extends TerraformContext {
     //**********************************************************************************************
     // CLASS
     //**********************************************************************************************
@@ -22,7 +21,6 @@ public class ContextRackspace implements TerraformContext {
     // INSTANCE
     //**********************************************************************************************
     private EnvironmentTaskRackspace env;
-    private PropertyResolver resolver;
     private CredentialsRackspace creds;
     protected RackspaceRestClient client;
 
@@ -55,26 +53,8 @@ public class ContextRackspace implements TerraformContext {
 
     //----------------------------------------------------------------------------------------------
     @Override
-    public String resolve(String propName) {
-        return resolver.resolve(propName);
-    }
-
-    //----------------------------------------------------------------------------------------------
-    @Override
     public void restore() throws RestorationException {
         // TODO Rackspace update commands
-    }
-
-    //----------------------------------------------------------------------------------------------
-    @Override
-    public void setProperty(String propName, String propValue) {
-        resolver.setProperty(propName, propValue);
-    }
-
-    //----------------------------------------------------------------------------------------------
-    @Override
-    public void setResolver(PropertyResolver resolver) {
-        this.resolver = resolver;
     }
 
     //----------------------------------------------------------------------------------------------

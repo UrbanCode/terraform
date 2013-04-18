@@ -32,7 +32,7 @@ import com.urbancode.terraform.tasks.vmware.util.VirtualHost;
 import com.urbancode.x2o.util.PropertyResolver;
 
 
-public class ContextVmware implements TerraformContext {
+public class ContextVmware extends TerraformContext {
 
     //**********************************************************************************************
     // CLASS
@@ -43,7 +43,6 @@ public class ContextVmware implements TerraformContext {
     // INSTANCE
     //**********************************************************************************************
     private EnvironmentTaskVmware env;
-    private PropertyResolver resolver;
     private CredentialsVmware credentials;
 
     //----------------------------------------------------------------------------------------------
@@ -54,18 +53,6 @@ public class ContextVmware implements TerraformContext {
     //----------------------------------------------------------------------------------------------
     public PropertyResolver fetchResolver() {
         return resolver;
-    }
-
-    //----------------------------------------------------------------------------------------------
-    @Override
-    public void setResolver(PropertyResolver resolver) {
-        this.resolver = resolver;
-    }
-
-    //----------------------------------------------------------------------------------------------
-    @Override
-    public void setProperty(String name, String value) {
-        resolver.setProperty(name, value);
     }
 
     //----------------------------------------------------------------------------------------------
@@ -84,12 +71,6 @@ public class ContextVmware implements TerraformContext {
     @Override
     public Credentials fetchCredentials() {
         return credentials;
-    }
-
-    //----------------------------------------------------------------------------------------------
-    @Override
-    public String resolve(String string) {
-        return resolver.resolve(string);
     }
 
     //----------------------------------------------------------------------------------------------

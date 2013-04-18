@@ -10,9 +10,8 @@ import com.urbancode.terraform.tasks.common.TerraformContext;
 import com.urbancode.terraform.tasks.common.exceptions.EnvironmentCreationException;
 import com.urbancode.terraform.tasks.common.exceptions.EnvironmentDestructionException;
 import com.urbancode.terraform.tasks.common.exceptions.EnvironmentRestorationException;
-import com.urbancode.x2o.util.PropertyResolver;
 
-public class ContextMicrosoft implements TerraformContext {
+public class ContextMicrosoft extends TerraformContext {
 
     //**********************************************************************************************
     // CLASS
@@ -23,7 +22,6 @@ public class ContextMicrosoft implements TerraformContext {
     // INSTANCE
     //**********************************************************************************************
     private EnvironmentTaskMicrosoft env;
-    private PropertyResolver resolver;
     private CredentialsMicrosoft credentials;
 
     //----------------------------------------------------------------------------------------------
@@ -46,12 +44,6 @@ public class ContextMicrosoft implements TerraformContext {
 
     //----------------------------------------------------------------------------------------------
     @Override
-    public void setResolver(PropertyResolver resolver) {
-        this.resolver = resolver;
-    }
-
-    //----------------------------------------------------------------------------------------------
-    @Override
     public void setCredentials(Credentials credentials)
             throws CredentialsException {
         this.credentials = (CredentialsMicrosoft) credentials;
@@ -67,18 +59,6 @@ public class ContextMicrosoft implements TerraformContext {
     @Override
     public Credentials fetchCredentials() {
         return credentials;
-    }
-
-    //----------------------------------------------------------------------------------------------
-    @Override
-    public void setProperty(String prop, String value) {
-
-    }
-
-    //----------------------------------------------------------------------------------------------
-    @Override
-    public String resolve(String resolve) {
-        return resolver.resolve(resolve);
     }
 
     //----------------------------------------------------------------------------------------------
