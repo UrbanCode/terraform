@@ -1,5 +1,6 @@
 package com.urbancode.terraform.tasks.vcloud;
 
+import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -9,7 +10,6 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
@@ -27,9 +27,11 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
 import com.savvis.sdk.oauth.connections.HttpApiResponse;
 import com.urbancode.x2o.tasks.SubTask;
+import com.urbancode.x2o.xml.XmlParsingException;
 
 public class VAppTask extends SubTask {
 
@@ -203,32 +205,30 @@ public class VAppTask extends SubTask {
     }
     
     //----------------------------------------------------------------------------------------------
-    private String findHref(String vAppBody) throws XPathExpressionException {
-        String result;
+    private String findHref(String vAppBody) throws XmlParsingException {
+        String result = null;
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         DocumentBuilder builder;
         Document doc = null;
         try {
             builder = factory.newDocumentBuilder();
             doc = builder.parse(new InputSource(new StringReader(vAppBody)));
+            XPath xpath = XPathFactory.newInstance().newXPath();
+            XPathExpression networkQuery = xpath.compile("/VApp/@href");
+            Object preResult = networkQuery.evaluate(doc, XPathConstants.STRING);
+            String href = (String) preResult;
+            result = href.substring(href.indexOf("vapp-"));
         } 
         catch (Exception e) {
-            e.printStackTrace();
+            log.error("exception while finding vApp link", e);
+            throw new XmlParsingException(e);
         }
         
-        XPath xpath = XPathFactory.newInstance().newXPath();
-        XPathExpression networkQuery = xpath.compile("/VApp/@href");
-        Object preResult = networkQuery.evaluate(doc, XPathConstants.STRING);
-        if (preResult == null) {
-            throw new XPathExpressionException("The vApp link could not be found.");
-        }
-        String href = (String) preResult;
-        result = href.substring(href.indexOf("vapp-"));
         return result;
     }
     
     //----------------------------------------------------------------------------------------------
-    private Node getNetworkConfigForTemplate(Document templateDoc) 
+    protected Node getNetworkConfigForTemplate(Document templateDoc) 
     throws XPathExpressionException {
         Node result;
         XPath xpath = XPathFactory.newInstance().newXPath();
@@ -251,7 +251,8 @@ public class VAppTask extends SubTask {
     }
     
     //----------------------------------------------------------------------------------------------
-    private Document fetchvAppTemplate(String templateToFetch) {
+    protected Document fetchvAppTemplate(String templateToFetch) 
+    throws ParserConfigurationException, SAXException, IOException {
         Document result = null;
         HttpApiResponse response = SavvisClient.getInstance().makeApiCallWithSuffix(
                 "/vAppTemplate/" + templateToFetch, 
@@ -260,13 +261,8 @@ public class VAppTask extends SubTask {
         
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         DocumentBuilder builder;
-        try {
-            builder = factory.newDocumentBuilder();
-            result = builder.parse(new InputSource(new StringReader(responseBody)));
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
+        builder = factory.newDocumentBuilder();
+        result = builder.parse(new InputSource(new StringReader(responseBody)));
         
         return result;
     }
@@ -281,16 +277,12 @@ public class VAppTask extends SubTask {
     }
     
     //----------------------------------------------------------------------------------------------
-    private String undeployBody() {
+    private String undeployBody() 
+    throws ParserConfigurationException, TransformerException {
         String result = "";
-        Document doc = null;
         
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-        try {
-            doc = factory.newDocumentBuilder().newDocument();
-        } catch (ParserConfigurationException e) {
-            log.error(e);
-        }
+        Document doc = factory.newDocumentBuilder().newDocument();
         
         Element undeployParams = doc.createElement("UndeployVAppParams");
         undeployParams.setAttribute("xmlns", "http://www.vmware.com/vcloud/v1.5");
@@ -301,18 +293,10 @@ public class VAppTask extends SubTask {
         
         TransformerFactory tf = TransformerFactory.newInstance();
         Transformer transformer;
-        try {
-            transformer = tf.newTransformer();
-            StringWriter writer = new StringWriter();
-            transformer.transform(new DOMSource(doc), new StreamResult(writer));
-            result = writer.getBuffer().toString().replaceAll("\n|\r", "");
-        } 
-        catch (TransformerConfigurationException e) {
-            log.error(e);
-        } 
-        catch (TransformerException e) {
-            log.error(e);
-        }
+        transformer = tf.newTransformer();
+        StringWriter writer = new StringWriter();
+        transformer.transform(new DOMSource(doc), new StreamResult(writer));
+        result = writer.getBuffer().toString().replaceAll("\n|\r", "");
         log.trace("sending undeploy body: " + result);
         return result;
     }

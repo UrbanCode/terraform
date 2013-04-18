@@ -17,7 +17,6 @@ public class EnvironmentTaskVCloud extends EnvironmentTask {
     // CLASS
     //**********************************************************************************************
     static private final Logger log = Logger.getLogger(EnvironmentTaskVCloud.class);
-    static final private int MAX_THREADS = 30;
 
     //**********************************************************************************************
     // INSTANCE
@@ -60,8 +59,8 @@ public class EnvironmentTaskVCloud extends EnvironmentTask {
             try {
                 vAppTask.create();
             } catch (Exception e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                log.error("Exception while creating vCloud environment", e);
+                throw new EnvironmentCreationException(e);
             }
         }
     }
@@ -80,8 +79,8 @@ public class EnvironmentTaskVCloud extends EnvironmentTask {
             try {
                 vAppTask.destroy();
             } catch (Exception e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                log.error("Exception while destroying vCloud environment", e);
+                throw new EnvironmentDestructionException(e);
             }
         }
     }

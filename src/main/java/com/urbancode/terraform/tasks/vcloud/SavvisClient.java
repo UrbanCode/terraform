@@ -7,6 +7,7 @@ import com.savvis.sdk.oauth.client.OAuthClient;
 import com.savvis.sdk.oauth.client.OAuthClientRequest;
 import com.savvis.sdk.oauth.common.OAuthCredentials;
 import com.savvis.sdk.oauth.connections.HttpApiResponse;
+import com.urbancode.terraform.credentials.common.CredentialsException;
 import com.urbancode.terraform.credentials.vcloud.CredentialsVCloud;
 
 public class SavvisClient {
@@ -38,12 +39,14 @@ public class SavvisClient {
     }
     
     //----------------------------------------------------------------------------------------------
-    public void setCredentials(CredentialsVCloud creds) {
+    public void setCredentials(CredentialsVCloud creds) 
+    throws CredentialsException {
         this.oAuthCreds = retrieveOAuthCreds(creds);
     }
     
     //----------------------------------------------------------------------------------------------
-    private OAuthCredentials retrieveOAuthCreds(CredentialsVCloud creds){
+    private OAuthCredentials retrieveOAuthCreds(CredentialsVCloud creds) 
+    throws CredentialsException {
         
         OAuthClientRequest oAuthRequest = new OAuthClientRequest();
         oAuthRequest.setApiKey(creds.getApiKey());
@@ -59,7 +62,7 @@ public class SavvisClient {
         }
         catch (Exception e) {
             log.error("Failed to authenticate with supplied vCloud credentials", e);
-            //TODO exception handling
+            throw new CredentialsException(e);
         }
         log.debug("Successfully authenticated to vCloud");
 
@@ -89,13 +92,12 @@ public class SavvisClient {
     }
     
     //----------------------------------------------------------------------------------------------
-    private void validateStatusCode(HttpApiResponse response) throws Exception {
+    private void validateStatusCode(HttpApiResponse response) throws BadResponse {
         int status = response.getStatusCode();
         log.debug("status code: " + status);
         if (status > 299) {
-            //TODO custom exception type
-            throw new Exception("The previous HTTP call returned status: " + status + " with message:" +
-                    response.getResponseString());
+            throw new BadResponse("The previous HTTP call returned status: " + status + " with message:" +
+                    response.getResponseString(), status);
         }
     }
 }
