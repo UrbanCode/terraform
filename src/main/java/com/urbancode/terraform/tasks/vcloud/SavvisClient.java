@@ -70,22 +70,26 @@ public class SavvisClient {
     }
     
     //----------------------------------------------------------------------------------------------
-    public HttpApiResponse makeApiCallWithSuffix(String urlSuffix, String method, String body, String requestContentType) {
+    public HttpApiResponse makeApiCallWithSuffix(String urlSuffix, String method, String body, String requestContentType) 
+    throws Exception {
         String url = oAuthCreds.getApiBaseLocation() + urlSuffix;
         
         return makeApiCall(url, method, body, requestContentType);
     }
     
     //----------------------------------------------------------------------------------------------
-    public HttpApiResponse makeApiCall(String url, String method, String body, String requestContentType) {
+    public HttpApiResponse makeApiCall(String url, String method, String body, String requestContentType) 
+    throws Exception {
         ApiClient apiClient = new ApiClient(oAuthCreds);
         HttpApiResponse httpApiResponse = new HttpApiResponse();
         log.debug("Sending request to: " + url);
         try {
             httpApiResponse = apiClient.getApiResponse(url, method, requestContentType, null, body);
             validateStatusCode(httpApiResponse);
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             log.error("Exception while making API call to " + url, e);
+            throw e;
         }
         
         return httpApiResponse;
