@@ -28,6 +28,7 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
 import com.savvis.sdk.oauth.connections.HttpApiResponse;
+import com.urbancode.terraform.tasks.common.exceptions.EnvironmentDestructionException;
 import com.urbancode.x2o.tasks.SubTask;
 import com.urbancode.x2o.xml.XmlParsingException;
 
@@ -138,8 +139,23 @@ public class VAppTask extends SubTask {
                 SavvisClient.POST_METHOD, undeployBody(), "application/vnd.vmware.vcloud.undeployVAppParams+xml");
         log.trace("response: " + response.getResponseString());
         
-        log.trace("Waiting for undeployment.");
-        Thread.sleep(60000);
+        boolean found = false;
+        long timeout = System.currentTimeMillis() + 180000L;
+        while (!found) {
+            log.trace("Waiting for undeployment.");
+            Thread.sleep(5000);
+            response = SavvisClient.getInstance().makeApiCallWithSuffix("/vApp/" + id, 
+                    SavvisClient.GET_METHOD, "", "");
+            try {
+                found = hasRemoveLink(response.getResponseString());
+            }
+            catch (Exception e) {
+                log.warn("Exception while checking to see if vApp was undeployed", e);
+            }
+            if (!found && System.currentTimeMillis() > timeout) {
+                throw new EnvironmentDestructionException("Timeout waiting for vApp to undeploy");
+            }
+        }
         
         response = SavvisClient.getInstance().makeApiCallWithSuffix("/vApp/" + id, 
                 SavvisClient.DELETE_METHOD, "", "");
@@ -216,6 +232,33 @@ public class VAppTask extends SubTask {
             Object preResult = networkQuery.evaluate(doc, XPathConstants.STRING);
             String href = (String) preResult;
             result = href.substring(href.indexOf("vapp-"));
+        } 
+        catch (Exception e) {
+            log.error("exception while finding vApp link", e);
+            throw new XmlParsingException(e);
+        }
+        
+        return result;
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    private boolean hasRemoveLink(String vAppBody) 
+    throws XmlParsingException {
+        boolean result = false;
+        
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder builder;
+        Document doc = null;
+        try {
+            builder = factory.newDocumentBuilder();
+            doc = builder.parse(new InputSource(new StringReader(vAppBody)));
+            XPath xpath = XPathFactory.newInstance().newXPath();
+            XPathExpression networkQuery = xpath.compile("/VApp/Link[@rel='remove']/@href");
+            String preResult = (String) networkQuery.evaluate(doc, XPathConstants.STRING);
+            log.trace("evaluated: " + preResult);
+            if (preResult.contains(id)) {
+                result = true;
+            }
         } 
         catch (Exception e) {
             log.error("exception while finding vApp link", e);
