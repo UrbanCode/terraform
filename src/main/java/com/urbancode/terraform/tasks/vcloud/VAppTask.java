@@ -4,7 +4,9 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -122,8 +124,17 @@ public class VAppTask extends SubTask {
         String requestBody = generateCreateRequest();
         String contentType = "application/vnd.vmware.vcloud.instantiateVAppTemplateParams+xml";
         String urlSuffix = "/vdc/" + env.getVcdId() + "/action/instantiateVAppTemplate";
-        HttpApiResponse response = SavvisClient.getInstance().makeApiCallWithSuffix(urlSuffix, 
-                SavvisClient.POST_METHOD, requestBody, contentType);
+        HttpApiResponse response = null;
+        
+        try {
+            response = SavvisClient.getInstance().makeApiCallWithSuffix(urlSuffix, 
+                    SavvisClient.POST_METHOD, requestBody, contentType);
+        }
+        catch (Exception e) {
+            env.fetchContext().setWriteContext(false);
+            throw e;
+        }
+        
         log.debug("response: " + response.getResponseString());
         id = findHref(response.getResponseString());
         
@@ -380,13 +391,20 @@ public class VAppTask extends SubTask {
         
         NodeList childrenNodes = (NodeList) preResult;
         result = childrenNodes.getLength() > 0;
+        
+        Set<String> currentVMNames = new HashSet<String>();
+        for (VMTask vmTask : vmTasks) {
+            currentVMNames.add(vmTask.getName());
+        }
         for (int i=0; i<childrenNodes.getLength(); i++) {
             Element vmElement = (Element) childrenNodes.item(i);
             String vmName = vmElement.getAttribute("name");
             String vmHref = vmElement.getAttribute("href");
-            VMTask vm = createVm();
-            vm.setName(vmName);
-            vm.setHref(vmHref);
+            if (!currentVMNames.contains(vmName)) {
+                VMTask vm = createVm();
+                vm.setName(vmName);
+                vm.setHref(vmHref);
+            }
         }
         return result;
     }

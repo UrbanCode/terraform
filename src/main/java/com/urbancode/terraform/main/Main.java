@@ -321,7 +321,7 @@ public class Main {
             throw new XmlParsingException("SAXException: " + e2.getMessage(), e2);
         }
         finally {
-            if (context != null && outputXmlFile != null) {
+            if (context != null && context.doWriteContext() && outputXmlFile != null) {
                 log.debug("Writing context out to " + outputXmlFile);
                 writeEnvToXml(outputXmlFile, context);
             }

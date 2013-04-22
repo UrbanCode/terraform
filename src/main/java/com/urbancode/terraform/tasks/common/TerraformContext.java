@@ -31,6 +31,17 @@ public abstract class TerraformContext implements Context {
     // INSTANCE
     //**********************************************************************************************
     protected PropertyResolver resolver;
+    boolean writeContext = true;
+    
+    //----------------------------------------------------------------------------------------------
+    public boolean doWriteContext() {
+        return writeContext;
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    public void setWriteContext(boolean writeContext) {
+        this.writeContext = writeContext;
+    }
 
     //----------------------------------------------------------------------------------------------
     @Override
@@ -59,5 +70,6 @@ public abstract class TerraformContext implements Context {
 
     //----------------------------------------------------------------------------------------------
     public abstract Credentials fetchCredentials();
+    
 
 }

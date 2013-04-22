@@ -51,6 +51,11 @@ public class EnvironmentTaskVCloud extends EnvironmentTask {
         vAppTasks.add(vApp);
         return vApp;
     }
+    
+    //----------------------------------------------------------------------------------------------
+    public TerraformContext fetchContext() {
+        return (TerraformContext) this.context;
+    }
 
     //----------------------------------------------------------------------------------------------
     @Override
