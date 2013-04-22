@@ -1,5 +1,6 @@
 package com.urbancode.terraform.tasks.vcloud;
 
+import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -26,8 +27,10 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
 import com.savvis.sdk.oauth.connections.HttpApiResponse;
+import com.urbancode.terraform.tasks.common.exceptions.EnvironmentCreationException;
 import com.urbancode.terraform.tasks.common.exceptions.EnvironmentDestructionException;
 import com.urbancode.x2o.tasks.SubTask;
 import com.urbancode.x2o.xml.XmlParsingException;
@@ -102,7 +105,7 @@ public class VAppTask extends SubTask {
     }
     
     //----------------------------------------------------------------------------------------------
-    public VMTask createVmTask() {
+    public VMTask createVm() {
         VMTask vmTask = new VMTask();
         vmTasks.add(vmTask);
         return vmTask;
@@ -123,6 +126,28 @@ public class VAppTask extends SubTask {
                 SavvisClient.POST_METHOD, requestBody, contentType);
         log.debug("response: " + response.getResponseString());
         id = findHref(response.getResponseString());
+        
+        try {
+            log.debug("Finding VMs...");
+            boolean foundVMs = false;
+            long timeout = System.currentTimeMillis() + 720000L;
+            while (!foundVMs) {
+                log.trace("Waiting for VMs to be created and started.");
+                Thread.sleep(5000);
+                HttpApiResponse vAppResponse = fetchVAppResponse();
+                foundVMs = unmarshalVMs(vAppResponse.getResponseString());
+                if (!foundVMs && System.currentTimeMillis() > timeout) {
+                    throw new EnvironmentCreationException("Timeout waiting for vApp to come online");
+                }
+            }
+
+        }
+        catch (EnvironmentCreationException e) {
+            throw e;
+        }
+        catch (Exception e) {
+            log.debug("error while finding VMs from vApp", e);
+        }
     }
 
     //----------------------------------------------------------------------------------------------
@@ -131,8 +156,7 @@ public class VAppTask extends SubTask {
         for (VMTask vmTask : vmTasks) {
             vmTask.destroy();
         }
-        HttpApiResponse response = SavvisClient.getInstance().makeApiCallWithSuffix("/vApp/" + id, 
-                SavvisClient.GET_METHOD, "", "");
+        HttpApiResponse response = fetchVAppResponse();
         log.trace("response: " + response.getResponseString());
         
         response = SavvisClient.getInstance().makeApiCallWithSuffix("/vApp/" + id + "/action/undeploy", 
@@ -160,6 +184,12 @@ public class VAppTask extends SubTask {
         response = SavvisClient.getInstance().makeApiCallWithSuffix("/vApp/" + id, 
                 SavvisClient.DELETE_METHOD, "", "");
         log.trace("response: " + response.getResponseString());
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    private HttpApiResponse fetchVAppResponse() throws Exception {
+        return SavvisClient.getInstance().makeApiCallWithSuffix("/vApp/" + id, 
+                SavvisClient.GET_METHOD, "", "");
     }
     
     //----------------------------------------------------------------------------------------------
@@ -278,16 +308,7 @@ public class VAppTask extends SubTask {
         if (preResult == null) {
             throw new XPathExpressionException("The network config node could not be found.");
         }
-        System.out.println("pre result class: " + preResult.getClass().getCanonicalName());
         result = (Node) preResult;
-        System.out.println("------DIAGNOSTICS--------");
-        System.out.println("node name: " + result.getNodeName());
-        System.out.println("child nodes? " + result.hasChildNodes());
-        NodeList children = result.getChildNodes();
-        for (int i=0; i<children.getLength(); i++) {
-            System.out.println("child node: " + children.item(i).getNodeName());
-        }
-        System.out.println("final class: " + result.getClass().getCanonicalName());
         return result;
     }
     
@@ -339,6 +360,34 @@ public class VAppTask extends SubTask {
         transformer.transform(new DOMSource(doc), new StreamResult(writer));
         result = writer.getBuffer().toString().replaceAll("\n|\r", "");
         log.trace("sending undeploy body: " + result);
+        return result;
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    /**
+     * @param vAppBody the XML response from the GET request
+     * @return true if VMs were found, false otherwise
+     */
+    private boolean unmarshalVMs(String vAppBody) 
+    throws XPathExpressionException, ParserConfigurationException, SAXException, IOException {
+        boolean result = false;
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder builder = factory.newDocumentBuilder();
+        Document doc = builder.parse(new InputSource(new StringReader(vAppBody)));
+        XPath xpath = XPathFactory.newInstance().newXPath();
+        XPathExpression networkQuery = xpath.compile("/VApp/Children/Vm");
+        Object preResult = networkQuery.evaluate(doc, XPathConstants.NODESET);
+        
+        NodeList childrenNodes = (NodeList) preResult;
+        result = childrenNodes.getLength() > 0;
+        for (int i=0; i<childrenNodes.getLength(); i++) {
+            Element vmElement = (Element) childrenNodes.item(i);
+            String vmName = vmElement.getAttribute("name");
+            String vmHref = vmElement.getAttribute("href");
+            VMTask vm = createVm();
+            vm.setName(vmName);
+            vm.setHref(vmHref);
+        }
         return result;
     }
 

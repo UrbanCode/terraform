@@ -19,6 +19,9 @@ public class VMTask extends SubTask {
     private NetworkTask networkTask;
     private List<DiskTask> diskTasks;
     
+    private String name;
+    private String href;
+    
     
     //----------------------------------------------------------------------------------------------
     public VMTask() {
@@ -39,6 +42,26 @@ public class VMTask extends SubTask {
     public NetworkTask createNetworkTask() {
         this.networkTask = new NetworkTask();
         return this.networkTask;
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    public String getName() {
+        return name;
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    public String getHref() {
+        return href;
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    public void setName(String name) {
+        this.name = name;
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    public void setHref(String href) {
+        this.href = href;
     }
     
     //----------------------------------------------------------------------------------------------
