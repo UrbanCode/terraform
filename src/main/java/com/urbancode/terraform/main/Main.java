@@ -337,9 +337,15 @@ public class Main {
     private Credentials parseCredentials(File credsFile) {
         Credentials result = null;
 
-        Properties props = loadPropertiesFromFile(credsFile);
-
-        result = parseCredsFromProps(props);
+        Properties credProps = loadPropertiesFromFile(credsFile);
+        
+        for (Property cmdlineProp : props) {
+            if (credProps.get(cmdlineProp.getName()) == null) {
+                credProps.put(cmdlineProp.getName(), cmdlineProp.getValue());
+            }
+        }
+        
+        result = parseCredsFromProps(credProps);
 
         if (result != null) {
             log.info("Restored Credentials: " + credsFile + " : " + result.getName());
