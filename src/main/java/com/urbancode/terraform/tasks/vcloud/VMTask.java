@@ -1,7 +1,5 @@
 package com.urbancode.terraform.tasks.vcloud;
 
-import java.util.List;
-
 import org.apache.log4j.Logger;
 
 import com.urbancode.x2o.tasks.SubTask;
@@ -16,8 +14,6 @@ public class VMTask extends SubTask {
     //**********************************************************************************************
     // INSTANCE
     //**********************************************************************************************
-    private NetworkTask networkTask;
-    private List<DiskTask> diskTasks;
     
     private String name;
     private String href;
@@ -26,22 +22,6 @@ public class VMTask extends SubTask {
     //----------------------------------------------------------------------------------------------
     public VMTask() {
         super();
-    }
-    
-    //----------------------------------------------------------------------------------------------
-    public NetworkTask getNetworkTask() {
-        return networkTask;
-    }
-    
-    //----------------------------------------------------------------------------------------------
-    public List<DiskTask> getDiskTasks() {
-        return diskTasks;
-    }
-    
-    //----------------------------------------------------------------------------------------------
-    public NetworkTask createNetworkTask() {
-        this.networkTask = new NetworkTask();
-        return this.networkTask;
     }
     
     //----------------------------------------------------------------------------------------------
@@ -62,13 +42,6 @@ public class VMTask extends SubTask {
     //----------------------------------------------------------------------------------------------
     public void setHref(String href) {
         this.href = href;
-    }
-    
-    //----------------------------------------------------------------------------------------------
-    public DiskTask createDiskTask() {
-        DiskTask diskTask = new DiskTask();
-        diskTasks.add(diskTask);
-        return diskTask;
     }
     
     //----------------------------------------------------------------------------------------------
