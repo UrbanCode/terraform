@@ -141,14 +141,24 @@ public class VAppTask extends SubTask {
         try {
             log.debug("Finding VMs...");
             boolean foundVMs = false;
+            boolean taskDone = false;
             long timeout = System.currentTimeMillis() + 720000L;
             while (!foundVMs) {
-                log.trace("Waiting for VMs to be created and started.");
+                log.trace("Waiting for VMs to be created.");
                 Thread.sleep(5000);
                 HttpApiResponse vAppResponse = fetchVAppResponse();
                 foundVMs = unmarshalVMs(vAppResponse.getResponseString());
                 if (!foundVMs && System.currentTimeMillis() > timeout) {
-                    throw new EnvironmentCreationException("Timeout waiting for vApp to come online");
+                    throw new EnvironmentCreationException("Timeout waiting for vApp to create VMs");
+                }
+            }
+            while (!taskDone) {
+                log.trace("Waiting for VMs to be started.");
+                Thread.sleep(5000);
+                HttpApiResponse vAppResponse = fetchVAppResponse();
+                taskDone = isCreateTaskDone(vAppResponse.getResponseString());
+                if (!taskDone && System.currentTimeMillis() > timeout) {
+                    throw new EnvironmentCreationException("Timeout waiting for vApp to start");
                 }
             }
 
@@ -362,6 +372,7 @@ public class VAppTask extends SubTask {
      */
     private boolean unmarshalVMs(String vAppBody) 
     throws XPathExpressionException, ParserConfigurationException, SAXException, IOException {
+        log.trace(vAppBody);
         boolean result = false;
         Document doc = buildDocument(vAppBody);
         XPath xpath = XPathFactory.newInstance().newXPath();
@@ -383,6 +394,29 @@ public class VAppTask extends SubTask {
                 VMTask vm = createVm();
                 vm.setName(vmName);
                 vm.setHref(vmHref);
+            }
+        }
+        return result;
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    private boolean isCreateTaskDone(String vAppBody) 
+    throws XPathExpressionException, ParserConfigurationException, SAXException, IOException {
+        log.trace(vAppBody);
+        boolean result = true;
+        Document doc = buildDocument(vAppBody);
+        XPath xpath = XPathFactory.newInstance().newXPath();
+        XPathExpression networkQuery = xpath.compile("/VApp/Tasks/Task");
+        Object preResult = networkQuery.evaluate(doc, XPathConstants.NODESET);
+        NodeList childrenNodes = (NodeList) preResult;
+        log.trace ("found " + childrenNodes.getLength() + " nodes");
+        for (int i=0; i<childrenNodes.getLength(); i++) {
+            Element vmElement = (Element) childrenNodes.item(i);
+            String taskOperation = vmElement.getAttribute("operationName");
+            if ("vdcInstantiateVapp".equals(taskOperation)) {
+                log.debug("The vApp has started.");
+                result = false;
+                break;
             }
         }
         return result;
