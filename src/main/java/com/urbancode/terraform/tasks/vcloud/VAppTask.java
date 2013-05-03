@@ -254,20 +254,6 @@ public class VAppTask extends SubTask {
             root.appendChild(descriptionElement);
         }
         
-        /*Element params = resultDoc.createElement("InstantiationParams");
-        
-        Document templateDoc = fetchvAppTemplate();
-        Node networkConfigSection = null;
-        try {
-            networkConfigSection = getNetworkConfigForTemplate(templateDoc);
-            log.info(networkConfigSection.toString());
-        } catch (XPathExpressionException e) {
-            log.error(e);
-        }
-        
-        params.appendChild(resultDoc.importNode(networkConfigSection, true));
-        root.appendChild(params);*/
-        
         Element source = resultDoc.createElement("Source");
         String baseUrl = SavvisClient.getInstance().getCredentials().getApiBaseLocation();
         String cleanTemplateId = cleanTemplateId();
@@ -317,7 +303,6 @@ public class VAppTask extends SubTask {
             XPath xpath = XPathFactory.newInstance().newXPath();
             XPathExpression networkQuery = xpath.compile("/VApp/Link[@rel='remove']/@href");
             String preResult = (String) networkQuery.evaluate(doc, XPathConstants.STRING);
-            log.trace("evaluated: " + preResult);
             if (preResult.contains(id)) {
                 result = true;
             }
@@ -430,7 +415,6 @@ public class VAppTask extends SubTask {
         XPathExpression networkQuery = xpath.compile("/VApp/Tasks/Task");
         Object preResult = networkQuery.evaluate(doc, XPathConstants.NODESET);
         NodeList childrenNodes = (NodeList) preResult;
-        log.trace ("found " + childrenNodes.getLength() + " nodes");
         for (int i=0; i<childrenNodes.getLength(); i++) {
             Element vmElement = (Element) childrenNodes.item(i);
             String taskOperation = vmElement.getAttribute("operationName");
@@ -455,7 +439,6 @@ public class VAppTask extends SubTask {
             XPathExpression query = xpath.compile("/Org/Link");
             Object preResult = query.evaluate(doc, XPathConstants.NODESET);
             NodeList childrenNodes = (NodeList) preResult;
-            log.trace ("found " + childrenNodes.getLength() + " nodes");
             for (int i=0; i<childrenNodes.getLength(); i++) {
                 Element linkElement = (Element) childrenNodes.item(i);
                 String foundName = linkElement.getAttribute("name");
@@ -486,7 +469,6 @@ public class VAppTask extends SubTask {
             XPathExpression query = xpath.compile("/Catalog/CatalogItems/CatalogItem");
             Object preResult = query.evaluate(doc, XPathConstants.NODESET);
             NodeList childrenNodes = (NodeList) preResult;
-            log.trace ("found " + childrenNodes.getLength() + " nodes");
             for (int i=0; i<childrenNodes.getLength(); i++) {
                 Element linkElement = (Element) childrenNodes.item(i);
                 String foundName = linkElement.getAttribute("name");

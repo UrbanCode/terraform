@@ -114,8 +114,7 @@ public class EnvironmentTaskVCloud extends EnvironmentTask {
     //----------------------------------------------------------------------------------------------
     @Override
     public void restore() throws EnvironmentRestorationException {
-        // TODO Auto-generated method stub
-        
+        // not implemented
     }
 
     //----------------------------------------------------------------------------------------------

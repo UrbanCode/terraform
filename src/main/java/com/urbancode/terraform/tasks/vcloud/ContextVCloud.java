@@ -1,7 +1,5 @@
 package com.urbancode.terraform.tasks.vcloud;
 
-import org.apache.log4j.Logger;
-
 import com.urbancode.terraform.credentials.common.Credentials;
 import com.urbancode.terraform.credentials.common.CredentialsException;
 import com.urbancode.terraform.credentials.vcloud.CredentialsVCloud;
@@ -15,7 +13,6 @@ public class ContextVCloud extends TerraformContext {
     //**********************************************************************************************
     // CLASS
     //**********************************************************************************************
-    static private final Logger log = Logger.getLogger(ContextVCloud.class);
 
     //**********************************************************************************************
     // INSTANCE
@@ -38,8 +35,7 @@ public class ContextVCloud extends TerraformContext {
     //----------------------------------------------------------------------------------------------
     @Override
     public void restore() throws RestorationException {
-        // TODO Auto-generated method stub
-
+        //not implemented
     }
 
     //----------------------------------------------------------------------------------------------
