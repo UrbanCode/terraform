@@ -1,15 +1,12 @@
 package com.urbancode.terraform.tasks.vcloud;
 
 import java.io.IOException;
-import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
@@ -28,7 +25,6 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 import com.savvis.sdk.oauth.connections.HttpApiResponse;
@@ -51,6 +47,8 @@ public class VAppTask extends SubTask {
     private List<VMTask> vmTasks = new ArrayList<VMTask>();
     
     private String name;
+    private String templateName;
+    private String catalogName;
     private String templateId;
     private String description;
     private String id;
@@ -72,6 +70,16 @@ public class VAppTask extends SubTask {
     }
     
     //----------------------------------------------------------------------------------------------
+    public String getTemplateName() {
+        return templateName;
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    public String getCatalogName() {
+        return catalogName;
+    }
+    
+    //----------------------------------------------------------------------------------------------
     public String getDescription() {
         return description;
     }
@@ -89,6 +97,16 @@ public class VAppTask extends SubTask {
     //----------------------------------------------------------------------------------------------
     public void setName(String name) {
         this.name = name;
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    public void setTemplateName(String templateName) {
+        this.templateName = templateName;
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    public void setCatalogName(String catalogName) {
+        this.catalogName = catalogName;
     }
     
     //----------------------------------------------------------------------------------------------
@@ -116,6 +134,9 @@ public class VAppTask extends SubTask {
     //----------------------------------------------------------------------------------------------
     @Override
     public void create() throws Exception {
+        if (templateId == null) {
+            findTemplateId();
+        }
         String suffixString = "-" + env.fetchSuffix();
         name = name.contains(suffixString) ? name : name + suffixString;
         for (VMTask vmTask : vmTasks) {
@@ -123,7 +144,7 @@ public class VAppTask extends SubTask {
         }
         String requestBody = generateCreateRequest();
         String contentType = "application/vnd.vmware.vcloud.instantiateVAppTemplateParams+xml";
-        String urlSuffix = "/vdc/" + env.getVcdId() + "/action/instantiateVAppTemplate";
+        String urlSuffix = "/vdc/" + env.getVdcId() + "/action/instantiateVAppTemplate";
         HttpApiResponse response = null;
         
         try {
@@ -216,7 +237,7 @@ public class VAppTask extends SubTask {
     //----------------------------------------------------------------------------------------------
     public String generateCreateRequest() 
     throws ParserConfigurationException, TransformerException {
-        Document resultDoc = blankDocument();
+        Document resultDoc = env.blankDocument();
         resultDoc.setXmlVersion("1.0");
         Element root = resultDoc.createElement("InstantiateVAppTemplateParams");
         resultDoc.appendChild(root);
@@ -271,7 +292,7 @@ public class VAppTask extends SubTask {
     private String findHref(String vAppBody) throws XmlParsingException {
         String result = null;
         try {
-            Document doc = buildDocument(vAppBody);
+            Document doc = env.buildDocument(vAppBody);
             XPath xpath = XPathFactory.newInstance().newXPath();
             XPathExpression networkQuery = xpath.compile("/VApp/@href");
             Object preResult = networkQuery.evaluate(doc, XPathConstants.STRING);
@@ -292,7 +313,7 @@ public class VAppTask extends SubTask {
         boolean result = false;
         
         try {
-            Document doc = buildDocument(vAppBody);
+            Document doc = env.buildDocument(vAppBody);
             XPath xpath = XPathFactory.newInstance().newXPath();
             XPathExpression networkQuery = xpath.compile("/VApp/Link[@rel='remove']/@href");
             String preResult = (String) networkQuery.evaluate(doc, XPathConstants.STRING);
@@ -331,7 +352,7 @@ public class VAppTask extends SubTask {
                 SavvisClient.GET_METHOD, "", "");
         String responseBody = response.getResponseString();
         
-        return buildDocument(responseBody);
+        return env.buildDocument(responseBody);
     }
     
     //----------------------------------------------------------------------------------------------
@@ -347,7 +368,7 @@ public class VAppTask extends SubTask {
     private String undeployBody() 
     throws ParserConfigurationException, TransformerException {
         String result = "";
-        Document doc = blankDocument();
+        Document doc = env.blankDocument();
         Element undeployParams = doc.createElement("UndeployVAppParams");
         undeployParams.setAttribute("xmlns", "http://www.vmware.com/vcloud/v1.5");
         Element undeployAction = doc.createElement("UndeployPowerAction");
@@ -374,7 +395,7 @@ public class VAppTask extends SubTask {
     throws XPathExpressionException, ParserConfigurationException, SAXException, IOException {
         log.trace(vAppBody);
         boolean result = false;
-        Document doc = buildDocument(vAppBody);
+        Document doc = env.buildDocument(vAppBody);
         XPath xpath = XPathFactory.newInstance().newXPath();
         XPathExpression networkQuery = xpath.compile("/VApp/Children/Vm");
         Object preResult = networkQuery.evaluate(doc, XPathConstants.NODESET);
@@ -404,7 +425,7 @@ public class VAppTask extends SubTask {
     throws XPathExpressionException, ParserConfigurationException, SAXException, IOException {
         log.trace(vAppBody);
         boolean result = true;
-        Document doc = buildDocument(vAppBody);
+        Document doc = env.buildDocument(vAppBody);
         XPath xpath = XPathFactory.newInstance().newXPath();
         XPathExpression networkQuery = xpath.compile("/VApp/Tasks/Task");
         Object preResult = networkQuery.evaluate(doc, XPathConstants.NODESET);
@@ -423,18 +444,85 @@ public class VAppTask extends SubTask {
     }
     
     //----------------------------------------------------------------------------------------------
-    private Document buildDocument(String xmlBody) 
-    throws SAXException, IOException, ParserConfigurationException {
-        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-        DocumentBuilder builder = factory.newDocumentBuilder();
-        return builder.parse(new InputSource(new StringReader(xmlBody)));
+    private String findCatalogId() 
+    throws Exception {
+        String result = null;
+        HttpApiResponse response = SavvisClient.getInstance().makeApiCallWithSuffix(
+                "/org/" + env.fetchOrgId(), "GET", "", "");
+        try {
+            Document doc = env.buildDocument(response.getResponseString());
+            XPath xpath = XPathFactory.newInstance().newXPath();
+            XPathExpression query = xpath.compile("/Org/Link");
+            Object preResult = query.evaluate(doc, XPathConstants.NODESET);
+            NodeList childrenNodes = (NodeList) preResult;
+            log.trace ("found " + childrenNodes.getLength() + " nodes");
+            for (int i=0; i<childrenNodes.getLength(); i++) {
+                Element linkElement = (Element) childrenNodes.item(i);
+                String foundName = linkElement.getAttribute("name");
+                if (catalogName.equals(foundName)) {
+                    String href = linkElement.getAttribute("href");
+                    result = href.substring(href.indexOf("/catalog"));
+                    break;
+                }
+            }
+        } 
+        catch (Exception e) {
+            log.error("exception while finding catalog ID", e);
+            throw new XmlParsingException(e);
+        }
+        return result;
     }
     
     //----------------------------------------------------------------------------------------------
-    private Document blankDocument() 
-    throws ParserConfigurationException {
-        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-        return factory.newDocumentBuilder().newDocument();
+    private String findCatalogItemId() 
+    throws Exception {
+        String result = null;
+        String catalogId = findCatalogId();
+        HttpApiResponse response = SavvisClient.getInstance().makeApiCallWithSuffix(
+                catalogId, "GET", "", "");
+        try {
+            Document doc = env.buildDocument(response.getResponseString());
+            XPath xpath = XPathFactory.newInstance().newXPath();
+            XPathExpression query = xpath.compile("/Catalog/CatalogItems/CatalogItem");
+            Object preResult = query.evaluate(doc, XPathConstants.NODESET);
+            NodeList childrenNodes = (NodeList) preResult;
+            log.trace ("found " + childrenNodes.getLength() + " nodes");
+            for (int i=0; i<childrenNodes.getLength(); i++) {
+                Element linkElement = (Element) childrenNodes.item(i);
+                String foundName = linkElement.getAttribute("name");
+                if (templateName.equals(foundName)) {
+                    String href = linkElement.getAttribute("href");
+                    result = href.substring(href.indexOf("/catalogItem"));
+                    break;
+                }
+            }
+        } 
+        catch (Exception e) {
+            log.error("exception while finding catalog item ID", e);
+            throw new XmlParsingException(e);
+        }
+        return result;
     }
-
+    
+    //----------------------------------------------------------------------------------------------
+    private void findTemplateId() 
+    throws Exception {
+        String catalogItemId = findCatalogItemId();
+        HttpApiResponse response = SavvisClient.getInstance().makeApiCallWithSuffix(
+                catalogItemId, "GET", "", "");
+        try {
+            Document doc = env.buildDocument(response.getResponseString());
+            XPath xpath = XPathFactory.newInstance().newXPath();
+            XPathExpression query = xpath.compile("/CatalogItem/Entity");
+            Object preResult = query.evaluate(doc, XPathConstants.NODE);
+            Element entityElement = (Element) preResult;
+            String href = entityElement.getAttribute("href");
+            templateId = href.substring(href.indexOf("/vAppTemplate/") + "/vAppTemplate/".length());
+        } 
+        catch (Exception e) {
+            log.error("exception while finding catalog item ID", e);
+            throw new XmlParsingException(e);
+        }
+    }
+    
 }

@@ -31,6 +31,7 @@ public class SavvisClient {
     //**********************************************************************************************
     // INSTANCE
     //**********************************************************************************************
+    String organizationName;
     OAuthCredentials oAuthCreds;
     
     //----------------------------------------------------------------------------------------------
@@ -39,9 +40,15 @@ public class SavvisClient {
     }
     
     //----------------------------------------------------------------------------------------------
+    public String getOrganizationName() {
+        return organizationName;
+    }
+    
+    //----------------------------------------------------------------------------------------------
     public void setCredentials(CredentialsVCloud creds) 
     throws CredentialsException {
         this.oAuthCreds = retrieveOAuthCreds(creds);
+        this.organizationName = creds.getOrganization();
     }
     
     //----------------------------------------------------------------------------------------------
