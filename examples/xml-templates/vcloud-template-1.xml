@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<context
+xmlns="com.urbancode.terraform.tasks.vcloud">
+    <environment 
+    name="my-vcloud-env"
+    vdc-name="My VDC1">
+        <v-app name="test vApp"
+	template-name="my_test_template"
+	catalog-name="catalog1"
+	description="this is a description of my vApp">
+        </v-app>
+    </environment>
+</context>

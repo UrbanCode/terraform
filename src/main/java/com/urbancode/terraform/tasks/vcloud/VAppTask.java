@@ -316,7 +316,7 @@ public class VAppTask extends SubTask {
     }
     
     //----------------------------------------------------------------------------------------------
-    protected Node getNetworkConfigForTemplate(Document templateDoc) 
+    protected Node getNetworkConfigSection(Document templateDoc) 
     throws XPathExpressionException {
         Node result;
         XPath xpath = XPathFactory.newInstance().newXPath();
