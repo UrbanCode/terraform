@@ -1,0 +1,75 @@
+vCloud README
+======================================
+
+Allowed commands:
+
+create - creates an environment of vApps
+
+destroy - deletes a previously created environment
+
+  -----------
+  Credentials
+  -----------
+  A vcloud credentials file contains your vCloud username, password, 
+  organization name, VDC location, api key, and secret key.
+  Any of these may be omitted and instead passed in to the command
+  line as properties.
+  
+  type=com.urbancode.terraform.credentials.vmware.CredentialsVCloud
+  name=my.vcloud.creds
+  username=myvcloudusername
+  password=myvcloudpassword
+  organization=myorganization
+  location=us-east-1
+  api-key=abcdef1234567890
+  secret-key=0987654321fedcbawbw
+
+  -----------
+  Templates
+  -----------
+  The general layout of an vcloud Environment Template follows.
+  The number in the parentheses is the number of those elements allowed.
+      context(1)
+        └── environment(1)
+            ├── v-app(n)
+            
+        The following is a list of elements available in the xml:
+    
+    [ The hierarchy represents which elements go under which in the xml ]
+
+    o context: The context holds the whole environment. It has one or more 
+      xmlns attributes, which specify map an xml namespace to a package. The 
+      packages it points to should contain a properties file named:
+        x2o.classes 
+          for vcloud use: xmlns="com.urbancode.uprovision.tasks.vcloud"
+
+      o environment: The environment contains vApps. 
+         Required attributes
+         name: the name of the environment.
+         vdc-name: the name of the virtual datacenter (VDC).
+
+        o v-app: This is a vApp, a cluster of VMs with special configurations.
+         Required attributes
+         name: the name of the vApp. A unique suffix will also be added.
+         template-name: the name of the vApp template in the catalog
+           from which this vApp will be instantiated.
+         catalog-name: the name of the catalog in which the template resides.
+         Optional attributes
+         description: a description of the vApp.
+        
+  Here is an example of a basic template.
+
+<?xml version="1.0" encoding="UTF-8"?>
+<context
+xmlns="com.urbancode.terraform.tasks.vcloud">
+    <environment 
+    name="my-vcloud-env"
+    vdc-name="My VDC1">
+        <v-app name="test vApp"
+	template-name="my_test_template"
+	catalog-name="catalog1"
+	description="this is a description of my vApp">
+        </v-app>
+    </environment>
+</context>
+
