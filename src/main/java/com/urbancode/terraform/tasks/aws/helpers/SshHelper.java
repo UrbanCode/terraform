@@ -146,6 +146,9 @@ public class SshHelper {
     //----------------------------------------------------------------------------------------------
     static public boolean isPortActive(String host, int port) {
         Socket s = null;
+        if (port < 0 || port > 65535) {
+            throw new IllegalArgumentException("Port value passed is outside the specified range of valid port values");
+        }
         try {
             s = new Socket();
             s.setReuseAddress(true);
